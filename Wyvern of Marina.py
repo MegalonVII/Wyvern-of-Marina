@@ -59,7 +59,8 @@ async def help(ctx):
 async def on_message(message):
     if message.content == "me":
         await message.channel.send('<:WoM:836128658828558336>')
-
+    else if message.content == "yoshi":
+        await message.channel.send('<:full:1028536660918550568>')
     await bot.process_commands(message)
 
 @bot.event
