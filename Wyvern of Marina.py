@@ -103,14 +103,16 @@ async def help(ctx):
 
 @bot.event
 async def on_message(message):
-    if message.content == "me" in message.content.lower():
-        await message.channel.send('<:WoM:836128658828558336>')
-    elif message.content == "yoshi" in message.content.lower():
-        await message.channel.send('<:full:1028536660918550568>')
-    elif message.content == "yuri" in message.content.lower():
-        await bot.add_reaction(message, '<:vers:804766992644702238>')
-    elif message.content[0:3] == "!w " and message.content.split()[1] in list(command_list.keys()):
+    if message.content[0:3] == "!w " and message.content.split()[1] in list(command_list.keys()):
         await message.channel.send(command_list[message.content.split()[1]])
+    else:   
+        if message.content.lower() == "me":
+            await message.channel.send('<:WoM:836128658828558336>')
+        if "yoshi" in message.content.lower().split(" "):
+            await message.channel.send('<:full:1028536660918550568>')
+        if "yuri" in message.content.lower().split(" "):
+            await message.add_reaction('<:vers:804766992644702238>')
+            
     await bot.process_commands(message)
 
 @bot.event
