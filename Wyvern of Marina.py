@@ -66,7 +66,7 @@ async def createcommand(ctx, *args):
     if len(args) < 2:
         await ctx.send(f'Wups, too few arguments! You need two arguments to create a new command.')
     #Note that the code only asks for the user to have the permission to manage messages
-    if not ctx.author.guild_permissions.manage_messages:
+    elif not ctx.author.guild_permissions.manage_messages:
         await ctx.send(f"Wups, you do not have the required permissions!")
     else:
         array = [arg for arg in args]
@@ -77,14 +77,18 @@ async def createcommand(ctx, *args):
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             if empty_file:
                 writer.writeheader()
-            writer.writerow({'command_name': name, 'command_output': output})
-            await ctx.send(f"The command " + name + " has been created!")
-            command_list[name] = output
+            if name in list(command_list.keys()):
+                await ctx.send(f'Wups, this command already exists...')
+            else:
+                writer.writerow({'command_name': name, 'command_output': output})
+                await ctx.send(f"The command " + name + " has been created!")
+                command_list[name] = output
 
 @bot.command(pass_context=True)
 async def customcommands(ctx):
     await ctx.send(list(command_list.keys()))
 
+@bot.command(pass_context=True)
 async def help(ctx):
     embed = discord.Embed(
         color = discord.Color.purple())
@@ -95,7 +99,7 @@ async def help(ctx):
 
     embed.add_field(name='!w say', value='Type something after the command for me to repeat it', inline=False)
     
-    embed.add_field(name='!w createcommand', value='Currently in Beta! Create your own commands that send custom text or links! [Admin Only]', inline=False)
+    embed.add_field(name='!w createcommand', value='Create your own commands that send custom text or links! [Admin Only]', inline=False)
     
     embed.add_field(name='!w customcommands', value="Displays a list of the server's custom commands", inline=False)
     
@@ -103,14 +107,16 @@ async def help(ctx):
 
 @bot.event
 async def on_message(message):
-    if message.content == "me":
-        await message.channel.send('<:WoM:836128658828558336>')
-    elif " yoshi " in message.content.lower():
-        await message.channel.send('<:full:1028536660918550568>')
-    elif " yuri " in message.content.lower():
-        await bot.add_reaction(message, '<:vers:804766992644702238>')
-    elif message.content[0:3] == "!w " and message.content.split()[1] in list(command_list.keys()):
+    if message.content[0:3] == "!w " and message.content.split()[1] in list(command_list.keys()):
         await message.channel.send(command_list[message.content.split()[1]])
+    else:   
+        if message.content.lower() == "me":
+            await message.channel.send('<:WoM:836128658828558336>')
+        if "yoshi" in message.content.lower().split(" "):
+            await message.channel.send('<:full:1028536660918550568>')
+        if "yuri" in message.content.lower().split(" "):
+            await message.add_reaction('<:vers:804766992644702238>')
+            
     await bot.process_commands(message)
 
 @bot.event
