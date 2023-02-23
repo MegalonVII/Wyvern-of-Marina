@@ -64,7 +64,7 @@ async def say(ctx, *args):
 async def createcommand(ctx, *args):
     if len(args) != 2:
         await ctx.send(f'Wups, not the correct number of arguments! You need two arguments to create a new command.')
-        # This just rules out the edge case that some moron might just do "!w createcommand".
+        # This just rules out the edge case that some moron might just do "!w createcommand" or try to put in 1 or 3 args.
     elif not ctx.author.guild_permissions.manage_messages:
         await ctx.send(f"Wups, you do not have the required permissions!")
     else:
@@ -87,7 +87,7 @@ async def createcommand(ctx, *args):
 async def deletecommand(ctx, *args):
     if len(args) != 1:
         await ctx.send(f'Wups, not the correct number of arguments! You need one argument to delete a command.')
-        # This also rules out the edge case that some moron might just do "!w deletecommand".
+        # This also rules out the edge case that some moron might just do "!w deletecommand" or try to delete 2 commands at once.
     elif not ctx.author.guild_permissions.manage_messages:
         await ctx.send(f'Wups, you do not have the required permissions!')
     else:
