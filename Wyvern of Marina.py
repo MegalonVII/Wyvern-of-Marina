@@ -119,7 +119,7 @@ async def on_message(message):
         if "yuri" in message.content.lower().split(" "):
             await message.add_reaction('<:vers:804766992644702238>')
         if "verstie" in message.content.lower().split(" "):
-            await message.add_reaction('🏳️‍⚧️')
+            await message.add_reaction('<:verstie:1078929624429498430>')
             
     await bot.process_commands(message)
 
