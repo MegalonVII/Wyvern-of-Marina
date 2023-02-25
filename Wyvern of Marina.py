@@ -114,8 +114,14 @@ async def on_message(message):
             await message.channel.send('<:WoM:836128658828558336>')
         if "yoshi" in message.content.lower().split(" "):
             await message.channel.send('<:full:1028536660918550568>')
+        if "3ds" in message.content.lower().split(" "):
+            await message.channel.send('<:megalon:1078915237983563887>')
         if "yuri" in message.content.lower().split(" "):
             await message.add_reaction('<:vers:804766992644702238>')
+        if "wolfiversal" in message.content.lower().split(" "):
+            await message.add_reaction('<:transgender_flag:1078914142016122960>')
+        if "wolfi" in message.content.lower().split(" "):
+            await message.add_reaction('<:versal:1078915648513646672>')
             
     await bot.process_commands(message)
 
