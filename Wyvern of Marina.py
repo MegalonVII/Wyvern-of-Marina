@@ -146,8 +146,12 @@ async def on_message(message):
             await message.channel.send('<:WoM:836128658828558336>')
         if "yoshi" in message.content.lower().split(" "):
             await message.channel.send('<:full:1028536660918550568>')
+        if "3ds" in message.content.lower().split(" "):
+            await message.channel.send('<:megalon:1078914494132129802>')
         if "yuri" in message.content.lower().split(" "):
             await message.add_reaction('<:vers:804766992644702238>')
+        if "verstie" in message.content.lower().split(" "):
+            await message.add_reaction('<:verstie:1078929624429498430>')
             
     await bot.process_commands(message)
 
