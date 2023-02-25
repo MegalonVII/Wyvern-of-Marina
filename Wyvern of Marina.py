@@ -118,10 +118,8 @@ async def on_message(message):
             await message.channel.send('<:megalon:1078914494132129802>')
         if "yuri" in message.content.lower().split(" "):
             await message.add_reaction('<:vers:804766992644702238>')
-        if "wolfiversal" in message.content.lower().split(" "):
+        if "verstie" in message.content.lower().split(" "):
             await message.add_reaction('🏳️‍⚧️')
-        if "wolfi" in message.content.lower().split(" "):
-            await message.add_reaction('<:versal:804765857028505628>')
             
     await bot.process_commands(message)
 
