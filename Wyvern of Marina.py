@@ -148,9 +148,6 @@ async def on_message(message):
             await message.channel.send('<:full:1028536660918550568>')
         if "yuri" in message.content.lower().split(" "):
             await message.add_reaction('<:vers:804766992644702238>')
-        if "3ds" in message.content.lower.split(" "):
-            await message.channel.send('hey guys did you know hacking your nintendo 3ds is super easy?')
-            # Sorry just felt like doing this :)
             
     await bot.process_commands(message)
 
