@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from discord.utils import get
 from discord.ext import commands
 from keep_alive import keep_alive
-import pandas as pd # Make sure Sky installs this on his PC with "pip install pandas" in the terminal
+# import pandas as pd (Not applicable now, but when we implement deletecommand, make sure Sky installs this on his PC with "pip install pandas" in the terminal.)
 
 load_dotenv()
 
@@ -62,15 +62,19 @@ async def say(ctx, *args):
     
 @bot.command()
 async def createcommand(ctx, *args):
-    if len(args) != 2:
+    if len(args) < 2:
         await ctx.send(f'Wups, not the correct number of arguments! You need two arguments to create a new command.')
-        # This just rules out the edge case that some moron might just do "!w createcommand" or try to put in 1 or 3 args.
+        # This just rules out the edge case that some moron might just do "!w createcommand" or just list a command name and no output.
     elif not ctx.author.guild_permissions.manage_messages:
         await ctx.send(f"Wups, you do not have the required permissions!")
     else:
         array = [arg for arg in args]
         name = array[0]
-        output = array[1]
+        array.remove(array[0])
+        output = array[0]
+        array.remove(array[0])
+        for arg in array:
+            output = output + ' ' + arg
         with open('commands.csv', 'a', newline='') as csvfile:
             fieldnames = ['command_name', 'command_output']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -83,7 +87,7 @@ async def createcommand(ctx, *args):
                 await ctx.send(f"The command " + name + " has been created!")
                 command_list[name] = output
                 
-@bot.command()
+'''@bot.command()
 async def deletecommand(ctx, *args):
     if len(args) != 1:
         await ctx.send(f'Wups, not the correct number of arguments! You need one argument to delete a command.')
@@ -102,7 +106,7 @@ async def deletecommand(ctx, *args):
                 commands = pd.read_csv('commands.csv')
                 commands = commands[commands.command_name != name]
                 commands.to_csv('commands.csv', index=False)
-                await ctx.send(f'The command ' + name + ' has been deleted!')
+                await ctx.send(f'The command ' + name + ' has been deleted!')'''
         # The main bug that I found was that even though it deletes the command from the CSV file, it
         # does not remove it from command_list until WoM restarts.
         # 
@@ -115,7 +119,13 @@ async def deletecommand(ctx, *args):
 
 @bot.command(pass_context=True)
 async def customcommands(ctx):
-    await ctx.send(list(command_list.keys()))
+    commandList = list(command_list.keys())
+    commands = ', '.join(commandList) 
+    if commands == '':
+        await ctx.send(f'Wups! There are no custom commands...')
+    else:
+        await ctx.send(commands)
+
 
 @bot.command(pass_context=True)
 async def help(ctx):
@@ -131,7 +141,7 @@ async def help(ctx):
     embed.add_field(name='!w createcommand', value='Create your own commands that make me send custom text or links [Admin Only]', inline=False)
     
     # This is just there because we have the basis for this. Just so that we don't have to do this later.
-    embed.add_field(name='!w deletecommand', value='Delete commands that have already been created [Admin Only]', inline=False)
+    # embed.add_field(name='!w deletecommand', value='Delete commands that have already been created [Admin Only]', inline=False)
     
     embed.add_field(name='!w customcommands', value="Displays a list of the server's custom commands", inline=False)
     
@@ -145,9 +155,9 @@ async def on_message(message):
         if message.content.lower() == "me":
             await message.channel.send('<:WoM:836128658828558336>')
         if "yoshi" in message.content.lower().split(" "):
-            await message.channel.send('<:full:1028536660918550568>')
+            await message.add_reaction('<:full:1028536660918550568>')
         if "3ds" in message.content.lower().split(" "):
-            await message.channel.send('<:megalon:1078914494132129802>')
+            await message.add_reaction('<:megalon:1078914494132129802>')
         if "yuri" in message.content.lower().split(" "):
             await message.add_reaction('<:vers:804766992644702238>')
         if "verstie" in message.content.lower().split(" "):
