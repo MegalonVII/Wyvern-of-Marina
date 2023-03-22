@@ -114,7 +114,6 @@ async def deletecommand(ctx, *args):
                     command_list[dict[0]]=dict[1]
             await ctx.reply(f'The command {name} has been deleted!', mention_author=False)
             
-
 @bot.command()
 async def customcommands(ctx):
     commandList = list(command_list.keys())
