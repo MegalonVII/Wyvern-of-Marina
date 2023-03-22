@@ -1,22 +1,27 @@
+# all imports
 import discord
 import os
 import csv
 from dotenv import load_dotenv
-from discord.utils import get
 from discord.ext import commands
 from keep_alive import keep_alive
-# import pandas as pd (Not applicable now, but when we implement deletecommand, make sure Sky installs this on his PC with "pip install pandas" in the terminal.)
+import random
+import pandas as pd
+import asyncio
 
+# instantiation starts here
 load_dotenv()
 
 TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
 
-bot = commands.Bot(command_prefix = '!w ')
+intents = discord.Intents.all()
+bot = commands.Bot(command_prefix = '!w ', intents = intents)
 
 say = print
 command_list={}
 empty_file=False
+snipe_message_content = {}
+snipe_message_author = {}
 
 if not os.path.exists('commands.csv'):
     with open('commands.csv', 'w') as creating_new_csv_file: 
@@ -36,37 +41,31 @@ bot.remove_command('help')
 
 @bot.event
 async def on_ready():
-    guild = discord.utils.find(lambda g: g.name == GUILD, bot.guilds)
-    print(f'{bot.user} is connected to the following guild:\n'
-        f'{guild.name}(id: {guild.id})')
+    guild = discord.utils.get(bot.guilds)
+    botname = '{0.user.name}'.format(bot)
+    members = '\n - '.join(member.name for member in guild.members if not member.bot)
+    print(f'{botname} is connected to the following guild:\n{guild.name} (ID: {guild.id})\nMembers:\n - {members}')
 
-    members = 'n\ - '.join([member.name for member in guild.members])
-    print(f'Guild Members:\n - {members}')
-
+# bot commands start here
 @bot.command()
 async def ping(ctx):
     await ctx.send(f'Pong! {round (bot.latency * 1000)}ms ')
-  
     await ctx.message.delete()
 
 @bot.command()
 async def say(ctx, *args):
     response = ''
-
     for arg in args:
         response = response + ' ' + arg
-
     await ctx.channel.send(response)
-
     await ctx.message.delete()
     
 @bot.command()
 async def createcommand(ctx, *args):
     if len(args) < 2:
-        await ctx.send(f'Wups, not the correct number of arguments! You need two arguments to create a new command.')
-        # This just rules out the edge case that some moron might just do "!w createcommand" or just list a command name and no output.
+        await ctx.reply('Wups! Incorrect number of arguments! You need two arguments to create a new command...', mention_author = False)
     elif not ctx.author.guild_permissions.manage_messages:
-        await ctx.send(f"Wups, you do not have the required permissions!")
+        await ctx.reply("Wups! You do not have the required permissions...", mention_author=False)
     else:
         array = [arg for arg in args]
         name = array[0]
@@ -81,72 +80,76 @@ async def createcommand(ctx, *args):
             if empty_file:
                 writer.writeheader()
             if name in list(command_list.keys()):
-                await ctx.send(f'Wups, this command already exists...')
+                await ctx.reply('Wups, this command already exists...', mention_author=False)
             else:
                 writer.writerow({'command_name': name, 'command_output': output})
-                await ctx.send(f"The command " + name + " has been created!")
+                await ctx.reply(f"The command {name} has been created!", mention_author=False)
                 command_list[name] = output
                 
-'''@bot.command()
+@bot.command()
 async def deletecommand(ctx, *args):
+    global command_list
+  
     if len(args) != 1:
-        await ctx.send(f'Wups, not the correct number of arguments! You need one argument to delete a command.')
-        # This also rules out the edge case that some moron might just do "!w deletecommand" or try to delete 2 commands at once.
+        await ctx.reply('Wups! Incorrect number of arguments! You need one argument to delete a command...', mention_author=False)
     elif not ctx.author.guild_permissions.manage_messages:
-        await ctx.send(f'Wups, you do not have the required permissions!')
+        await ctx.reply('Wups, you do not have the required permissions...', mention_author=False)
     else:
-        # This is very buggy, I need to work with Pich on this.
         array = [arg for arg in args]
         name = array[0]
-        with open('commands.csv', 'r') as csvfile:
-            reader = csv.reader(csvfile)
-            if empty_file or not name in list(command_list.keys()):
-                await ctx.send(f'Wups, this command does not exist...')
-            else:
-                commands = pd.read_csv('commands.csv')
-                commands = commands[commands.command_name != name]
-                commands.to_csv('commands.csv', index=False)
-                await ctx.send(f'The command ' + name + ' has been deleted!')'''
-        # The main bug that I found was that even though it deletes the command from the CSV file, it
-        # does not remove it from command_list until WoM restarts.
-        # 
-        # Another bug I found was that sometimes running this will create a new command with 'command_name' as 
-        # the name and 'command_output' as the output. I sometimes had to delete my commands.csv to get it to 
-        # reset.
-        # 
-        # I'm writing this at like almost 3 am in the morning so I'm gonna go to bed. Hopefully Pich can find some
-        # other bugs if she looks at this branch and fix them if possible.
-
-@bot.command(pass_context=True)
+        if not name in list(command_list.keys()):
+            await ctx.reply('Wups! This command does not exist...', mention_author=False)
+        elif len(list(command_list.keys())) == 0:
+            await ctx.reply('Wups! There are no commands to delete in the first place...', mention_author=False)
+        else:
+            commands = pd.read_csv('commands.csv')
+            commands = commands[commands.command_name != name]
+            commands.to_csv('commands.csv', index=False)
+            with open('commands.csv', mode='r') as csv_file:
+                csv_reader = csv.DictReader(csv_file)
+                rows = list(csv_reader)
+                command_list = {}
+                for row in rows:
+                    dict = list(row.values())
+                    command_list[dict[0]]=dict[1]
+            await ctx.reply(f'The command {name} has been deleted!', mention_author=False)
+            
+@bot.command()
 async def customcommands(ctx):
     commandList = list(command_list.keys())
     commands = ', '.join(commandList) 
     if commands == '':
-        await ctx.send(f'Wups! There are no custom commands...')
+        await ctx.reply('Wups! There are no custom commands...', mention_author=False)
     else:
-        await ctx.send(commands)
+        await ctx.reply(commands, mention_author=False)
 
+@bot.command()
+async def snipe(ctx):
+    channel = ctx.channel
+    try:
+        embed = discord.Embed(color = discord.Color.purple(), description=snipe_message_content[channel.id])
+        embed.set_author(name=f"Last deleted message in #{channel.name}")
+        embed.set_footer(text=f"This message was sent by {snipe_message_author[channel.id]}")
+        embed.set_thumbnail(url=snipe_message_author[channel.id].avatar)
+        await ctx.reply(embed=embed, mention_author=False)
+    except KeyError:
+        await ctx.reply(f"Wups! There are no recently deleted messages in <#{channel.id}>...", mention_author=False)
 
-@bot.command(pass_context=True)
+@bot.command()
 async def help(ctx):
-    embed = discord.Embed(
-        color = discord.Color.purple())
-
+    embed = discord.Embed(color = discord.Color.purple())
     embed.set_author(name='Commands available')
 
-    embed.add_field(name='!w ping', value='Returns my respond time in milliseconds', inline=False)
+    embed.add_field(name='!w ping', value='Returns my respond time in milliseconds.', inline=False)
+    embed.add_field(name='!w say', value='Type something after the command for me to repeat it.', inline=False)
+    embed.add_field(name='!w createcommand', value='Create your own commands that make me send custom text or links. [Admin Only]', inline=False)
+    embed.add_field(name='!w deletecommand', value='Delete commands that have already been created. [Admin Only]', inline=False)
+    embed.add_field(name='!w customcommands', value="Displays a list of the server's custom commands.", inline=False)
+    embed.add_field(name='!w snipe', value='Snipes the last deleted message in that channel. Keep in mind, you only have 60 seconds to snipe the deleted message!', inline=False)
+    
+    await ctx.reply(embed=embed, mention_author=False)
 
-    embed.add_field(name='!w say', value='Type something after the command for me to repeat it', inline=False)
-    
-    embed.add_field(name='!w createcommand', value='Create your own commands that make me send custom text or links [Admin Only]', inline=False)
-    
-    # This is just there because we have the basis for this. Just so that we don't have to do this later.
-    # embed.add_field(name='!w deletecommand', value='Delete commands that have already been created [Admin Only]', inline=False)
-    
-    embed.add_field(name='!w customcommands', value="Displays a list of the server's custom commands", inline=False)
-    
-    await ctx.send(embed=embed)
-
+# bot events start here
 @bot.event
 async def on_message(message):
     if message.content[0:3] == "!w " and message.content.split()[1] in list(command_list.keys()):
@@ -154,6 +157,15 @@ async def on_message(message):
     else:   
         if message.content.lower() == "me":
             await message.channel.send('<:WoM:836128658828558336>')
+        if message.content.lower() == "which":
+            guild = discord.utils.get(bot.guilds)
+            members = []
+            for member in guild.members:
+                if member.bot == False:
+                    members.append(member.name.lower())
+            memberNum = random.randint(0, len(members) - 1)
+            await message.channel.send(members[memberNum])
+
         if "yoshi" in message.content.lower().split(" "):
             await message.add_reaction('<:full:1028536660918550568>')
         if "3ds" in message.content.lower().split(" "):
@@ -168,7 +180,19 @@ async def on_message(message):
 @bot.event
 async def on_command_error(ctx, error):
     if not ctx.message.content.split()[1] in list(command_list.keys()):
-        await ctx.send(f'Wups, try "!w help" ({error})')
+        await ctx.reply(f'Wups! try "!w help"... ({error})', mention_author=False)
+
+@bot.event
+async def on_message_delete(message):
+    global snipe_message_content
+    global snipe_message_author
+
+    snipe_message_author[message.channel.id] = message.author
+    snipe_message_content[message.channel.id] = message.content
+    await asyncio.sleep(60)
+    del snipe_message_author[message.channel.id]
+    del snipe_message_content[message.channel.id]
     
+# set up to start the bot
 keep_alive()
 bot.run(TOKEN)
