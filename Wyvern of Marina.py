@@ -144,7 +144,7 @@ async def choose(ctx, *args):
         for arg in args:
             options.append(arg)
         choose = random.randint(0, len(options) - 1)
-        await ctx.send(f"{ctx.message.author.name}, I choose {options[choose]}!")
+        await ctx.reply(f"I choose **{options[choose]}**!", mention_author=False)
 
 @bot.command()
 async def help(ctx):
