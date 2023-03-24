@@ -144,7 +144,7 @@ async def choose(ctx, *args):
         for arg in args:
             options.append(arg)
         choose = random.randint(0, len(options) - 1)
-        await ctx.reply(f"I choose **{options[choose]}**!", mention_author=False)
+        await ctx.reply(f"I choose {options[choose]}!", mention_author=False)
 
 @bot.command()
 async def help(ctx):
@@ -204,6 +204,12 @@ async def on_message_delete(message):
     await asyncio.sleep(60)
     del snipe_message_author[message.channel.id]
     del snipe_message_content[message.channel.id]
+
+@bot.event
+async def on_member_join(member):
+    channel = member.guild.system_channel
+    if not member.bot:
+        await channel.send(f"Welcome, {member.mention}, to **The Marina**! This is your one-way ticket to Hell. There's no going back from here...\nFor a grasp of the rules, however, we do ask that you check <#822341695411847249>.\n*Remember to take breaks, nya?*")
     
 # set up to start the bot
 keep_alive()
