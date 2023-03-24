@@ -130,10 +130,21 @@ async def snipe(ctx):
         embed = discord.Embed(color = discord.Color.purple(), description=snipe_message_content[channel.id])
         embed.set_author(name=f"Last deleted message in #{channel.name}")
         embed.set_footer(text=f"This message was sent by {snipe_message_author[channel.id]}")
-        embed.set_thumbnail(url=snipe_message_author[channel.id].avatar)
+        embed.set_thumbnail(url=snipe_message_author[channel.id].avatar.url)
         await ctx.reply(embed=embed, mention_author=False)
     except KeyError:
         await ctx.reply(f"Wups! There are no recently deleted messages in <#{channel.id}>...", mention_author=False)
+
+@bot.command()
+async def choose(ctx, *args):
+    if (len(args) < 2):
+        await ctx.send("Wups! You need 2 arguments for me to choose from...")
+    else:
+        options = []
+        for arg in args:
+            options.append(arg)
+        choose = random.randint(0, len(options) - 1)
+        await ctx.send(f"{ctx.message.author.name}, I choose {options[choose]}!")
 
 @bot.command()
 async def help(ctx):
@@ -145,7 +156,8 @@ async def help(ctx):
     embed.add_field(name='!w createcommand', value='Create your own commands that make me send custom text or links. [Admin Only]', inline=False)
     embed.add_field(name='!w deletecommand', value='Delete commands that have already been created. [Admin Only]', inline=False)
     embed.add_field(name='!w customcommands', value="Displays a list of the server's custom commands.", inline=False)
-    embed.add_field(name='!w snipe', value='Snipes the last deleted message in that channel. Keep in mind, you only have 60 seconds to snipe the deleted message!', inline=False)
+    embed.add_field(name='!w snipe', value='Snipes the last deleted message in that channel. Keep in mind, you only have 60 seconds to snipe the deleted message!')
+    embed.add_field(name='!w choose', value='Chooses a random option from all the options that you give me.', inline=False)
     
     await ctx.reply(embed=embed, mention_author=False)
 
