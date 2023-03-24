@@ -138,7 +138,7 @@ async def snipe(ctx):
 @bot.command()
 async def choose(ctx, *args):
     if (len(args) < 2):
-        await ctx.send("Wups! You need 2 arguments for me to choose from...")
+        await ctx.send("Wups! You need at least 2 arguments for me to choose from...")
     else:
         options = []
         for arg in args:
