@@ -8,6 +8,7 @@ from keep_alive import keep_alive
 import random
 import pandas as pd
 import asyncio
+import time
 
 # instantiation starts here
 load_dotenv()
@@ -22,6 +23,18 @@ command_list={}
 empty_file=False
 snipe_message_content = {}
 snipe_message_author = {}
+snipe_message_id = {}
+snipe_message_attachment = {}
+cooldown_amount = 5.0
+last_executed = time.time()
+cooldown_trigger_count = 0;
+
+def assert_cooldown():
+    global last_executed
+    if last_executed + cooldown_amount < time.time():
+        last_executed = time.time()
+        return False
+    return True
 
 if not os.path.exists('commands.csv'):
     with open('commands.csv', 'w') as creating_new_csv_file: 
@@ -44,7 +57,7 @@ async def on_ready():
     guild = discord.utils.get(bot.guilds)
     botname = '{0.user.name}'.format(bot)
     members = '\n - '.join(member.name for member in guild.members if not member.bot)
-    print(f'{botname} is connected to the following guild:\n{guild.name} (ID: {guild.id})\nMembers:\n - {members}')
+    print(f'{botname} is connected to the following guild:\n{guild.name} (ID: {guild.id})\nGuild Members:\n - {members}')
 
 # bot commands start here
 @bot.command()
@@ -127,8 +140,15 @@ async def customcommands(ctx):
 async def snipe(ctx):
     channel = ctx.channel
     try:
+        if len(snipe_message_attachment) != 0:
+            if 'video' in snipe_message_attachment[channel.id].content_type:
+                video = snipe_message_attachment[channel.id]
+                snipe_message_content[channel.id] += f"\n[Attached Video]({video.url})"
         embed = discord.Embed(color = discord.Color.purple(), description=snipe_message_content[channel.id])
         embed.set_author(name=f"Last deleted message in #{channel.name}")
+        if len(snipe_message_attachment) != 0:
+            if 'image' in snipe_message_attachment[channel.id].content_type:
+                embed.set_image(url=snipe_message_attachment[channel.id].url)
         embed.set_footer(text=f"This message was sent by {snipe_message_author[channel.id]}")
         embed.set_thumbnail(url=snipe_message_author[channel.id].avatar.url)
         await ctx.reply(embed=embed, mention_author=False)
@@ -138,7 +158,7 @@ async def snipe(ctx):
 @bot.command()
 async def choose(ctx, *args):
     if (len(args) < 2):
-        await ctx.send("Wups! You need at least 2 arguments for me to choose from...")
+        await ctx.reply("Wups! You need at least 2 arguments for me to choose from...", mention_author=False)
     else:
         options = []
         for arg in args:
@@ -147,17 +167,36 @@ async def choose(ctx, *args):
         await ctx.reply(f"I choose {options[choose]}!", mention_author=False)
 
 @bot.command()
+async def roulette(ctx):
+    member = ctx.message.author
+    guild = ctx.guild;
+    if not member.guild_permissions.administrator:
+        gunshot = random.randint(1, 6)
+        if gunshot == 1:
+            await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
+            for role in guild.roles:
+                if role.name == "Muted":
+                    await member.add_roles(role)
+                    await asyncio.sleep(3600)
+                    await member.remove_roles(role)
+        else:
+            await ctx.reply("🚬🔫 Looks like you\'re safe, for now...", mention_author=False)
+    else:
+        await ctx.reply("Looks like you\'re safe, you filthy admin...", mention_author=False)
+
+@bot.command()
 async def help(ctx):
     embed = discord.Embed(color = discord.Color.purple())
     embed.set_author(name='Commands available')
 
     embed.add_field(name='!w ping', value='Returns my respond time in milliseconds.', inline=False)
     embed.add_field(name='!w say', value='Type something after the command for me to repeat it.', inline=False)
-    embed.add_field(name='!w createcommand', value='Create your own commands that make me send custom text or links. [Admin Only]', inline=False)
-    embed.add_field(name='!w deletecommand', value='Delete commands that have already been created. [Admin Only]', inline=False)
+    embed.add_field(name='!w createcommand (name) (output)', value='Create your own commands that make me send custom text or links. [Admin Only]', inline=False)
+    embed.add_field(name='!w deletecommand (name)', value='Delete commands that have already been created. [Admin Only]', inline=False)
     embed.add_field(name='!w customcommands', value="Displays a list of the server's custom commands.", inline=False)
-    embed.add_field(name='!w snipe', value='Snipes the last deleted message in that channel. Keep in mind, you only have 60 seconds to snipe the deleted message!')
+    embed.add_field(name='!w snipe', value='Snipes the last deleted message in that channel. Only the first media attachment will be sniped from the message. Keep in mind, you only have 60 seconds to snipe the deleted message!')
     embed.add_field(name='!w choose', value='Chooses a random option from all the options that you give me.', inline=False)
+    embed.add_field(name='!w roulette', value='Try your luck... 😈', inline=False)
     
     await ctx.reply(embed=embed, mention_author=False)
 
@@ -170,12 +209,22 @@ async def on_message(message):
         if message.content.lower() == "me":
             await message.channel.send('<:WoM:836128658828558336>')
         if message.content.lower() == "which":
+            if message.author.id == bot.user.id:
+                return
+            if assert_cooldown():
+                global cooldown_trigger_count
+                cooldown_trigger_count += 1;
+                if cooldown_trigger_count == 3:
+                    await message.channel.send("Wups! Slow down there, bub! Command on cooldown...")
+                    cooldown_trigger_count = 0
+                return
             guild = discord.utils.get(bot.guilds)
             members = []
             for member in guild.members:
                 if member.bot == False:
                     members.append(member.name.lower())
             memberNum = random.randint(0, len(members) - 1)
+            cooldown_trigger_count = 0
             await message.channel.send(members[memberNum])
 
         if "yoshi" in message.content.lower().split(" "):
@@ -198,18 +247,30 @@ async def on_command_error(ctx, error):
 async def on_message_delete(message):
     global snipe_message_content
     global snipe_message_author
+    global snipe_message_id
+    global snipe_message_attachment
+    channel = message.channel.id
 
-    snipe_message_author[message.channel.id] = message.author
-    snipe_message_content[message.channel.id] = message.content
+    snipe_message_author[channel] = message.author
+    snipe_message_content[channel] = message.content
+    if message.attachments:
+        attachment = message.attachments[0]
+        snipe_message_attachment[channel] = attachment
+    snipe_message_id[channel] = message.id
+  
     await asyncio.sleep(60)
-    del snipe_message_author[message.channel.id]
-    del snipe_message_content[message.channel.id]
+    if message.id == snipe_message_id[channel]:
+        del snipe_message_author[channel]
+        del snipe_message_content[channel]
+        if len(snipe_message_attachment) != 0:
+            del snipe_message_attachment[channel]
+        del snipe_message_id[channel]
 
 @bot.event
 async def on_member_join(member):
     channel = member.guild.system_channel
     if not member.bot:
-        await channel.send(f"Welcome, {member.mention}, to **The Marina**! This is your one-way ticket to Hell. There's no going back from here...\nFor a grasp of the rules, however, we do ask that you check <#822341695411847249>.\n*Remember to take breaks, nya?*")
+        await channel.send(f"Welcome, {member.mention}, to **The Marina**! This is your one-way ticket to Hell. There\'s no going back from here...\nFor a grasp of the rules, however (yes, we have those), we do ask that you check <#822341695411847249>.\n*Remember to take breaks, nya?*")
     
 # set up to start the bot
 keep_alive()
