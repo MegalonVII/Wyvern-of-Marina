@@ -191,11 +191,11 @@ async def help(ctx):
 
     embed.add_field(name='!w ping', value='Returns my respond time in milliseconds.', inline=False)
     embed.add_field(name='!w say', value='Type something after the command for me to repeat it.', inline=False)
-    embed.add_field(name='!w createcommand (name) (output)', value='Create your own commands that make me send custom text or links. [Admin Only]', inline=False)
-    embed.add_field(name='!w deletecommand (name)', value='Delete commands that have already been created. [Admin Only]', inline=False)
+    embed.add_field(name='!w createcommand (name) (output)', value='Create your own commands that make me send custom text or links. **[Admin Only]**', inline=False)
+    embed.add_field(name='!w deletecommand (name)', value='Delete commands that have already been created. **[Admin Only]**', inline=False)
     embed.add_field(name='!w customcommands', value="Displays a list of the server's custom commands.", inline=False)
     embed.add_field(name='!w snipe', value='Snipes the last deleted message in that channel. Only the first media attachment will be sniped from the message. Keep in mind, you only have 60 seconds to snipe the deleted message!')
-    embed.add_field(name='!w choose', value='Chooses a random option from all the options that you give me.', inline=False)
+    embed.add_field(name='!w choose (any number of options, separated by a space)', value='Chooses a random option from all the options that you give me.', inline=False)
     embed.add_field(name='!w roulette', value='Try your luck... 😈', inline=False)
     
     await ctx.reply(embed=embed, mention_author=False)
