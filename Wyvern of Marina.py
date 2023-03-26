@@ -183,11 +183,13 @@ async def roulette(ctx, member: discord.Member = None):
             else:
                 await ctx.reply("🚬🔫 Looks like you\'re safe, for now...", mention_author=False)
         else:
-            await ctx.reply("Looks like you\'re safe, you filthy admin...", mention_author=False)
+            await ctx.reply("❌🔫 Looks like you\'re safe, you filthy admin...", mention_author=False)
 
     else: # if an admin wants to roulette a member they specify
         if not ctx.message.author.guild_permissions.administrator:
             await ctx.reply("❌🔫 Wups! A lowlife like you can\'t possibly fire the gun...", mention_author=False)
+        elif member == ctx.message.author:
+            await ctx.reply("❌🔫 Wups! Admins are valued. Don\'t roulette an admin like yourself...", mention_author=False)
         else:
             guild = ctx.guild;
             if not member.guild_permissions.administrator:
@@ -202,7 +204,7 @@ async def roulette(ctx, member: discord.Member = None):
                 else:
                     await ctx.reply("🚬🔫 Looks like they\'re safe, for now...", mention_author=False)
             else:
-                await ctx.reply("Looks like they\'re safe, that filthy admin...", mention_author=False)
+                await ctx.reply("❌🔫 Looks like they\'re safe, that filthy admin...", mention_author=False)
 
 @bot.command()
 async def help(ctx):
