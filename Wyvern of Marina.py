@@ -167,22 +167,42 @@ async def choose(ctx, *args):
         await ctx.reply(f"I choose {options[choose]}!", mention_author=False)
 
 @bot.command()
-async def roulette(ctx):
-    member = ctx.message.author
-    guild = ctx.guild;
-    if not member.guild_permissions.administrator:
-        gunshot = random.randint(1, 6)
-        if gunshot == 1:
-            await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
-            for role in guild.roles:
-                if role.name == "Muted":
-                    await member.add_roles(role)
-                    await asyncio.sleep(3600)
-                    await member.remove_roles(role)
+async def roulette(ctx, member: discord.Member = None):
+    if member == None: # if a member wants to roulette themselves
+        member = ctx.message.author
+        guild = ctx.guild;
+        if not member.guild_permissions.administrator:
+            gunshot = random.randint(1, 6)
+            if gunshot == 1:
+                await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
+                for role in guild.roles:
+                    if role.name == "Muted":
+                        await member.add_roles(role)
+                        await asyncio.sleep(3600)
+                        await member.remove_roles(role)
+            else:
+                await ctx.reply("🚬🔫 Looks like you\'re safe, for now...", mention_author=False)
         else:
-            await ctx.reply("🚬🔫 Looks like you\'re safe, for now...", mention_author=False)
-    else:
-        await ctx.reply("Looks like you\'re safe, you filthy admin...", mention_author=False)
+            await ctx.reply("Looks like you\'re safe, you filthy admin...", mention_author=False)
+
+    else: # if an admin wants to roulette a member they specify
+        if not ctx.message.author.guild_permissions.administrator:
+            await ctx.reply("❌🔫 Wups! A lowlife like you can\'t possibly fire the gun...", mention_author=False)
+        else:
+            guild = ctx.guild;
+            if not member.guild_permissions.administrator:
+                gunshot = random.randint(1, 6)
+                if gunshot == 1:
+                    await ctx.reply("🔥🔫 This user died! (muted for 1 hour)", mention_author=False)
+                    for role in guild.roles:
+                        if role.name == "Muted":
+                            await member.add_roles(role)
+                            await asyncio.sleep(3600)
+                            await member.remove_roles(role)
+                else:
+                    await ctx.reply("🚬🔫 Looks like they\'re safe, for now...", mention_author=False)
+            else:
+                await ctx.reply("Looks like they\'re safe, that filthy admin...", mention_author=False)
 
 @bot.command()
 async def help(ctx):
@@ -196,7 +216,7 @@ async def help(ctx):
     embed.add_field(name='!w customcommands', value="Displays a list of the server's custom commands.", inline=False)
     embed.add_field(name='!w snipe', value='Snipes the last deleted message in that channel. Only the first media attachment will be sniped from the message. Keep in mind, you only have 60 seconds to snipe the deleted message!')
     embed.add_field(name='!w choose (any number of options, separated by a space)', value='Chooses a random option from all the options that you give me.', inline=False)
-    embed.add_field(name='!w roulette', value='Try your luck... 😈', inline=False)
+    embed.add_field(name='!w roulette (**[Admin Only]** member)', value='Try your luck... 😈', inline=False)
     
     await ctx.reply(embed=embed, mention_author=False)
 
