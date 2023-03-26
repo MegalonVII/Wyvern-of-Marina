@@ -18,16 +18,17 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix = '!w ', intents = intents)
 
-say = print
+say=print
 command_list={}
 empty_file=False
-snipe_message_content = {}
-snipe_message_author = {}
-snipe_message_id = {}
-snipe_message_attachment = {}
-cooldown_amount = 5.0
-last_executed = time.time()
-cooldown_trigger_count = 0;
+snipe_message_content={}
+snipe_message_author={}
+snipe_message_id={}
+snipe_message_attachment={}
+cooldown_amount=5.0
+last_executed=time.time()
+cooldown_trigger_count=0;
+rouletted_members={}
 
 def assert_cooldown():
     global last_executed
@@ -168,18 +169,24 @@ async def choose(ctx, *args):
 
 @bot.command()
 async def roulette(ctx, member: discord.Member = None):
+    global rouletted_members
+    muted_role = discord.utils.get(ctx.guild.roles, name="Muted")
+    
     if member == None: # if a member wants to roulette themselves
         member = ctx.message.author
-        guild = ctx.guild;
         if not member.guild_permissions.administrator:
             gunshot = random.randint(1, 6)
             if gunshot == 1:
+                user_roles = member.roles[1:]
+                await member.remove_roles(*user_roles)
+                await member.add_roles(muted_role)
+                rouletted_members[member.id] = user_roles
                 await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
-                for role in guild.roles:
-                    if role.name == "Muted":
-                        await member.add_roles(role)
-                        await asyncio.sleep(3600)
-                        await member.remove_roles(role)
+                await asyncio.sleep(3600)
+                if member.id in rouletted_members:
+                    await member.add_roles(*rouletted_members[member.id])
+                    del rouletted_members[member.id]
+                await member.remove_roles(muted_role)
             else:
                 await ctx.reply("🚬🔫 Looks like you\'re safe, for now...", mention_author=False)
         else:
@@ -191,16 +198,19 @@ async def roulette(ctx, member: discord.Member = None):
         elif member == ctx.message.author:
             await ctx.reply("❌🔫 Wups! Admins are valued. Don\'t roulette an admin like yourself...", mention_author=False)
         else:
-            guild = ctx.guild;
             if not member.guild_permissions.administrator:
                 gunshot = random.randint(1, 6)
                 if gunshot == 1:
+                    user_roles = member.roles[1:]
+                    await member.remove_roles(*user_roles)
+                    await member.add_roles(muted_role)
+                    rouletted_members[member.id] = user_roles
                     await ctx.reply("🔥🔫 This user died! (muted for 1 hour)", mention_author=False)
-                    for role in guild.roles:
-                        if role.name == "Muted":
-                            await member.add_roles(role)
-                            await asyncio.sleep(3600)
-                            await member.remove_roles(role)
+                    await asyncio.sleep(3600)
+                    if member.id in rouletted_members:
+                        await member.add_roles(*rouletted_members[member.id])
+                        del rouletted_members[member.id]
+                    await member.remove_roles(muted_role)
                 else:
                     await ctx.reply("🚬🔫 Looks like they\'re safe, for now...", mention_author=False)
             else:
@@ -240,7 +250,7 @@ async def on_message(message):
                     await message.channel.send("Wups! Slow down there, bub! Command on cooldown...")
                     cooldown_trigger_count = 0
                 return
-            guild = discord.utils.get(bot.guilds)
+            guild = message.guild
             members = []
             for member in guild.members:
                 if member.bot == False:
