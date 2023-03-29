@@ -303,6 +303,13 @@ async def on_member_join(member):
     channel = member.guild.system_channel
     if not member.bot:
         await channel.send(f"Welcome, {member.mention}, to **The Marina**! This is your one-way ticket to Hell. There\'s no going back from here...\nFor a grasp of the rules, however (yes, we have those), we do ask that you check <#822341695411847249>.\n*Remember to take breaks, nya?*")
+
+@bot.event
+async def on_member_update(before, after):
+    channel = before.guild.system_channel
+    if before.is_timed_out() == False:
+        if after.is_timed_out() == True:
+            await channel.send(f"That fucking bozo {after.mention} got timed out! Point and laugh at this user! <:you:1090563610603958322>")
     
 # set up to start the bot
 keep_alive()
