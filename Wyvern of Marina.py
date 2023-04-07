@@ -9,6 +9,7 @@ import random
 import pandas as pd
 import asyncio
 import time
+import datetime
 
 # instantiation starts here
 load_dotenv()
@@ -25,10 +26,9 @@ snipe_message_content={}
 snipe_message_author={}
 snipe_message_id={}
 snipe_message_attachment={}
-cooldown_amount=5.0
+cooldown_amount=10.0
 last_executed=time.time()
-cooldown_trigger_count=0;
-rouletted_members={}
+cooldown_trigger_count=0
 
 def assert_cooldown():
     global last_executed
@@ -55,10 +55,7 @@ bot.remove_command('help')
 
 @bot.event
 async def on_ready():
-    guild = discord.utils.get(bot.guilds)
-    botname = '{0.user.name}'.format(bot)
-    members = '\n - '.join(member.name for member in guild.members if not member.bot)
-    print(f'{botname} is connected to the following guild:\n{guild.name} (ID: {guild.id})\nGuild Members:\n - {members}')
+    print(f'Logged in as: {bot.user.name}\nID: {bot.user.id}')
 
 # bot commands start here
 @bot.command()
@@ -77,9 +74,9 @@ async def say(ctx, *args):
 @bot.command()
 async def createcommand(ctx, *args):
     if len(args) < 2:
-        await ctx.reply('Wups! Incorrect number of arguments! You need two arguments to create a new command...', mention_author = False)
+        return await ctx.reply('Wups! Incorrect number of arguments! You need two arguments to create a new command...', mention_author = False)
     elif not ctx.author.guild_permissions.manage_messages:
-        await ctx.reply("Wups! You do not have the required permissions...", mention_author=False)
+        return await ctx.reply("Wups! You do not have the required permissions...", mention_author=False)
     else:
         array = [arg for arg in args]
         name = array[0]
@@ -94,10 +91,10 @@ async def createcommand(ctx, *args):
             if empty_file:
                 writer.writeheader()
             if name in list(command_list.keys()):
-                await ctx.reply('Wups, this command already exists...', mention_author=False)
+                return await ctx.reply('Wups, this command already exists...', mention_author=False)
             else:
                 writer.writerow({'command_name': name, 'command_output': output})
-                await ctx.reply(f"The command {name} has been created!", mention_author=False)
+                return await ctx.reply(f"The command {name} has been created!", mention_author=False)
                 command_list[name] = output
                 
 @bot.command()
@@ -105,16 +102,16 @@ async def deletecommand(ctx, *args):
     global command_list
   
     if len(args) != 1:
-        await ctx.reply('Wups! Incorrect number of arguments! You need one argument to delete a command...', mention_author=False)
+        return await ctx.reply('Wups! Incorrect number of arguments! You need one argument to delete a command...', mention_author=False)
     elif not ctx.author.guild_permissions.manage_messages:
-        await ctx.reply('Wups, you do not have the required permissions...', mention_author=False)
+        return await ctx.reply('Wups, you do not have the required permissions...', mention_author=False)
     else:
         array = [arg for arg in args]
         name = array[0]
         if not name in list(command_list.keys()):
-            await ctx.reply('Wups! This command does not exist...', mention_author=False)
+            return await ctx.reply('Wups! This command does not exist...', mention_author=False)
         elif len(list(command_list.keys())) == 0:
-            await ctx.reply('Wups! There are no commands to delete in the first place...', mention_author=False)
+            return await ctx.reply('Wups! There are no commands to delete in the first place...', mention_author=False)
         else:
             commands = pd.read_csv('commands.csv')
             commands = commands[commands.command_name != name]
@@ -126,16 +123,16 @@ async def deletecommand(ctx, *args):
                 for row in rows:
                     dict = list(row.values())
                     command_list[dict[0]]=dict[1]
-            await ctx.reply(f'The command {name} has been deleted!', mention_author=False)
+            return await ctx.reply(f'The command {name} has been deleted!', mention_author=False)
             
 @bot.command()
 async def customcommands(ctx):
     commandList = list(command_list.keys())
     commands = ', '.join(commandList) 
     if commands == '':
-        await ctx.reply('Wups! There are no custom commands...', mention_author=False)
+        return await ctx.reply('Wups! There are no custom commands...', mention_author=False)
     else:
-        await ctx.reply(commands, mention_author=False)
+        return await ctx.reply(commands, mention_author=False)
 
 @bot.command()
 async def snipe(ctx):
@@ -145,81 +142,69 @@ async def snipe(ctx):
             if 'video' in snipe_message_attachment[channel.id].content_type:
                 video = snipe_message_attachment[channel.id]
                 snipe_message_content[channel.id] += f"\n[Attached Video]({video.url})"
-        embed = discord.Embed(color = discord.Color.purple(), description=snipe_message_content[channel.id])
-        embed.set_author(name=f"Last deleted message in #{channel.name}")
+        embed = discord.Embed(title=f"Last deleted message in #{channel.name}", color = discord.Color.purple(), description=snipe_message_content[channel.id])
         if len(snipe_message_attachment) != 0:
             if 'image' in snipe_message_attachment[channel.id].content_type:
                 embed.set_image(url=snipe_message_attachment[channel.id].url)
         embed.set_footer(text=f"This message was sent by {snipe_message_author[channel.id]}")
         embed.set_thumbnail(url=snipe_message_author[channel.id].avatar.url)
-        await ctx.reply(embed=embed, mention_author=False)
+        return await ctx.reply(embed=embed, mention_author=False)
     except KeyError:
-        await ctx.reply(f"Wups! There are no recently deleted messages in <#{channel.id}>...", mention_author=False)
+        return await ctx.reply(f"Wups! There are no recently deleted messages in <#{channel.id}>...", mention_author=False)
 
 @bot.command()
 async def choose(ctx, *args):
     if (len(args) < 2):
-        await ctx.reply("Wups! You need at least 2 arguments for me to choose from...", mention_author=False)
+        return await ctx.reply("Wups! You need at least 2 arguments for me to choose from...", mention_author=False)
     else:
         options = []
         for arg in args:
             options.append(arg)
         choose = random.randint(0, len(options) - 1)
-        await ctx.reply(f"I choose {options[choose]}!", mention_author=False)
+        return await ctx.reply(f"I choose {options[choose]}!", mention_author=False)
 
 @bot.command()
-async def roulette(ctx, member: discord.Member = None):
-    global rouletted_members
-    muted_role = discord.utils.get(ctx.guild.roles, name="Muted")
-    
+async def roulette(ctx, member:discord.Member=None):
     if member == None: # if a member wants to roulette themselves
         member = ctx.message.author
         if not member.guild_permissions.administrator:
-            gunshot = random.randint(1, 6)
+            gunshot = random.randint(1,6)
             if gunshot == 1:
-                user_roles = member.roles[1:]
-                await member.remove_roles(*user_roles)
-                await member.add_roles(muted_role)
-                rouletted_members[member.id] = user_roles
-                await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
-                await asyncio.sleep(3600)
-                if member.id in rouletted_members:
-                    await member.add_roles(*rouletted_members[member.id])
-                    del rouletted_members[member.id]
-                await member.remove_roles(muted_role)
+                await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=24))
+                return await ctx.reply("🔥🔫 You died! (muted for 24 hours)", mention_author=False)
             else:
-                await ctx.reply("🚬🔫 Looks like you\'re safe, for now...", mention_author=False)
+                return await ctx.reply("🚬🔫 Looks like you\'re safe, for now...", mention_author=False)
         else:
-            await ctx.reply("❌🔫 Looks like you\'re safe, you filthy admin...", mention_author=False)
+            return await ctx.reply("❌🔫 Looks like you\'re safe, you filthy admin...", mention_author=False)
 
     else: # if an admin wants to roulette a member they specify
         if not ctx.message.author.guild_permissions.administrator:
-            await ctx.reply("❌🔫 Wups! A lowlife like you can\'t possibly fire the gun...", mention_author=False)
+            return await ctx.reply("❌🔫 Wups! A lowlife like you can\'t possibly fire the gun...", mention_author=False)
         elif member == ctx.message.author:
-            await ctx.reply("❌🔫 Wups! Admins are valued. Don\'t roulette an admin like yourself...", mention_author=False)
+            return await ctx.reply("❌🔫 Wups! Admins are valued. Don\'t roulette an admin like yourself...", mention_author=False)
         else:
             if not member.guild_permissions.administrator:
-                gunshot = random.randint(1, 6)
+                gunshot = random.randint(1,6)
                 if gunshot == 1:
-                    user_roles = member.roles[1:]
-                    await member.remove_roles(*user_roles)
-                    await member.add_roles(muted_role)
-                    rouletted_members[member.id] = user_roles
-                    await ctx.reply("🔥🔫 This user died! (muted for 1 hour)", mention_author=False)
-                    await asyncio.sleep(3600)
-                    if member.id in rouletted_members:
-                        await member.add_roles(*rouletted_members[member.id])
-                        del rouletted_members[member.id]
-                    await member.remove_roles(muted_role)
+                    await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=24))
+                    return await ctx.reply("🔥🔫 This user died! (muted for 24 hours)", mention_author=False)
                 else:
-                    await ctx.reply("🚬🔫 Looks like they\'re safe, for now...", mention_author=False)
+                    return await ctx.reply("🚬🔫 Looks like they\'re safe, for now...", mention_author=False)
             else:
-                await ctx.reply("❌🔫 Looks like they\'re safe, that filthy admin...", mention_author=False)
+                return await ctx.reply("❌🔫 Looks like they\'re safe, that filthy admin...", mention_author=False)
+
+@bot.command()
+async def who(ctx):
+    message = ctx.message
+    author = message.author
+    content = message.content[3:]
+    members = [member for member in message.guild.members if not member.bot]
+    memberNum = random.randint(0, len(members) - 1)
+    return await ctx.reply(f"`{content}`? {members[memberNum]}", mention_author=False)
 
 @bot.command()
 async def help(ctx):
-    embed = discord.Embed(color = discord.Color.purple())
-    embed.set_author(name='Commands available')
+    embed = discord.Embed(title='Commands available', color = discord.Color.purple())
 
     embed.add_field(name='!w ping', value='Returns my respond time in milliseconds.', inline=False)
     embed.add_field(name='!w say', value='Type something after the command for me to repeat it.', inline=False)
@@ -228,9 +213,10 @@ async def help(ctx):
     embed.add_field(name='!w customcommands', value="Displays a list of the server's custom commands.", inline=False)
     embed.add_field(name='!w snipe', value='Snipes the last deleted message in that channel. Only the first media attachment will be sniped from the message. Keep in mind, you only have 60 seconds to snipe the deleted message!')
     embed.add_field(name='!w choose (any number of options, separated by a space)', value='Chooses a random option from all the options that you give me.', inline=False)
-    embed.add_field(name='!w roulette (**[Admin Only]** member)', value='Try your luck... 😈', inline=False)
+    embed.add_field(name='!w who (remainder of question)', value='I\'ll tell you the name of a random member who fits this description', inline=False)
+    embed.add_field(name='!w roulette ([**Admin Only**] pinged member)', value='Try your luck... 😈', inline=False)
     
-    await ctx.reply(embed=embed, mention_author=False)
+    return await ctx.reply(embed=embed, mention_author=False)
 
 # bot events start here
 @bot.event
@@ -251,10 +237,7 @@ async def on_message(message):
                     cooldown_trigger_count = 0
                 return
             guild = message.guild
-            members = []
-            for member in guild.members:
-                if member.bot == False:
-                    members.append(member.name.lower())
+            members = [member.name.lower() for member in guild.members if not member.bot]
             memberNum = random.randint(0, len(members) - 1)
             cooldown_trigger_count = 0
             await message.channel.send(members[memberNum])
@@ -273,7 +256,7 @@ async def on_message(message):
 @bot.event
 async def on_command_error(ctx, error):
     if not ctx.message.content.split()[1] in list(command_list.keys()):
-        await ctx.reply(f'Wups! try "!w help"... ({error})', mention_author=False)
+        return await ctx.reply(f'Wups! try "!w help"... ({error})', mention_author=False)
 
 @bot.event
 async def on_message_delete(message):
@@ -302,14 +285,14 @@ async def on_message_delete(message):
 async def on_member_join(member):
     channel = member.guild.system_channel
     if not member.bot:
-        await channel.send(f"Welcome, {member.mention}, to **The Marina**! This is your one-way ticket to Hell. There\'s no going back from here...\nFor a grasp of the rules, however (yes, we have those), we do ask that you check <#822341695411847249>.\n*Remember to take breaks, nya?*")
+        return await channel.send(f"Welcome, {member.mention}, to **The Marina**! This is your one-way ticket to Hell. There\'s no going back from here...\nFor a grasp of the rules, however (yes, we have those), we do ask that you check <#822341695411847249>.\n*Remember to take breaks, nya?*")
 
 @bot.event
 async def on_member_update(before, after):
     channel = before.guild.system_channel
     if before.is_timed_out() == False:
         if after.is_timed_out() == True:
-            await channel.send(f"That fucking bozo {after.mention} got timed out! Point and laugh at this user! <:you:1090563610603958322>")
+            return await channel.send(f"That fucking bozo {after.mention} got timed out! Point and laugh at this user! <:you:765067257008881715>")
     
 # set up to start the bot
 keep_alive()
