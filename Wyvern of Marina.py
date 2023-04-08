@@ -156,12 +156,9 @@ async def snipe(ctx):
 async def choose(ctx, *args):
     if (len(args) < 2):
         return await ctx.reply("Wups! You need at least 2 arguments for me to choose from...", mention_author=False)
-    else:
-        options = []
-        for arg in args:
-            options.append(arg)
-        choose = random.randint(0, len(options) - 1)
-        return await ctx.reply(f"I choose {options[choose]}!", mention_author=False)
+    options = [arg for arg in args]
+    choose = random.randint(0, len(options) - 1)
+    return await ctx.reply(f"I choose {options[choose]}!", mention_author=False)
 
 @bot.command()
 async def roulette(ctx, member:discord.Member=None):
@@ -170,7 +167,7 @@ async def roulette(ctx, member:discord.Member=None):
         if not member.guild_permissions.administrator:
             gunshot = random.randint(1,6)
             if gunshot == 1:
-                await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=24))
+                await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=24), reason='roulette')
                 return await ctx.reply("🔥🔫 You died! (muted for 24 hours)", mention_author=False)
             else:
                 return await ctx.reply("🚬🔫 Looks like you\'re safe, for now...", mention_author=False)
@@ -179,7 +176,14 @@ async def roulette(ctx, member:discord.Member=None):
 
     else: # if an admin wants to roulette a member they specify
         if not ctx.message.author.guild_permissions.administrator:
-            return await ctx.reply("❌🔫 Wups! A lowlife like you can\'t possibly fire the gun...", mention_author=False)
+            if member == ctx.message.author:
+                gunshot = random.randint(1,6)
+                if gunshot == 1:
+                    await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=24), reason='roulette')
+                    return await ctx.reply("🔥🔫 You died! (muted for 24 hours)", mention_author=False)
+                else:
+                    return await ctx.reply("🚬🔫 Looks like you\'re safe, for now...", mention_author=False)
+            return await ctx.reply("❌🔫 Wups! A lowlife like you can\'t possibly fire the gun at someone else...", mention_author=False)
         elif member == ctx.message.author:
             return await ctx.reply("❌🔫 Wups! Admins are valued. Don\'t roulette an admin like yourself...", mention_author=False)
         else:
@@ -192,30 +196,143 @@ async def roulette(ctx, member:discord.Member=None):
                     return await ctx.reply("🚬🔫 Looks like they\'re safe, for now...", mention_author=False)
             else:
                 return await ctx.reply("❌🔫 Looks like they\'re safe, that filthy admin...", mention_author=False)
-
+        
 @bot.command()
 async def who(ctx):
     message = ctx.message
-    author = message.author
     content = message.content[3:]
     members = [member for member in message.guild.members if not member.bot]
     memberNum = random.randint(0, len(members) - 1)
-    return await ctx.reply(f"`{content}`? {members[memberNum]}", mention_author=False)
+    return await ctx.reply(f"`{content}`? {members[memberNum].name}", mention_author=False)
 
 @bot.command()
-async def help(ctx):
-    embed = discord.Embed(title='Commands available', color = discord.Color.purple())
+async def kick(ctx, member:discord.Member):
+    author = ctx.message.author
+    admin = author.guild_permissions.administrator
+    channel = author.guild.system_channel
+  
+    if not admin:
+        return await ctx.reply("Wups! Only administrators are allowed to use this command...", mention_author=False)
+    if member.guild_permissions.administrator:
+        return await ctx.reply("Wups! Administrators can\'t be kicked...", mention_author=False)
+      
+    await member.kick()
+    await ctx.message.delete()
+    return await channel.send(f"{member.name} has been kicked! Hope you learn from your mistake... <:do_not:1077435360537223238>")
 
-    embed.add_field(name='!w ping', value='Returns my respond time in milliseconds.', inline=False)
-    embed.add_field(name='!w say', value='Type something after the command for me to repeat it.', inline=False)
-    embed.add_field(name='!w createcommand (name) (output)', value='Create your own commands that make me send custom text or links. **[Admin Only]**', inline=False)
-    embed.add_field(name='!w deletecommand (name)', value='Delete commands that have already been created. **[Admin Only]**', inline=False)
-    embed.add_field(name='!w customcommands', value="Displays a list of the server's custom commands.", inline=False)
-    embed.add_field(name='!w snipe', value='Snipes the last deleted message in that channel. Only the first media attachment will be sniped from the message. Keep in mind, you only have 60 seconds to snipe the deleted message!')
-    embed.add_field(name='!w choose (any number of options, separated by a space)', value='Chooses a random option from all the options that you give me.', inline=False)
-    embed.add_field(name='!w who (remainder of question)', value='I\'ll tell you the name of a random member who fits this description', inline=False)
-    embed.add_field(name='!w roulette ([**Admin Only**] pinged member)', value='Try your luck... 😈', inline=False)
+@bot.command()
+async def ban(ctx, member:discord.Member):
+    author = ctx.message.author
+    admin = author.guild_permissions.administrator
+    channel = author.guild.system_channel
+  
+    if not admin:
+        return await ctx.reply("Wups! Only administrators are allowed to use this command...", mention_author=False)
+    if member.guild_permissions.administrator:
+        return await ctx.reply("Wups! Administrators can\'t be banned...", mention_author=False)
+
+    await member.ban()
+    await ctx.message.delete()
+    return await channel.send(f"{member.name} has been banned! Rest in fucking piss, bozo. <:kysNOW:896223569288241175>")
+
+@bot.command()
+async def mute(ctx, member:discord.Member, timelimit):
+    valid = False
+    author = ctx.message.author
+    admin = author.guild_permissions.administrator
+    timelimit = timelimit.lower()
+    timeamount = timelimit[-1]
+    timepossibilities = ['s', 'm', 'h', 'd', 'w']
+    if timeamount in timepossibilities:
+        valid = True
+    current_time = discord.utils.utcnow()
+  
+    if not admin:
+        return await ctx.reply("Wups! Only administrators are allowed to use this command...", mention_author=False)
+    if member.guild_permissions.administrator:
+        return await ctx.reply("Wups! Administrators can\'t be muted...", mention_author=False)
+    if not valid:
+        return await ctx.reply("Wups! Invalid time amount...", mention_author=False)
+
+    if 's' in timelimit:
+        gettime = int(timelimit.strip('s'))
+        if gettime > 2419200:
+            return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
+        newtime = datetime.timedelta(seconds=gettime)
+    if 'm' in timelimit:
+        gettime = int(timelimit.strip('m'))
+        if gettime > 40320:
+              return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
+        newtime = datetime.timedelta(minutes=gettime)
+    if 'h' in timelimit:
+        gettime = int(timelimit.strip('h'))
+        if gettime > 672:
+              return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
+        newtime = datetime.timedelta(hours=gettime)
+    if 'd' in timelimit:
+        gettime = int(timelimit.strip('d'))
+        if gettime > 28:
+              return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
+        newtime = datetime.timedelta(days=gettime)
+    if 'w' in timelimit:
+        gettime = int(timelimit.strip('w'))
+        if gettime > 4:
+              return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
+        newtime = datetime.timedelta(weeks=gettime)
+
+    await member.edit(timed_out_until=current_time+newtime)
+    await ctx.message.delete()
+
+@bot.command()
+async def unmute(ctx, member:discord.Member):
+    author = ctx.message.author
+    admin = author.guild_permissions.administrator
+    channel = author.guild.system_channel
+
+    if not admin:
+        return await ctx.reply("Wups! Only administrators are allowed to use this command...", mention_author=False)
+    if member.guild_permissions.administrator:
+        return await ctx.reply("Wups! Administrators can\'t be muted in the first place...", mention_author=False)
+    if member.timed_out_until == None:
+        return await ctx.reply("Wups! User is not muted in the first place...", mention_author=False)
+
+    await member.edit(timed_out_until=None)
+    await ctx.message.delete()
+    return await channel.send(f'{member.mention} has been unmuted! We hope you grew and changed as a person or whatever LowTierGod said... <:tysNOW:898761644056916009>')
+
+@bot.command()
+async def help(ctx, page:int=0):
+    embed = discord.Embed(title='Commands available', color = discord.Color.purple())
+    pages = 3
+    if page < 0 or page > pages:
+        return await ctx.reply(f'Wups! Invalid page number...', mention_author=False)
+      
+    if page == 0:
+        embed.title='Need help?'
+        embed.add_field(name='!w help 1', value = 'All the fun commands for everyone to enjoy!', inline=False)
+        embed.add_field(name='!w help 2', value = 'All the administrative commands.', inline=False)
+        embed.add_field(name='!w help 3', value = 'All the miscellaneous commands.', inline=False)
+      
+    elif page == 1:
+        embed.add_field(name='!w say', value='Type something after the command for me to repeat it.', inline=False)
+        embed.add_field(name='!w customcommands', value="Displays a list of the server's custom commands.", inline=False)
+        embed.add_field(name='!w snipe', value='Snipes the last deleted message in that channel. Only the first media attachment will be sniped from the message. Keep in mind, you only have 60 seconds to snipe the deleted message!', inline=False)
+        embed.add_field(name='!w choose (any number of options, separated by a space)', value='Chooses a random option from all the options that you give me.', inline=False)
+        embed.add_field(name='!w who (remainder of question)', value='I\'ll tell you the name of a random member who fits this description.', inline=False)
+        embed.add_field(name='!w roulette (@yourself or [**Admin Only**] @member)', value='Try your luck... 😈', inline=False)
+      
+    elif page == 2:
+        embed.add_field(name='!w createcommand (name) (output)', value='Create your own commands that make me send custom text or links.', inline=False)
+        embed.add_field(name='!w deletecommand (name)', value='Delete commands that have already been created.', inline=False)
+        embed.add_field(name='!w kick (@member)', value='Kicks the mentioned member from the server.', inline=False)
+        embed.add_field(name='!w ban (@member)', value='Bans the mentioned member from the server.', inline=False)
+        embed.add_field(name='!w mute (@member) (time amount)(s, m, h, d, or w)', value='Mutes the mentioned member for the given time amount. \"s\" for seconds, \"m\" for minutes, \"h\" for hours, \"d\" for days, and \"w\" for weeks. No space in between the time amount and the letter!', inline=False)
+        embed.add_field(name='!w unmute (@member)', value='Unmutes the mentioned member.', inline=False)
+      
+    elif page == 3:
+        embed.add_field(name='!w ping', value='Returns my respond time in milliseconds.', inline=False)
     
+    embed.set_footer(text=f'Viewing page {page}/{pages}')
     return await ctx.reply(embed=embed, mention_author=False)
 
 # bot events start here
