@@ -17,7 +17,7 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
 intents = discord.Intents.all()
-bot = commands.Bot(command_prefix = '!w ', intents = intents)
+bot = commands.Bot(command_prefix = '!w ', intents=intents)
 
 say=print
 command_list={}
@@ -26,6 +26,9 @@ snipe_message_content={}
 snipe_message_author={}
 snipe_message_id={}
 snipe_message_attachment={}
+editsnipe_message_content={}
+editsnipe_message_author={}
+editsnipe_message_id={}
 cooldown_amount=10.0
 last_executed=time.time()
 cooldown_trigger_count=0
@@ -60,7 +63,7 @@ async def on_ready():
 # bot commands start here
 @bot.command()
 async def ping(ctx):
-    await ctx.send(f'Pong! {round (bot.latency * 1000)}ms ')
+    await ctx.send(f'Pong! {round (bot.latency * 1000)}ms')
     await ctx.message.delete()
 
 @bot.command()
@@ -142,7 +145,7 @@ async def snipe(ctx):
             if 'video' in snipe_message_attachment[channel.id].content_type:
                 video = snipe_message_attachment[channel.id]
                 snipe_message_content[channel.id] += f"\n[Attached Video]({video.url})"
-        embed = discord.Embed(title=f"Last deleted message in #{channel.name}", color = discord.Color.purple(), description=snipe_message_content[channel.id])
+        embed = discord.Embed(title=f"Last deleted message in <#{channel.name}>", color = discord.Color.purple(), description=snipe_message_content[channel.id])
         if len(snipe_message_attachment) != 0:
             if 'image' in snipe_message_attachment[channel.id].content_type:
                 embed.set_image(url=snipe_message_attachment[channel.id].url)
@@ -151,6 +154,17 @@ async def snipe(ctx):
         return await ctx.reply(embed=embed, mention_author=False)
     except KeyError:
         return await ctx.reply(f"Wups! There are no recently deleted messages in <#{channel.id}>...", mention_author=False)
+
+@bot.command()
+async def editsnipe(ctx):
+    channel = ctx.channel
+    try:
+        embed = discord.Embed(title=f"Last edited message in <#{channel.name}>", color = discord.Color.purple(), description=editsnipe_message_content[channel.id])
+        embed.set_footer(text=f"This message was sent by {editsnipe_message_author[channel.id]}")
+        embed.set_thumbnail(url=editsnipe_message_author[channel.id].avatar.url)
+        return await ctx.reply(embed=embed, mention_author=False)
+    except KeyError:
+        return await ctx.reply(f"Wups! There are no recently edited messages in <#{channel.id}>...", mention_author=False)
 
 @bot.command()
 async def choose(ctx, *args):
@@ -186,6 +200,8 @@ async def roulette(ctx, member:discord.Member=None):
             return await ctx.reply("❌🔫 Wups! A lowlife like you can\'t possibly fire the gun at someone else...", mention_author=False)
         elif member == ctx.message.author:
             return await ctx.reply("❌🔫 Wups! Admins are valued. Don\'t roulette an admin like yourself...", mention_author=False)
+        elif member.timed_out_until != None:
+            return await ctx.reply("❌🔫 Wups! Don\'t you think it\'d be overkill to shoot a dead body?", mention_author=False)
         else:
             if not member.guild_permissions.administrator:
                 gunshot = random.randint(1,6)
@@ -196,6 +212,26 @@ async def roulette(ctx, member:discord.Member=None):
                     return await ctx.reply("🚬🔫 Looks like they\'re safe, for now...", mention_author=False)
             else:
                 return await ctx.reply("❌🔫 Looks like they\'re safe, that filthy admin...", mention_author=False)
+      
+@bot.command()
+async def howgay(ctx, member:discord.Member=None):
+    if member == None:
+        member = ctx.message.author
+    percent = random.randint(0,100)
+    responses = ['You\'re not into that mentally ill crap.',
+                 'You\'re probably just going through a phase...',
+                 'It\'s ok to be gay, buddy. We\'ll support you... unless you make it your entire personality.',
+                 'You **LOVE** it up the rear end, don\'t you?']
+    if percent >= 0 and percent <= 25:
+        response = responses[0]
+    elif percent >= 26 and percent <= 50:
+        response = responses[1]
+    elif percent >= 51 and percent <= 75:
+        response = responses[2]
+    elif percent >= 76 and percent <= 100:
+        response = responses[3]
+
+    return await ctx.reply(f"{member.name} is {percent}% gay. {response}",mention_author=False)
         
 @bot.command()
 async def who(ctx):
@@ -224,7 +260,6 @@ async def kick(ctx, member:discord.Member):
 async def ban(ctx, member:discord.Member):
     author = ctx.message.author
     admin = author.guild_permissions.administrator
-    channel = author.guild.system_channel
   
     if not admin:
         return await ctx.reply("Wups! Only administrators are allowed to use this command...", mention_author=False)
@@ -232,8 +267,7 @@ async def ban(ctx, member:discord.Member):
         return await ctx.reply("Wups! Administrators can\'t be banned...", mention_author=False)
 
     await member.ban()
-    await ctx.message.delete()
-    return await channel.send(f"{member.name} has been banned! Rest in fucking piss, bozo. <:kysNOW:896223569288241175>")
+    return await ctx.message.delete()
 
 @bot.command()
 async def mute(ctx, member:discord.Member, timelimit):
@@ -281,13 +315,12 @@ async def mute(ctx, member:discord.Member, timelimit):
         newtime = datetime.timedelta(weeks=gettime)
 
     await member.edit(timed_out_until=current_time+newtime)
-    await ctx.message.delete()
+    return await ctx.message.delete()
 
 @bot.command()
 async def unmute(ctx, member:discord.Member):
     author = ctx.message.author
     admin = author.guild_permissions.administrator
-    channel = author.guild.system_channel
 
     if not admin:
         return await ctx.reply("Wups! Only administrators are allowed to use this command...", mention_author=False)
@@ -297,15 +330,14 @@ async def unmute(ctx, member:discord.Member):
         return await ctx.reply("Wups! User is not muted in the first place...", mention_author=False)
 
     await member.edit(timed_out_until=None)
-    await ctx.message.delete()
-    return await channel.send(f'{member.mention} has been unmuted! We hope you grew and changed as a person or whatever LowTierGod said... <:tysNOW:898761644056916009>')
+    return await ctx.message.delete()
 
 @bot.command()
 async def help(ctx, page:int=0):
     embed = discord.Embed(title='Commands available', color = discord.Color.purple())
     pages = 3
     if page < 0 or page > pages:
-        return await ctx.reply(f'Wups! Invalid page number...', mention_author=False)
+        return await ctx.reply('Wups! Invalid page number...', mention_author=False)
       
     if page == 0:
         embed.title='Need help?'
@@ -317,9 +349,11 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w say', value='Type something after the command for me to repeat it.', inline=False)
         embed.add_field(name='!w customcommands', value="Displays a list of the server's custom commands.", inline=False)
         embed.add_field(name='!w snipe', value='Snipes the last deleted message in that channel. Only the first media attachment will be sniped from the message. Keep in mind, you only have 60 seconds to snipe the deleted message!', inline=False)
+        embed.add_field(name='!w editsnipe', value='Acts just like !w snipe, only for messages that were edited instead of deleted.', inline=False)
         embed.add_field(name='!w choose (any number of options, separated by a space)', value='Chooses a random option from all the options that you give me.', inline=False)
         embed.add_field(name='!w who (remainder of question)', value='I\'ll tell you the name of a random member who fits this description.', inline=False)
-        embed.add_field(name='!w roulette (@yourself or [**Admin Only**] @member)', value='Try your luck... 😈', inline=False)
+        embed.add_field(name='!w howgay ([Optional] @member)', value='I\'ll tell you either how gay you are or how gay the user you mention is.', inline=False)
+        embed.add_field(name='!w roulette ([Admin Only] @member)', value='Try your luck... 😈', inline=False)
       
     elif page == 2:
         embed.add_field(name='!w createcommand (name) (output)', value='Create your own commands that make me send custom text or links.', inline=False)
@@ -330,7 +364,7 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w unmute (@member)', value='Unmutes the mentioned member.', inline=False)
       
     elif page == 3:
-        embed.add_field(name='!w ping', value='Returns my respond time in milliseconds.', inline=False)
+        embed.add_field(name='!w ping', value='Returns my response time in milliseconds.', inline=False)
     
     embed.set_footer(text=f'Viewing page {page}/{pages}')
     return await ctx.reply(embed=embed, mention_author=False)
@@ -377,6 +411,9 @@ async def on_command_error(ctx, error):
 
 @bot.event
 async def on_message_delete(message):
+    if message.author.bot:
+        return
+
     global snipe_message_content
     global snipe_message_author
     global snipe_message_id
@@ -399,6 +436,26 @@ async def on_message_delete(message):
         del snipe_message_id[channel]
 
 @bot.event
+async def on_message_edit(message_before, message_after):
+    if message_before.author.bot:
+        return
+  
+    global editsnipe_message_content
+    global editsnipe_message_author
+    global editsnipe_message_id
+    channel = message_after.channel.id
+
+    editsnipe_message_content[channel] = message_before.content
+    editsnipe_message_author[channel] = message_before.author
+    editsnipe_message_id[channel] = message_before.id
+
+    await asyncio.sleep(60)
+    if message_before.id == editsnipe_message_id[channel]:
+        del editsnipe_message_content[channel]
+        del editsnipe_message_author[channel]
+        del editsnipe_message_id[channel]
+
+@bot.event
 async def on_member_join(member):
     channel = member.guild.system_channel
     if not member.bot:
@@ -410,6 +467,11 @@ async def on_member_update(before, after):
     if before.is_timed_out() == False:
         if after.is_timed_out() == True:
             return await channel.send(f"That fucking bozo {after.mention} got timed out! Point and laugh at this user! <:you:765067257008881715>")
+
+@bot.event
+async def on_member_ban(guild, user):
+    channel = guild.system_channel
+    return await channel.send(f"{user.name} has been banned! Rest in fucking piss, bozo. <:kysNOW:896223569288241175>")
     
 # set up to start the bot
 keep_alive()
