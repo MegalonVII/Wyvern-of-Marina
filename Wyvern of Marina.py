@@ -97,8 +97,8 @@ async def createcommand(ctx, *args):
                 return await ctx.reply('Wups, this command already exists...', mention_author=False)
             else:
                 writer.writerow({'command_name': name, 'command_output': output})
-                return await ctx.reply(f"The command {name} has been created!", mention_author=False)
                 command_list[name] = output
+                return await ctx.reply(f"The command {name} has been created!", mention_author=False)
                 
 @bot.command()
 async def deletecommand(ctx, *args):
