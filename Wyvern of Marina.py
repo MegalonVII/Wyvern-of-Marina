@@ -181,8 +181,8 @@ async def roulette(ctx, member:discord.Member=None):
         if not member.guild_permissions.administrator:
             gunshot = random.randint(1,6)
             if gunshot == 1:
-                await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=24), reason='roulette')
-                return await ctx.reply("🔥🔫 You died! (muted for 24 hours)", mention_author=False)
+                await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
+                return await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
             else:
                 return await ctx.reply("🚬🔫 Looks like you\'re safe, for now...", mention_author=False)
         else:
@@ -193,8 +193,8 @@ async def roulette(ctx, member:discord.Member=None):
             if member == ctx.message.author:
                 gunshot = random.randint(1,6)
                 if gunshot == 1:
-                    await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=24), reason='roulette')
-                    return await ctx.reply("🔥🔫 You died! (muted for 24 hours)", mention_author=False)
+                    await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
+                    return await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
                 else:
                     return await ctx.reply("🚬🔫 Looks like you\'re safe, for now...", mention_author=False)
             return await ctx.reply("❌🔫 Wups! A lowlife like you can\'t possibly fire the gun at someone else...", mention_author=False)
@@ -206,8 +206,8 @@ async def roulette(ctx, member:discord.Member=None):
             if not member.guild_permissions.administrator:
                 gunshot = random.randint(1,6)
                 if gunshot == 1:
-                    await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=24))
-                    return await ctx.reply("🔥🔫 This user died! (muted for 24 hours)", mention_author=False)
+                    await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1))
+                    return await ctx.reply("🔥🔫 This user died! (muted for 1 hour)", mention_author=False)
                 else:
                     return await ctx.reply("🚬🔫 Looks like they\'re safe, for now...", mention_author=False)
             else:
