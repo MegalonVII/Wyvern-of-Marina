@@ -71,7 +71,7 @@ async def say(ctx, *args):
     response = ''
     for arg in args:
         response = response + ' ' + arg
-    await ctx.channel.send(response)
+    msg = await ctx.channel.send(response, allowed_mentions=discord.AllowedMentions(everyone=False, roles=False))
     await ctx.message.delete()
     
 @bot.command()
@@ -176,6 +176,9 @@ async def choose(ctx, *args):
 
 @bot.command()
 async def roulette(ctx, member:discord.Member=None):
+    if assert_cooldown():
+        return await ctx.reply("Wups! Slow down there, bub! Command on cooldown...", mention_author=False)
+  
     if member == None: # if a member wants to roulette themselves
         member = ctx.message.author
         if not member.guild_permissions.administrator:
@@ -215,6 +218,9 @@ async def roulette(ctx, member:discord.Member=None):
       
 @bot.command()
 async def howgay(ctx, member:discord.Member=None):
+    if assert_cooldown():
+        return await ctx.reply("Wups! Slow down there, bub! Command on cooldown...", mention_author=False)
+      
     if member == None:
         member = ctx.message.author
     percent = random.randint(0,100)
@@ -333,6 +339,19 @@ async def unmute(ctx, member:discord.Member):
     return await ctx.message.delete()
 
 @bot.command()
+async def whomuted(ctx):
+    members = [member for member in ctx.message.guild.members]
+    muted = []
+    for member in members:
+        if member.is_timed_out() == True:
+            muted.append(member.name)
+    mutedNames = ", ".join(muted)
+    if mutedNames == '':
+        return await ctx.reply("Wups! No one is muted currently...", mention_author=False)
+    else:
+        return await ctx.reply(mutedNames, mention_author=False)
+
+@bot.command()
 async def help(ctx, page:int=0):
     embed = discord.Embed(title='Commands available', color = discord.Color.purple())
     pages = 3
@@ -365,6 +384,7 @@ async def help(ctx, page:int=0):
       
     elif page == 3:
         embed.add_field(name='!w ping', value='Returns my response time in milliseconds.', inline=False)
+        embed.add_field(name='!w whomuted', value='Returns the name of every member who is muted.', inline=False)
     
     embed.set_footer(text=f'Viewing page {page}/{pages}')
     return await ctx.reply(embed=embed, mention_author=False)
@@ -372,26 +392,28 @@ async def help(ctx, page:int=0):
 # bot events start here
 @bot.event
 async def on_message(message):
+    if message.author.bot:
+        return
+      
+    #shinyOdds = random.randint(1,4096)
+  
     if message.content[0:3] == "!w " and message.content.split()[1] in list(command_list.keys()):
         await message.channel.send(command_list[message.content.split()[1]])
     else:   
         if message.content.lower() == "me":
             await message.channel.send('<:WoM:836128658828558336>')
         if message.content.lower() == "which":
-            if message.author.id == bot.user.id:
-                return
             if assert_cooldown():
-                global cooldown_trigger_count
-                cooldown_trigger_count += 1;
-                if cooldown_trigger_count == 3:
-                    await message.channel.send("Wups! Slow down there, bub! Command on cooldown...")
-                    cooldown_trigger_count = 0
-                return
+                return await message.channel.send("Wups! Slow down there, bub! Command on cooldown...")
             guild = message.guild
             members = [member.name.lower() for member in guild.members if not member.bot]
             memberNum = random.randint(0, len(members) - 1)
             cooldown_trigger_count = 0
             await message.channel.send(members[memberNum])
+        if "crank" in message.content.lower().split(" "):
+            if assert_cooldown():
+                return
+            await message.channel.send("hey")
 
         if "yoshi" in message.content.lower().split(" "):
             await message.add_reaction('<:full:1028536660918550568>')
@@ -401,8 +423,17 @@ async def on_message(message):
             await message.add_reaction('<:vers:804766992644702238>')
         if "verstie" in message.content.lower().split(" "):
             await message.add_reaction('🏳️‍⚧️')
-            
+
     await bot.process_commands(message)
+
+    '''if shinyOdds == 1:
+        dmChannel = message.author.dm_channel
+        if dmChannel is None:
+            dmChannel = await message.author.create_dm()
+        warningMsg = await dmChannel.send("You feel vibrations from deep below. You have 10 seconds to warn everyone...")
+        await asyncio.sleep(10)
+        await warningMsg.delete()
+        await message.guild.system_channel.send("hello") # this is for testing, i will make it crazier when i get the idea'''
 
 @bot.event
 async def on_command_error(ctx, error):
