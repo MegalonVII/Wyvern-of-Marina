@@ -396,22 +396,27 @@ async def avatar(ctx, member:discord.Member=None):
     return await ctx.reply(embed=e, mention_author=False)
 
 @bot.command()
-async def rps(ctx):
+async def rps(ctx, playerChoice: str=None):
     if assert_rps_cooldown():
         return await ctx.reply("Wups! Slow down there, bub! Command on cooldown...", mention_author=False)
+    elif playerChoice is None:
+        return await ctx.reply("Wups! You need to give me your choice...", mention_author=False)
+
+    playerChoice = playerChoice.lower()
+    choices = ['rock', 'paper', 'scissors']
+    if playerChoice not in choices:
+        return await ctx.reply("Wups! Invalid choice...", mention_author=False)
     else:
-        choices = ['rock', 'paper', 'scissors']
-        playerChoice = random.choice(choices)
         botChoice = random.choice(choices)
     
         if playerChoice == botChoice:
-            return await ctx.reply(f"You chose `{playerChoice}` and I chose `{botChoice}`.\nUgh! Boring! We tied...", mention_author=False)
+            return await ctx.reply(f"I chose `{botChoice}`.\nUgh! Boring! We tied...", mention_author=False)
         elif (playerChoice == choices[0] and botChoice == choices[1]) or \
             (playerChoice == choices[1] and botChoice == choices[2]) or \
             (playerChoice == choices[2] and botChoice == choices[0]):
-                return await ctx.reply(f"You chose `{playerChoice}` and I chose `{botChoice}`.\nHah! I win, sucker! Why'd you pick that one, stupid?", mention_author=False)
+                return await ctx.reply(f"I chose `{botChoice}`.\nHah! I win, sucker! Why'd you pick that one, stupid?", mention_author=False)
         else:
-            return await ctx.reply(f"You chose `{playerChoice}` and I chose `{botChoice}`.\nWell played there. You have bested me...", mention_author=False)
+            return await ctx.reply(f"I chose `{botChoice}`.\nWell played there. You have bested me...", mention_author=False)
 
 @bot.command()
 async def help(ctx, page:int=0):
@@ -434,7 +439,7 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w choose (any number of options, separated by a space)', value='Chooses a random option from all the options that you give me.', inline=False)
         embed.add_field(name='!w who (remainder of question)', value='I\'ll tell you the name of a random member who fits this description.', inline=False)
         embed.add_field(name='!w howgay ([Optional] @member)', value='I\'ll tell you either how gay you are or how gay the user you mention is.', inline=False)
-        embed.add_field(name='!w rps', value='Play a simple game of Rock-Paper-Scissors with me!', inline=False)
+        embed.add_field(name='!w rps (your choice)', value='Play a simple game of Rock-Paper-Scissors with me!', inline=False)
         embed.add_field(name='!w roulette ([Admin Only] @member)', value='Try your luck... 😈', inline=False)
       
     elif page == 2:
@@ -504,7 +509,7 @@ async def on_message(message):
         elif eventNum == 2:
             with open("shiny.png", "rb") as f:
                 file = discord.File(f)
-                await message.channel.send(content="A wild Wyvern of Marina appeared! ✨", file=file)
+                return await message.channel.send(content="A wild Wyvern of Marina appeared! ✨", file=file)
 
 @bot.event
 async def on_command_error(ctx, error):
