@@ -11,64 +11,44 @@ import time
 import datetime
 
 # bot instantiation
-TOKEN = os.getenv('DISCORD_TOKEN')
 bot = commands.Bot(command_prefix = '!w ', intents=discord.Intents.all())
 bot.remove_command('help')
 
 # all global bot variables here
-empty_file=False
-no_flairs=False
-command_list={}
-flair_list={}
+files=["commands", "flairs"]
+file_checks={file:False for file in files}
+lists={file:{} for file in files}
 snipe_data={"content":{}, "author":{}, "id":{}, "attachment":{}}
-editsnipe_data={"content":{}, "author":{}, "id":()}
+editsnipe_data={"content":{}, "author":{}, "id":{}}
 cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":10.0, "8ball":5.0}
 last_executed={key:time.time() for key in cooldowns}
 
-# defines how to create command list
-def create_command_list():
-    global empty_file
-    global command_list
-    if not os.path.exists('commands.csv'):
-        with open('commands.csv', 'w'): 
+# defines how to create each list
+def create_list(filename):
+    global file_checks
+    global lists
+    file_checks[filename]=False
+    if not os.path.exists(f'{filename}.csv'):
+        with open(f'{filename}.csv'):
             pass
-    with open('commands.csv', mode='r') as csv_file:
+    with open(f'{filename}.csv', mode='r') as csv_file:
         csv_reader = csv.DictReader(csv_file)
         rows = list(csv_reader)
         if len(rows)==0:
-            empty_file=True
+            file_checks[filename]=True
         else:
-            command_list = {}
+            lists[filename]={}
             for row in rows:
                 dict = list(row.values())
-                command_list[dict[0]]=dict[1]
-
-# defines how to create flair list
-def create_flair_list():
-    global no_flairs
-    global flair_list
-    no_flairs=False
-    if not os.path.exists('flairs.csv'):
-        with open('flairs.csv', 'w'):
-            pass
-    with open('flairs.csv', 'r') as flairs:
-        reader = csv.DictReader(flairs)
-        rows = list(reader)
-        if len(rows)==0:
-            no_flairs=True
-        else:
-            flair_list={}
-            for row in rows:
-                dict = list(row.values())
-                flair_list[dict[0]]=dict[1]
+                lists[filename][dict[0]]=dict[1]
 
 # defines the cooldown method
 def assert_cooldown(command):
     global last_executed
     if last_executed[command] + cooldowns[command] < time.time():
         last_executed[command] = time.time()
-        return False
-    return True
+        return 0
+    return round(last_executed[command] + cooldowns[command] - time.time())
 
 # bot commands start here
 @bot.command(name='ping')
@@ -85,48 +65,47 @@ async def say(ctx, *args):
         return await ctx.reply("Wups! You need something for me to say...", mention_author=False)
     
 @bot.command(name='createcommand', aliases=['cc'])
-async def createcommand(ctx, *args):
-    if len(args) < 2:
-        return await ctx.reply('Wups! Incorrect number of arguments! You need two arguments to create a new command...', mention_author = False)
-    elif not ctx.author.guild_permissions.manage_messages:
-        return await ctx.reply("Wups! You do not have the required permissions...", mention_author=False)
-    else:
-        array = [arg for arg in args]
-        name = array[0]
-        array.remove(array[0])
-        output = ' '.join(array)
+async def createcommand(ctx, name, *output):
+    try:
+        if len(output) < 1:
+            return await ctx.reply('Wups! You need to give me an output for your new command...', mention_author = False)
+        elif not ctx.author.guild_permissions.manage_messages:
+            return await ctx.reply("Wups! You do not have the required permissions...", mention_author=False)
+        elif name in list(lists["commands"].keys()):
+            return await ctx.reply('Wups, this command already exists...', mention_author=False)
+          
+        output = ' '.join(output).replace('"', '\"').replace("'", "\'")
         with open('commands.csv', 'a', newline='') as csvfile:
             fieldnames = ['command_name', 'command_output']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            if empty_file:
+            if file_checks["commands"]:
                 writer.writeheader()
-            if name in list(command_list.keys()):
-                return await ctx.reply('Wups, this command already exists...', mention_author=False)
-            else:
-                writer.writerow({'command_name': name, 'command_output': output})
-                command_list[name] = output
-                return await ctx.reply(f"The command {name} has been created!", mention_author=False)
+            writer.writerow({'command_name': name, 'command_output': output})
+        create_list("commands")
+        return await ctx.reply(f"The command {name} has been created!", mention_author=False)
+    except:
+        return await ctx.reply('Wups! I don\'t have a name for a command...', mention_author=False)
                 
 @bot.command(name='deletecommand', aliases=['dc'])
 async def deletecommand(ctx, name):
     if not ctx.author.guild_permissions.manage_messages:
         return await ctx.reply('Wups, you do not have the required permissions...', mention_author=False)
-    if not name in list(command_list.keys()):
+    if not name in list(lists["commands"].keys()):
         return await ctx.reply('Wups! This command does not exist...', mention_author=False)
-    if len(list(command_list.keys())) == 0:
+    if len(list(lists["commands"].keys())) == 0:
         return await ctx.reply('Wups! There are no commands to delete in the first place...', mention_author=False)
 
     commands = pd.read_csv('commands.csv')
     commands = commands[commands.command_name != name]
     commands.to_csv('commands.csv', index=False)
-    create_command_list()
+    create_list("commands")
     return await ctx.reply(f'The command {name} has been deleted!', mention_author=False)
         
             
 @bot.command(name='customcommands', aliases=['custc'])
 async def customcommands(ctx):
     try:
-        return await ctx.reply(', '.join(list(command_list.keys())), mention_author=False)
+        return await ctx.reply(', '.join(list(lists["commands"].keys())), mention_author=False)
     except:
         return await ctx.reply('Wups! There are no custom commands...', mention_author=False)
 
@@ -167,8 +146,8 @@ async def choose(ctx, *args):
 
 @bot.command(name='roulette')
 async def roulette(ctx, member:discord.Member=None):
-    if assert_cooldown("roulette"):
-        return await ctx.reply("Wups! Slow down there, bub! Command on cooldown...", mention_author=False)
+    if assert_cooldown("roulette") != 0:
+        return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('roulette')} seconds...", mention_author=False)
 
     member = member or ctx.author
     if member == ctx.author: # if a member wants to roulette themselves
@@ -186,11 +165,11 @@ async def roulette(ctx, member:discord.Member=None):
                     await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
                     return await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
                 return await ctx.reply("🚬🔫 Looks like you\'re safe, for now...", mention_author=False)
-            return await ctx.reply("❌🔫 Wups! A lowlife like you can\'t possibly fire the gun at someone else...", mention_author=False)
+            return await ctx.reply("❌🔫 A lowlife like you can\'t possibly fire the gun at someone else...", mention_author=False)
         elif member == ctx.author:
-            return await ctx.reply("❌🔫 Wups! Admins are valued. Don\'t roulette an admin like yourself...", mention_author=False)
+            return await ctx.reply("❌🔫 Admins are valued. Don\'t roulette an admin like yourself...", mention_author=False)
         elif member.is_timed_out() == True:
-            return await ctx.reply("❌🔫 Wups! Don\'t you think it\'d be overkill to shoot a dead body?", mention_author=False)
+            return await ctx.reply("❌🔫 Don\'t you think it\'d be overkill to shoot a dead body?", mention_author=False)
         else:
             if not member.guild_permissions.administrator:
                 if random.randint(1,6) == 1:
@@ -201,8 +180,8 @@ async def roulette(ctx, member:discord.Member=None):
       
 @bot.command(name='howgay')
 async def howgay(ctx, member:discord.Member=None):
-    if assert_cooldown("howgay"):
-        return await ctx.reply("Wups! Slow down there, bub! Command on cooldown...", mention_author=False)
+    if assert_cooldown("howgay") != 0:
+        return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('howgay')} seconds...", mention_author=False)
       
     member = member or ctx.author
     percent = random.randint(0,100)
@@ -223,33 +202,24 @@ async def howgay(ctx, member:discord.Member=None):
         
 @bot.command(name='who')
 async def who(ctx):
-    content = ctx.message.content[3:]
-    members = [member for member in ctx.message.guild.members if not member.bot]
-    return await ctx.reply(f"`{content}`? {random.choice(members)}", mention_author=False)
+    return await ctx.reply(f"`{ctx.message.content[3:]}`? {random.choice([member for member in ctx.message.guild.members if not member.bot])}", mention_author=False)
 
 @bot.command(name='kick')
-async def kick(ctx, member:discord.Member):
-    author = ctx.message.author
-    admin = author.guild_permissions.administrator
-    channel = author.guild.system_channel
-  
-    if not admin:
+async def kick(ctx, member:discord.Member):  
+    if not ctx.author.guild_permissions.administrator:
         return await ctx.reply("Wups! Only administrators are allowed to use this command...", mention_author=False)
-    if member.guild_permissions.administrator:
+    if member.guild_permissions.administrator and not member.bot:
         return await ctx.reply("Wups! Administrators can\'t be kicked...", mention_author=False)
       
     await member.kick()
     await ctx.message.delete()
-    return await channel.send(f"{member.name} has been kicked! Hope you learn from your mistake... <:do_not:1077435360537223238>")
+    return await ctx.guild.system_channel.send(f"{member.name} has been kicked! Hope you learn from your mistake... <:do_not:1077435360537223238>")
 
 @bot.command(name='ban')
 async def ban(ctx, member:discord.Member):
-    author = ctx.message.author
-    admin = author.guild_permissions.administrator
-  
-    if not admin:
+    if not ctx.author.guild_permissions.administrator:
         return await ctx.reply("Wups! Only administrators are allowed to use this command...", mention_author=False)
-    if member.guild_permissions.administrator:
+    if member.guild_permissions.administrator and not member.bot:
         return await ctx.reply("Wups! Administrators can\'t be banned...", mention_author=False)
 
     await member.ban()
@@ -258,16 +228,13 @@ async def ban(ctx, member:discord.Member):
 @bot.command(name='mute')
 async def mute(ctx, member:discord.Member, timelimit):
     valid = False
-    author = ctx.message.author
-    admin = author.guild_permissions.administrator
     timelimit = timelimit.lower()
-    timeamount = timelimit[-1]
     timepossibilities = ['s', 'm', 'h', 'd', 'w']
-    if timeamount in timepossibilities:
+    if timelimit[-1] in timepossibilities:
         valid = True
     current_time = discord.utils.utcnow()
   
-    if not admin:
+    if not ctx.author.guild_permissions.administrator:
         return await ctx.reply("Wups! Only administrators are allowed to use this command...", mention_author=False)
     if member.guild_permissions.administrator:
         return await ctx.reply("Wups! Administrators can\'t be muted...", mention_author=False)
@@ -317,30 +284,26 @@ async def unmute(ctx, member:discord.Member):
 
 @bot.command(name='whomuted')
 async def whomuted(ctx):
-    muted = [member.name for member in ctx.guild.members if member.is_timed_out()]
-    mutedNames = ", ".join(muted)
-    if mutedNames == '':
+    try:
+        return await ctx.reply(", ".join([member.name for member in ctx.guild.members if member.is_timed_out()]), mention_author=False)
+    except:
         return await ctx.reply("Wups! No one is muted currently...", mention_author=False)
-    else:
-        return await ctx.reply(mutedNames, mention_author=False)
 
 @bot.command(name='avatar', aliases=['avi'])
 async def avatar(ctx, member:discord.Member=None):
     member = member or ctx.author
     e = discord.Embed(title=f"{member.name}'s Avatar", color=discord.Color.purple())
     if member.display_avatar.url != member.avatar.url:
-        e.set_image(url=member.display_avatar.url)
         e.set_thumbnail(url=member.avatar.url)
-    else:
-        e.set_image(url=member.display_avatar.url)
+    e.set_image(url=member.display_avatar.url)
     e.set_footer(text=f"Requested by: {ctx.message.author.name}")
     return await ctx.reply(embed=e, mention_author=False)
 
 @bot.command(name='rps')
 async def rps(ctx, playerChoice: str=None):
-    if assert_cooldown("rps"):
-        return await ctx.reply("Wups! Slow down there, bub! Command on cooldown...", mention_author=False)
-    elif playerChoice is None:
+    if assert_cooldown("rps") != 0:
+        return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('rps')} seconds...", mention_author=False)
+    if playerChoice is None:
         return await ctx.reply("Wups! You need to give me your choice...", mention_author=False)
 
     playerChoice = playerChoice.lower()
@@ -361,8 +324,8 @@ async def rps(ctx, playerChoice: str=None):
 
 @bot.command(name='8ball')
 async def eightball(ctx):
-    if assert_cooldown("8ball"):
-        return await ctx.reply("Wups! Slow down there, bub! Command on cooldown...", mention_author=False)
+    if assert_cooldown("8ball") != 0 :
+        return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('8ball')} seconds...", mention_author=False)
     if len(ctx.message.content) < 9:
         return await ctx.reply("Wups! You need to give me a question to respond to...", mention_author=False)
   
@@ -373,19 +336,19 @@ async def eightball(ctx):
 async def addflair(ctx, role: discord.Role):
     if not ctx.author.guild_permissions.administrator:
         return await ctx.reply('Wups! Only administrators can use this command...', mention_author=False)
+    if role.position >= ctx.me.top_role.position:
+        return await ctx.reply("Wups! I can't add this role as a flair because it is above my highest role...", mention_author=False)
+    if role.name in lists["flairs"].keys():
+        return await ctx.reply(f"Wups! '{role.name}' is already a flair...", mention_author=False)
 
     try:
         with open('flairs.csv', 'a', newline='') as csvfile:
             fieldnames = ['role_name', 'role_id']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            if role.position >= ctx.me.top_role.position:
-                return await ctx.reply("Wups! I can't add this role as a flair because it is above my highest role...", mention_author=False)
-            if role.name in flair_list.keys():
-                return await ctx.reply(f"Wups! '{role.name}' is already a flair...", mention_author=False) 
-            if no_flairs:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames) 
+            if file_checks["flairs"]:
                 writer.writeheader()
             writer.writerow({'role_name': role.name, 'role_id': role.id})
-        create_flair_list()
+        create_list("flairs")
         await ctx.message.add_reaction('✅')
         await asyncio.sleep(3)
         return await ctx.message.delete()
@@ -396,15 +359,15 @@ async def addflair(ctx, role: discord.Role):
 async def deleteflair(ctx, role:discord.Role):
     if not ctx.author.guild_permissions.administrator:
         return await ctx.reply('Wups, you do not have the required permissions...', mention_author=False)
-    if not role.name in list(flair_list.keys()):
+    if not role.name in list(lists["flairs"].keys()):
         return await ctx.reply('Wups! This role is not a flair...', mention_author=False)
-    if len(list(flair_list.keys())) == 0:
+    if len(list(lists["flairs"].keys())) == 0:
         return await ctx.reply('Wups! There are no flairs to delete in the first place...', mention_author=False)
 
     flairs = pd.read_csv('flairs.csv')
     flairs = flairs[flairs.role_name != role.name]
     flairs.to_csv('flairs.csv', index=False)
-    create_flair_list()
+    create_list("flairs")
     await ctx.message.add_reaction('✅')
     await asyncio.sleep(3)
     return await ctx.message.delete()
@@ -412,20 +375,19 @@ async def deleteflair(ctx, role:discord.Role):
 @bot.command(name='listflairs', aliases=['lf'])
 async def listflairs(ctx):
     try:
-        await ctx.send('\n'.join(list(flair_list.keys())))
+        await ctx.send('\n'.join(list(lists["flairs"].keys())))
         return await ctx.message.delete()
     except:
         return await ctx.reply('Wups! There are no self-assignable roles in this server...', mention_author=False)
 
 @bot.command(name='im')
 async def im(ctx, *roleName:str):
-    # finds the role from the name given
-    roleName = ' '.join(roleName)
+    roleName = ' '.join(roleName) # finds the role from the name given
     role = discord.utils.get(ctx.guild.roles, name=roleName)
     
     if role is None:
         return await ctx.reply("Wups! Invalid role...", mention_author=False)
-    if role.name not in list(flair_list.keys()): # checks if it is a flair
+    if role.name not in list(lists["flairs"].keys()): # checks if it is a flair
         return await ctx.reply("Wups! That is not a self-assignable role...", mention_author=False)
       
     hasRole = False # checks if the user already has the role
@@ -493,8 +455,8 @@ async def help(ctx, page:int=0):
 # bot events start here
 @bot.event
 async def on_ready():
-    create_command_list()
-    create_flair_list()
+    for file in files:
+        create_list(file)
     print(f'Logged in as: {bot.user.name}\nID: {bot.user.id}')
 
 @bot.event
@@ -502,14 +464,14 @@ async def on_message(message):
     if message.author.bot:
         return
   
-    if message.content[0:3] == "!w " and message.content.split()[1] in list(command_list.keys()):
-        await message.channel.send(command_list[message.content.split()[1]])
+    if message.content[0:3] == "!w " and message.content.split()[1] in list(lists["commands"].keys()):
+        await message.channel.send(lists["commands"][message.content.split()[1]])
     else:   
         if message.content.lower() == "me":
             await message.channel.send('<:WoM:836128658828558336>')
         if message.content.lower() == "which":
-            if assert_cooldown("which"):
-                await message.reply("Wups! Slow down there, bub! Command on cooldown...", mention_author=False)
+            if assert_cooldown("which") != 0:
+                await message.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('which')} seconds...", mention_author=False)
             else:
                 members = [member.name.lower() for member in message.guild.members if not member.bot]
                 await message.channel.send(random.choice(members))
@@ -540,7 +502,7 @@ async def on_message(message):
 
 @bot.event
 async def on_command_error(ctx, error):
-    if not ctx.message.content.split()[1] in list(command_list.keys()):
+    if not ctx.message.content.split()[1] in list(lists["commands"].keys()):
         return await ctx.reply(f'Wups! try "!w help"... ({error})', mention_author=False)
 
 @bot.event
@@ -587,4 +549,5 @@ async def on_member_ban(guild, user):
     
 # set up to start the bot
 keep_alive()
+TOKEN = os.getenv('DISCORD_TOKEN')
 bot.run(TOKEN)
