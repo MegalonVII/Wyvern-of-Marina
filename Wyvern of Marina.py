@@ -50,6 +50,27 @@ def assert_cooldown(command):
         return 0
     return round(last_executed[command] + cooldowns[command] - time.time())
 
+# function to check if message is starred
+async def check_starboard(message):
+    if message.reactions:
+        for reaction in message.reactions:
+            if str(reaction.emoji)=='<:spuperman:670852114070634527>' and reaction.count>=4:
+                return True
+    return False
+
+# defines how to create embed of starred message
+async def add_to_starboard(message):
+    channel = discord.utils.get(message.guild.channels, name='hot-seat')
+    if not message.channel.id == channel.id:
+        embed = discord.Embed(color=discord.Color.purple(), description=f'[Original Message]({message.jump_url})')
+        embed.set_author(name=message.author.name, icon_url=message.author.avatar.url)
+        embed.set_thumbnail(url=message.author.avatar.url)
+        embed.add_field(name='Channel', value=f'<#{message.channel.id}>', inline=True)
+        embed.add_field(name='Message', value=f'{message.content}', inline=True)
+        if message.attachments:
+            embed.set_image(url=message.attachments[0].url)
+        return await channel.send(embed=embed)
+
 # bot commands start here
 @bot.command(name='ping')
 async def ping(ctx):
@@ -546,6 +567,15 @@ async def on_member_update(before, after):
 @bot.event
 async def on_member_ban(guild, user):
     return await guild.system_channel.send(f"{user.name} has been banned! Rest in fucking piss, bozo. <:kysNOW:896223569288241175>")
+
+@bot.event
+async def on_reaction_add(reaction, user):
+    if reaction.message.author == user:
+        return
+      
+    if str(reaction.emoji) == '<:spuperman:670852114070634527>':
+        if await check_starboard(reaction.message):
+            return await add_to_starboard(reaction.message)
     
 # set up to start the bot
 keep_alive()
