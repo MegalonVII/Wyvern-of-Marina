@@ -22,6 +22,7 @@ snipe_data={"content":{}, "author":{}, "id":{}, "attachment":{}}
 editsnipe_data={"content":{}, "author":{}, "id":{}}
 cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":10.0, "8ball":5.0}
 last_executed={key:time.time() for key in cooldowns}
+starboard_emoji = '<:spuperman:670852114070634527>'
 
 # defines how to create each list
 def create_list(filename):
@@ -50,26 +51,38 @@ def assert_cooldown(command):
         return 0
     return round(last_executed[command] + cooldowns[command] - time.time())
 
-# function to check if message is starred
+# starboard functions
 async def check_starboard(message):
     if message.reactions:
         for reaction in message.reactions:
-            if str(reaction.emoji)=='<:spuperman:670852114070634527>' and reaction.count>=4:
+            if str(reaction.emoji)==starboard_emoji and reaction.count>=4:
                 return True
     return False
 
-# defines how to create embed of starred message
 async def add_to_starboard(message):
     channel = discord.utils.get(message.guild.channels, name='hot-seat')
-    if not message.channel.id == channel.id:
-        embed = discord.Embed(color=discord.Color.purple(), description=f'[Original Message]({message.jump_url})')
-        embed.set_author(name=message.author.name, icon_url=message.author.avatar.url)
-        embed.set_thumbnail(url=message.author.avatar.url)
-        embed.add_field(name='Channel', value=f'<#{message.channel.id}>', inline=True)
-        embed.add_field(name='Message', value=f'{message.content}', inline=True)
-        if message.attachments:
-            embed.set_image(url=message.attachments[0].url)
-        return await channel.send(embed=embed)
+    embed = discord.Embed(color=discord.Color.purple(), description=f'[Original Message]({message.jump_url})') # creates embed
+    embed.set_author(name=message.author.name, icon_url=message.author.avatar.url)
+    embed.set_thumbnail(url=message.author.avatar.url)
+    embed.add_field(name='Channel', value=f'<#{message.channel.id}>', inline=True)
+    embed.add_field(name='Message', value=f'{str(message.content)}', inline=True)
+    if message.attachments:
+        embed.set_image(url=message.attachments[0].url)
+    for reaction in message.reactions:
+        if str(reaction.emoji) == starboard_emoji:
+            star_reaction = reaction
+            embed.set_footer(text=f'{star_reaction.count} ⭐')
+            break
+    async for star_msg in channel.history(): # edits embed in case of added reaction
+        if star_msg.embeds and star_msg.embeds[0].description == f'[Original Message]({message.jump_url})':
+            embed = star_msg.embeds[0]
+            for reaction in message.reactions:
+                if str(reaction.emoji) == starboard_emoji:
+                    star_reaction = reaction
+                    embed.set_footer(text=f'{star_reaction.count} ⭐')
+                    break
+            return await star_msg.edit(embed=embed)
+    return await channel.send(embed=embed)
 
 # bot commands start here
 @bot.command(name='ping')
@@ -81,7 +94,7 @@ async def ping(ctx):
 async def say(ctx, *args):
     try:
         await ctx.message.delete()
-        return await ctx.channel.send(" ".join(args), allowed_mentions=discord.AllowedMentions(everyone=False, roles=False))
+        return await ctx.channel.send(" ".join(args).replace('"', '\"').replace("'", "\'"), allowed_mentions=discord.AllowedMentions(everyone=False, roles=False))
     except:
         return await ctx.reply("Wups! You need something for me to say...", mention_author=False)
     
@@ -136,8 +149,7 @@ async def snipe(ctx):
     try:
         data = snipe_data[channel.id]
         if data["attachment"] and 'video' in data["attachment"].content_type:
-            url = data["attachment"].url
-            data["content"] += f"\n[Attached Video]({url})"
+            data["content"] += f"\n[Attached Video]({data['attachment'].url})"
         embed = discord.Embed(title=f"Last deleted message in #{channel.name}", color = discord.Color.purple(), description=data["content"])
         if data["attachment"] and 'image' in data["attachment"].content_type:
             embed.set_image(url=data["attachment"].url)
@@ -171,7 +183,9 @@ async def roulette(ctx, member:discord.Member=None):
         return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('roulette')} seconds...", mention_author=False)
 
     member = member or ctx.author
-    if member == ctx.author: # if a member wants to roulette themselves
+    if member.id == 347503746835546134:
+        return await ctx.reply("❌🔫 I can\'t kill God...", mention_author=False)
+    elif member == ctx.author: # if a member wants to roulette themselves
         if not member.guild_permissions.administrator:
             if random.randint(1,6) == 1:
                 await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
@@ -206,10 +220,7 @@ async def howgay(ctx, member:discord.Member=None):
       
     member = member or ctx.author
     percent = random.randint(0,100)
-    responses = ['You\'re not into that mentally ill crap.',
-                 'You\'re probably just going through a phase...',
-                 'It\'s ok to be gay, buddy. We\'ll support you... unless you make it your entire personality.',
-                 'You **LOVE** it up the rear end, don\'t you?']
+    responses = ['You\'re not into that mentally ill crap.', 'You\'re probably just going through a phase...', 'It\'s ok to be gay, buddy. We\'ll support you... unless you make it your entire personality.', 'You **LOVE** it up the rear end, don\'t you?']
     if percent >= 0 and percent <= 25:
         response = responses[0]
     elif percent >= 26 and percent <= 50:
@@ -223,7 +234,7 @@ async def howgay(ctx, member:discord.Member=None):
         
 @bot.command(name='who')
 async def who(ctx):
-    return await ctx.reply(f"`{ctx.message.content[3:]}`? {random.choice([member for member in ctx.message.guild.members if not member.bot])}", mention_author=False)
+    return await ctx.reply(f"`{ctx.message.content[3:]}`? {random.choice([member.name for member in ctx.message.guild.members if not member.bot])}", mention_author=False)
 
 @bot.command(name='kick')
 async def kick(ctx, member:discord.Member):  
@@ -355,14 +366,14 @@ async def eightball(ctx):
 
 @bot.command(name='addflair', aliases=['addf'])
 async def addflair(ctx, role: discord.Role):
-    if not ctx.author.guild_permissions.administrator:
-        return await ctx.reply('Wups! Only administrators can use this command...', mention_author=False)
-    if role.position >= ctx.me.top_role.position:
-        return await ctx.reply("Wups! I can't add this role as a flair because it is above my highest role...", mention_author=False)
-    if role.name in lists["flairs"].keys():
-        return await ctx.reply(f"Wups! '{role.name}' is already a flair...", mention_author=False)
-
     try:
+        if not ctx.author.guild_permissions.administrator:
+            return await ctx.reply('Wups! Only administrators can use this command...', mention_author=False)
+        if role.position >= ctx.me.top_role.position:
+            return await ctx.reply("Wups! I can't add this role as a flair because it is above my highest role...", mention_author=False)
+        if role.name in lists["flairs"].keys():
+            return await ctx.reply(f"Wups! '{role.name}' is already a flair...", mention_author=False)
+
         with open('flairs.csv', 'a', newline='') as csvfile:
             fieldnames = ['role_name', 'role_id']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames) 
@@ -373,7 +384,7 @@ async def addflair(ctx, role: discord.Role):
         await ctx.message.add_reaction('✅')
         await asyncio.sleep(3)
         return await ctx.message.delete()
-    except ValueError:
+    except:
         return await ctx.reply('Wups! Something went wrong. Try doing `!w addflair @Role`...', mention_author=False)
 
 @bot.command(name='deleteflair', aliases=['delf'])
@@ -557,12 +568,10 @@ async def on_member_join(member):
 
 @bot.event
 async def on_member_update(before, after):
-    if after.is_timed_out() == True:
-        if before.is_timed_out() == False:
-            return await before.guild.system_channel.send(f"That fucking bozo {after.mention} got timed out! Point and laugh at this user! <:you:765067257008881715>")
-    elif after.is_timed_out() == False:
-        if before.is_timed_out() == True:
-            return await before.guild.system_channel.send(f"Welcome back, {after.mention}. Don\'t do that again, idiot. <:do_not:1077435360537223238>")
+    if after.is_timed_out() == True and before.is_timed_out() == False:
+        return await before.guild.system_channel.send(f"That fucking bozo {after.mention} got timed out! Point and laugh at this user! <:you:765067257008881715>")
+    if after.is_timed_out() == False and before.is_timed_out() == True:
+        return await before.guild.system_channel.send(f"Welcome back, {after.mention}. Don\'t do that again, idiot. <:do_not:1077435360537223238>")
 
 @bot.event
 async def on_member_ban(guild, user):
@@ -572,8 +581,7 @@ async def on_member_ban(guild, user):
 async def on_reaction_add(reaction, user):
     if reaction.message.author == user:
         return
-      
-    if str(reaction.emoji) == '<:spuperman:670852114070634527>':
+    if str(reaction.emoji) == starboard_emoji:
         if await check_starboard(reaction.message):
             return await add_to_starboard(reaction.message)
     
