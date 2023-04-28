@@ -250,10 +250,7 @@ async def roulette(ctx, member:discord.Member=None):
         return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('roulette')} seconds...", mention_author=False)
       
     member = member or ctx.author
-    if member.id == 347503746835546134: # megalon immunity (lol)
-        return await ctx.reply("❌🔫 I can\'t kill God...", mention_author=False)
-      
-    elif member == ctx.author: # if a member wants to roulette themselves
+    if member == ctx.author: # if a member wants to roulette themselves
         if not member.guild_permissions.administrator:
             if random.randint(1,6) == 1:
                 await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
