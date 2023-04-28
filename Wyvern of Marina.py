@@ -323,12 +323,12 @@ async def deletecommand(ctx, name):
 
 @bot.command(name='clear')
 async def clear(ctx, num:int=None):
-    if assert_cooldown("clear") != 0 :
-        return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('clear')} seconds...", mention_author=False)
     if not ctx.author.guild_permissions.manage_messages:
         return await ctx.reply('Wups! You do not have the required permissions...', mention_author=False)
     if num is None or num < 1 or num > 10:
         return await ctx.reply('Wups! Please enter a number between 1 and 10...', mention_author=False)
+    if assert_cooldown("clear") != 0 :
+        return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('clear')} seconds...", mention_author=False)
 
     await ctx.message.add_reaction('✅')
     return await ctx.message.channel.purge(limit=num+1)
@@ -534,9 +534,6 @@ async def on_message(message):
                 await message.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('which')} seconds...", mention_author=False)
             else:
                 await message.channel.send(random.choice([member.name.lower() for member in message.guild.members if not member.bot]))
-        if "kys" in message.content.lower().split(" "):
-            await message.delete()
-            await message.channel.send(f"{message.author.mention} said: {message.content.lower().replace('kys', 'rys')}")
 
         # trigger reactions
         if "yoshi" in message.content.lower().split(" "): # pichoco reaction
@@ -549,6 +546,8 @@ async def on_message(message):
             await message.add_reaction('🐍')
         if "crank" in message.content.lower().split(" "): # vaniler/blues reaction
             await message.add_reaction('🔧')
+        if "kys" in message.content.lower().split(" "): # ltg (?) reaction
+            await message.add_reaction('⚡')
           
     await bot.process_commands(message)
   
