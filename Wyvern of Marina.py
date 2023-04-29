@@ -498,7 +498,7 @@ async def whomuted(ctx):
         return await ctx.reply("Wups! No one is muted currently...", mention_author=False)
 
 @bot.command(name='avatar', aliases=['avi'])
-async def avatar(ctx, member:discord.Member):
+async def avatar(ctx, member:discord.Member=None):
     member = member or ctx.author
     e = discord.Embed(title=f"{member.name}'s Avatar", color=discord.Color.purple())
     if member.display_avatar.url != member.avatar.url:
@@ -533,18 +533,11 @@ async def on_message(message):
                 await message.channel.send(random.choice([member.name.lower() for member in message.guild.members if not member.bot]))
 
         # trigger reactions
-        if "yoshi" in message.content.lower().split(" "): # pichoco reaction
-            await message.add_reaction('<:full:1028536660918550568>')
-        if "3ds" in message.content.lower().split(" "): # megalon reaction
-            await message.add_reaction('<:megalon:1078914494132129802>')
-        if "yuri" in message.content.lower().split(" "): # versal reaction
-            await message.add_reaction('<:vers:804766992644702238>')
-        if "yaoi" in message.content.lower().split(" "): # snake reaction
-            await message.add_reaction('🐍')
-        if "crank" in message.content.lower().split(" "): # vaniler/blues reaction
-            await message.add_reaction('🔧')
-        if "kys" in message.content.lower().split(" "): # ltg (?) reaction
-            await message.add_reaction('⚡')
+        triggers = ['yoshi','3ds','yuri','yaoi','crank','kys']
+        trigger_emojis = ['<:full:1028536660918550568>','<:megalon:1078914494132129802>','<:vers:804766992644702238>','🐍','🔧','⚡']
+        for trigger, emoji in zip(triggers, trigger_emojis):
+            if trigger in message.content.lower().split(" "):
+                await message.add_reaction(emoji)
           
     await bot.process_commands(message)
   
@@ -566,16 +559,17 @@ async def on_command_error(ctx, error):
 
 @bot.event
 async def on_message_delete(message):
-    global snipe_data
-    channel = message.channel.id
-    if message.author.bot:
-        return
+    if not message.content[0:7] == '!w say ' or message.author.bot:
+        global snipe_data
+        channel = message.channel.id
+        if message.author.bot:
+            return
+          
+        snipe_data[channel]={"content":str(message.content), "author":message.author, "id":message.id, "attachment":message.attachments[0] if message.attachments else None}
       
-    snipe_data[channel]={"content":str(message.content), "author":message.author, "id":message.id, "attachment":message.attachments[0] if message.attachments else None}
-  
-    await asyncio.sleep(60)
-    if message.id == snipe_data[channel]["id"]:
-        del snipe_data[channel]
+        await asyncio.sleep(60)
+        if message.id == snipe_data[channel]["id"]:
+            del snipe_data[channel]
 
 @bot.event
 async def on_message_edit(message_before, message_after):
@@ -609,7 +603,7 @@ async def on_member_ban(guild, user):
 
 @bot.event
 async def on_reaction_add(reaction, user):
-    if reaction.message.author == user:
+    if reaction.message.author == user or user.bot:
         return
       
     if str(reaction.emoji) == starboard_emoji:
