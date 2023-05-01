@@ -9,6 +9,9 @@ import pandas as pd
 import asyncio
 import time
 import datetime
+import requests
+import json
+import urllib.parse
 
 # bot instantiation
 TOKEN=os.getenv('DISCORD_TOKEN')
@@ -17,7 +20,7 @@ file_checks={file:False for file in files}
 lists={file:{} for file in files}
 snipe_data={"content":{}, "author":{}, "id":{}, "attachment":{}}
 editsnipe_data={"content":{}, "author":{}, "id":{}}
-cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0, "clear":5.0}
+cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":30.0}
 last_executed={key:time.time() for key in cooldowns}
 starboard_emoji='<:spuperman:670852114070634527>'
 bot=commands.Bot(command_prefix = '!w ', intents=discord.Intents.all())
@@ -109,6 +112,7 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w rps (your choice)', value='Play a simple game of Rock-Paper-Scissors with me!', inline=False)
         embed.add_field(name='!w 8ball (question)', value='I\'ll give you the magic response to your yes or no question!', inline=False)
         embed.add_field(name='!w roulette ([Admin Only] @member)', value='Try your luck... 😈', inline=False)
+        embed.add_field(name='!w trivia', value='I\'ll give you a multiple-choice trivia question on either general knowledge or some form of entertainment media. You have 15 seconds to answer with the correct letter option!', inline=False)
       
     elif page == 2:
         embed.title='Administrative Commands'
@@ -139,7 +143,7 @@ async def help(ctx, page:int=0):
 
 
 # fun commands start here
-# say, custc, snipe, esnipe, choose, who, howgay, rps, 8ball, roulette
+# say, custc, snipe, esnipe, choose, who, howgay, rps, 8ball, roulette, trivia
 @bot.command(name='say')
 async def say(ctx, *args):
     try:
@@ -277,6 +281,44 @@ async def roulette(ctx, member:discord.Member=None):
                     return await ctx.reply("🔥🔫 This user died! (muted for 1 hour)", mention_author=False)
                 return await ctx.reply("🚬🔫 Looks like they\'re safe, for now...", mention_author=False)
             return await ctx.reply("❌🔫 Looks like they\'re safe, that filthy admin...", mention_author=False)
+
+@bot.command(name='trivia')
+async def trivia(ctx):
+    if assert_cooldown('trivia') != 0:
+        return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('trivia')} seconds...", mention_author=False)
+    
+    async with ctx.typing():
+        response = requests.get(f"https://opentdb.com/api.php?amount=1&category={random.choice([9, 11, 12, 14, 15, 31])}&type=multiple&encode=url3986")
+        data = json.loads(response.text)
+        correct_answer = urllib.parse.unquote(data['results'][0]['correct_answer'])
+        incorrect_answers = data['results'][0]['incorrect_answers']
+        options = [urllib.parse.unquote(answer) for answer in incorrect_answers] + [correct_answer]
+        random.shuffle(options)
+        quiz_embed = discord.Embed(title="❓ Trivia ❓", description=urllib.parse.unquote(data['results'][0]['question']), color=discord.Color.purple())
+        quiz_embed.add_field(name="Options", value="\n".join(options), inline=False)
+        quiz_embed.set_footer(text="You have 15 seconds to answer. Type the letter of your answer (A, B, C, D).")
+        await ctx.reply(embed=quiz_embed, mention_author=False)
+
+    def check_answer(message):
+        return message.author == ctx.author and message.content.lower() in ['a', 'b', 'c', 'd']
+
+    try:
+        answer_message = await bot.wait_for('message', timeout=15.0, check=check_answer)
+    except asyncio.TimeoutError:
+        return await ctx.reply(f"Time's up! The correct answer was **{correct_answer}**.", mention_author=False)
+    else:
+        if answer_message.content.lower() == 'a':
+            selected_answer = options[0]
+        elif answer_message.content.lower() == 'b':
+            selected_answer = options[1]
+        elif answer_message.content.lower() == 'c':
+            selected_answer = options[2]
+        elif answer_message.content.lower() == 'd':
+            selected_answer = options[3]
+
+        if selected_answer == correct_answer:
+            return await answer_message.reply(f"Correct! The answer is **{correct_answer}**.", mention_author=False)
+        return await answer_message.reply(f"Sorry, that's incorrect. The correct answer is **{correct_answer}**.", mention_author=False)
           
 
 # administrative commands start here
