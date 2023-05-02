@@ -21,7 +21,7 @@ lists={file:{} for file in files}
 snipe_data={"content":{}, "author":{}, "id":{}, "attachment":{}}
 editsnipe_data={"content":{}, "author":{}, "id":{}}
 cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":30.0, "slots":10.0}
-last_executed={time:time.time() for time in cooldowns}
+last_executed={cooldown:time.time() for cooldown in cooldowns}
 starboard_emoji='<:spuperman:670852114070634527>'
 bot=commands.Bot(command_prefix = '!w ', intents=discord.Intents.all())
 bot.remove_command('help')
@@ -439,7 +439,7 @@ async def clear(ctx, num:int=None):
         return await ctx.reply('Wups! You do not have the required permissions...', mention_author=False)
     if num is None or num < 1 or num > 10:
         return await ctx.reply('Wups! Please enter a number between 1 and 10...', mention_author=False)
-    if assert_cooldown("clear") != 0 :
+    if assert_cooldown("clear") != 0:
         await ctx.message.add_reaction('🦈')
         return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('clear')} seconds...", mention_author=False)
 
@@ -644,7 +644,7 @@ async def on_message(message):
             await message.channel.send('<:WoM:836128658828558336>')
         if message.content.lower() == "which":
             if assert_cooldown("which") != 0:
-                await ctx.message.add_reaction('🦈')
+                await message.add_reaction('🦈')
             else:
                 await message.channel.send(random.choice([member.name.lower() for member in message.guild.members if not member.bot]))
 
