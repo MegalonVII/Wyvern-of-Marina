@@ -381,7 +381,11 @@ async def balance(ctx):
 
 @bot.command(name='leaderboard', aliases=['lb'])
 async def leaderboard(ctx):
-    top_users = sorted(lists['coins'].items(), key=lambda x: x[1])[:5]
+    df = pd.read_csv("coins.csv")
+    df_sorted = df.sort_values("coins", ascending=False)
+    df_sorted.to_csv("coins.csv", index=False)
+    create_list('coins')
+    top_users = [(k, lists['coins'][k]) for k in list(lists['coins'])[:5]]
     embed = discord.Embed(title=f'Top {len(top_users)} Richest Users', color=discord.Color.purple())
     if len(top_users) == 1:
         embed.title='Richest User'
