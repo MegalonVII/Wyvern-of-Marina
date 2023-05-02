@@ -15,13 +15,13 @@ import urllib.parse
 
 # bot instantiation
 TOKEN=os.getenv('DISCORD_TOKEN')
-files=["commands", "flairs"]
+files=["commands", "flairs", "coins"]
 file_checks={file:False for file in files}
 lists={file:{} for file in files}
 snipe_data={"content":{}, "author":{}, "id":{}, "attachment":{}}
 editsnipe_data={"content":{}, "author":{}, "id":{}}
-cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":30.0}
-last_executed={key:time.time() for key in cooldowns}
+cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":30.0, "slots":10.0}
+last_executed={time:time.time() for time in cooldowns}
 starboard_emoji='<:spuperman:670852114070634527>'
 bot=commands.Bot(command_prefix = '!w ', intents=discord.Intents.all())
 bot.remove_command('help')
@@ -61,7 +61,7 @@ async def check_starboard(message):
 
 async def add_to_starboard(message):
     channel = discord.utils.get(message.guild.channels, name='hot-seat')
-    embed = discord.Embed(color=discord.Color.purple(), description=f'[Original Message]({message.jump_url})') # creates embed
+    embed = discord.Embed(color=discord.Color.gold(), description=f'[Original Message]({message.jump_url})') # creates embed
     embed.set_author(name=message.author.name, icon_url=message.author.avatar.url)
     embed.set_thumbnail(url=message.author.avatar.url)
     embed.add_field(name='Channel', value=f'<#{message.channel.id}>', inline=True)
@@ -83,6 +83,26 @@ async def add_to_starboard(message):
                     break
             return await star_msg.edit(embed=embed)
     return await channel.send(embed=embed)
+
+def add_coins(userID: int, coins: int):
+    fieldnames = ['user_id', 'coins']
+    found = False
+    rows = []
+    with open('coins.csv', 'r', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if row['user_id'] == str(userID):
+                row = {'user_id': row['user_id'], 'coins': int(row['coins']) + coins}
+                found = True
+            rows.append(row)
+    if not found:
+        rows.append({'user_id': str(userID), 'coins': coins})
+    with open('coins.csv', 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+    create_list("coins")
 
 
 # bot help command redifined
@@ -113,6 +133,9 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w 8ball (question)', value='I\'ll give you the magic response to your yes or no question!', inline=False)
         embed.add_field(name='!w roulette ([Admin Only] @member)', value='Try your luck... 😈', inline=False)
         embed.add_field(name='!w trivia', value='I\'ll give you a multiple-choice trivia question on either general knowledge or some form of entertainment media. You have 15 seconds to answer with the correct letter option!', inline=False)
+        embed.add_field(name='!w slots', value='Win some Zenny! 🤑', inline=False)
+        embed.add_field(name='!w balance', value='I\'ll tell you how much Zenny you have.', inline=False)
+        embed.add_field(name='!w leaderboard', value='Displays the top 5 richest members in the server.', inline=False)
       
     elif page == 2:
         embed.title='Administrative Commands'
@@ -143,7 +166,7 @@ async def help(ctx, page:int=0):
 
 
 # fun commands start here
-# say, custc, snipe, esnipe, choose, who, howgay, rps, 8ball, roulette, trivia
+# say, custc, snipe, esnipe, choose, who, howgay, rps, 8ball, roulette, trivia, slots, balance, leaderboard
 @bot.command(name='say')
 async def say(ctx, *args):
     try:
@@ -200,6 +223,7 @@ async def who(ctx):
 @bot.command(name='howgay')
 async def howgay(ctx, member:discord.Member=None):
     if assert_cooldown("howgay") != 0:
+        await ctx.message.add_reaction('🦈')
         return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('howgay')} seconds...", mention_author=False)
       
     member = member or ctx.author
@@ -219,6 +243,7 @@ async def howgay(ctx, member:discord.Member=None):
 @bot.command(name='rps')
 async def rps(ctx, playerChoice: str=None):
     if assert_cooldown("rps") != 0 :
+        await ctx.message.add_reaction('🦈')
         return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('rps')} seconds...", mention_author=False)
     if playerChoice is None:
         return await ctx.reply("Wups! You need to give me your choice...", mention_author=False)
@@ -241,6 +266,7 @@ async def rps(ctx, playerChoice: str=None):
 @bot.command(name='8ball')
 async def eightball(ctx):
     if assert_cooldown("8ball") != 0 :
+        await ctx.message.add_reaction('🦈')
         return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('8ball')} seconds...", mention_author=False)
     if len(ctx.message.content) < 9:
         return await ctx.reply("Wups! You need to give me a question to respond to...", mention_author=False)
@@ -251,6 +277,7 @@ async def eightball(ctx):
 @bot.command(name='roulette')
 async def roulette(ctx, member:discord.Member=None):
     if assert_cooldown("roulette") != 0:
+        await ctx.message.add_reaction('🦈')
         return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('roulette')} seconds...", mention_author=False)
       
     member = member or ctx.author
@@ -285,6 +312,7 @@ async def roulette(ctx, member:discord.Member=None):
 @bot.command(name='trivia')
 async def trivia(ctx):
     if assert_cooldown('trivia') != 0:
+        await ctx.message.add_reaction('🦈')
         return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('trivia')} seconds...", mention_author=False)
     
     async with ctx.typing():
@@ -319,7 +347,52 @@ async def trivia(ctx):
         if selected_answer == correct_answer:
             return await answer_message.reply(f"Correct! The answer is **{correct_answer}**.", mention_author=False)
         return await answer_message.reply(f"Sorry, that's incorrect. The correct answer is **{correct_answer}**.", mention_author=False)
-          
+
+@bot.command(name='slots')
+async def slots(ctx):
+    if assert_cooldown('slots') != 0:
+        await ctx.message.add_reaction('🦈')
+        return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('slots')} seconds...", mention_author=False)
+      
+    emojis = ["🍒", "🍇", "🍊", "🍋", "🍉","7️⃣"]
+    reels = ["❓","❓","❓"]
+    msg = await ctx.reply(f"{reels[0]} | {reels[1]} | {reels[2]}", mention_author=False)
+    for i in range(0,3):
+        await asyncio.sleep(1)
+        reels[i] = random.choice(emojis)
+        await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}", allowed_mentions=discord.AllowedMentions.none())
+    if all(reel == "7️⃣" for reel in reels):
+        add_coins(ctx.author.id,500)
+        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\n**Jackpot**! 500 Zenny!", allowed_mentions=discord.AllowedMentions.none())
+    elif len(set(reels)) == 1 and reels[0] != "7️⃣":
+        add_coins(ctx.author.id,100)
+        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nSmall prize! 100 Zenny!", allowed_mentions=discord.AllowedMentions.none())
+    elif len(set(reels)) == 2:
+        add_coins(ctx.author.id,25)
+        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nNice! 25 Zenny!", allowed_mentions=discord.AllowedMentions.none())
+    return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nBetter luck next time...", allowed_mentions=discord.AllowedMentions.none())
+
+@bot.command(name='balance', aliases=['bal'])
+async def balance(ctx):
+    for userID in lists['coins'].keys():
+        if str(ctx.author.id) == userID:
+            return await ctx.reply(f"You have {lists['coins'][str(ctx.author.id)]}z!", mention_author=False)
+    return await ctx.reply("Wups! Get some bread, broke ass...", mention_author=False)
+
+@bot.command(name='leaderboard', aliases=['lb'])
+async def leaderboard(ctx):
+    top_users = sorted(lists['coins'].items(), key=lambda x: x[1])[:5]
+    embed = discord.Embed(title=f'Top {len(top_users)} Richest Users', color=discord.Color.purple())
+    if len(top_users) == 1:
+        embed.title='Richest User'
+    elif len(top_users) == 0:
+        return await ctx.reply('Wups! No one is in this economy...', mention_author=False)
+    for i, (user_id, z) in enumerate(top_users):
+        user = await bot.fetch_user(user_id)
+        embed.add_field(name=f'#{i+1}: {user.name}', value=f'{z}z', inline=False)
+        if i == 0:
+            embed.set_thumbnail(url=user.avatar.url)
+    return await ctx.reply(embed=embed, mention_author=False)
 
 # administrative commands start here
 # cc, dc, clear, kick, ban, mute, unmute, addf, delf
@@ -367,6 +440,7 @@ async def clear(ctx, num:int=None):
     if num is None or num < 1 or num > 10:
         return await ctx.reply('Wups! Please enter a number between 1 and 10...', mention_author=False)
     if assert_cooldown("clear") != 0 :
+        await ctx.message.add_reaction('🦈')
         return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('clear')} seconds...", mention_author=False)
 
     await ctx.message.add_reaction('✅')
@@ -551,7 +625,7 @@ async def avatar(ctx, member:discord.Member=None):
   
 
 # bot events start here
-# on_ready, on_message, on_command_error, on_message_delete, on_message_edit, on_member_join, on_member_update, on_member_ban, on_reaction_add
+# on_ready, on_message, on_command_error, on_message_delete, on_message_edit, on_member_join, on_member_update, on_member_ban, on_reaction_add, on_member_remove
 @bot.event
 async def on_ready():
     for file in files:
@@ -570,13 +644,13 @@ async def on_message(message):
             await message.channel.send('<:WoM:836128658828558336>')
         if message.content.lower() == "which":
             if assert_cooldown("which") != 0:
-                await message.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('which')} seconds...", mention_author=False)
+                await ctx.message.add_reaction('🦈')
             else:
                 await message.channel.send(random.choice([member.name.lower() for member in message.guild.members if not member.bot]))
 
         # trigger reactions
-        triggers = ['yoshi','3ds','yuri','yaoi','crank','kys']
-        trigger_emojis = ['<:full:1028536660918550568>','<:megalon:1078914494132129802>','<:vers:804766992644702238>','🐍','🔧','⚡']
+        triggers = ['yoshi','3ds','yuri','yaoi','crank','kys','chan']
+        trigger_emojis = ['<:full:1028536660918550568>','<:megalon:1078914494132129802>','<:vers:804766992644702238>','🐍','🔧','⚡','🦄']
         for trigger, emoji in zip(triggers, trigger_emojis):
             if trigger in message.content.lower().split(" "):
                 await message.add_reaction(emoji)
@@ -651,6 +725,13 @@ async def on_reaction_add(reaction, user):
     if str(reaction.emoji) == starboard_emoji:
         if await check_starboard(reaction.message):
             return await add_to_starboard(reaction.message)
+
+@bot.event
+async def on_member_remove(member):
+    coins = pd.read_csv('coins.csv')
+    coins = coins[coins['user_id'] != member.id]
+    coins.to_csv('coins.csv', index=False)
+    create_list("coins")
           
     
 # everything has finally been set up
