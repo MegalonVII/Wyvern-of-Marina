@@ -166,6 +166,7 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w slots', value='Win some Zenny! 🤑', inline=False)
         embed.add_field(name='!w balance', value='I\'ll tell you how much Zenny you have.', inline=False)
         embed.add_field(name='!w leaderboard', value='Displays the top 5 richest members in the server.', inline=False)
+        embed.add_field(name='!w steal (@member)', value='Do a little bit of thievery... 😈', inline=False)
       
     elif page == 3:
         embed.title='Administrative Commands'
@@ -176,11 +177,11 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w ban (@member)', value='Bans the mentioned member from the server.', inline=False)
         embed.add_field(name='!w mute (@member) (time amount)(s, m, h, d, or w)', value='Mutes the mentioned member for the given time amount. \"s\" for seconds, \"m\" for minutes, \"h\" for hours, \"d\" for days, and \"w\" for weeks. No space in between the time amount and the letter!', inline=False)
         embed.add_field(name='!w unmute (@member)', value='Unmutes the mentioned member.', inline=False)
-        embed.add_field(name='!w addflair (@role)', value='Adds this role as a flair to this server.', inline=False)
-        embed.add_field(name='!w deleteflair (@role)', value='Removes this role as a flair from this server.', inline=False)
       
     elif page == 4:
         embed.title='Flair Commands'
+        embed.add_field(name='!w addflair (@role) [Admin Only]', value='Adds this role as a flair to this server.', inline=False)
+        embed.add_field(name='!w deleteflair (@role) [Admin Only]', value='Removes this role as a flair from this server.', inline=False)
         embed.add_field(name='!w listflairs', value='Lists all the flairs for this server.', inline=False)
         embed.add_field(name='!w im (role name)', value='Gives or removes the flair you ask for.', inline=False)
       
@@ -591,7 +592,10 @@ async def unmute(ctx, member:discord.Member):
 
     await member.edit(timed_out_until=None)
     return await ctx.message.delete()
+  
 
+# flair commands start here
+# addf, delf, lf, im
 @bot.command(name='addflair', aliases=['addf'])
 async def addflair(ctx, role: discord.Role):
     try:
@@ -631,10 +635,6 @@ async def deleteflair(ctx, role:discord.Role):
     await ctx.message.add_reaction('✅')
     await asyncio.sleep(3)
     return await ctx.message.delete()
-  
-
-# flair commands start here
-# lf, im
 @bot.command(name='listflairs', aliases=['lf'])
 async def listflairs(ctx):
     try:
@@ -777,7 +777,16 @@ async def on_message_edit(message_before, message_after):
 @bot.event
 async def on_member_join(member):
     if not member.bot:
+        try:
+            peep_role = discord.utils.get(ctx.guild.roles, name="Peep")
+            await member.add_roles(peep_role)
+        except:
+            pass
         return await member.guild.system_channel.send(f"Welcome, {member.mention}, to **The Marina**! This is your one-way ticket to Hell. There\'s no going back from here...\nFor a grasp of the rules, however (yes, we have those), we do ask that you check <#822341695411847249>.\n*Remember to take breaks, nya?*")
+    else:
+        try:
+            beep = discord.utils.get(ctx.guild.roles, name="beep")
+            await member.add_roles(beep)
 
 @bot.event
 async def on_member_update(before, after):
@@ -802,10 +811,11 @@ async def on_reaction_add(reaction, user):
 
 @bot.event
 async def on_member_remove(member):
-    coins = pd.read_csv('coins.csv')
-    coins = coins[coins['user_id'] != member.id]
-    coins.to_csv('coins.csv', index=False)
-    create_list("coins")
+    if str(member.id) in lists['coins'].keys():
+      coins = pd.read_csv('coins.csv')
+      coins = coins[coins['user_id'] != member.id]
+      coins.to_csv('coins.csv', index=False)
+      create_list("coins")
           
     
 # everything has finally been set up
