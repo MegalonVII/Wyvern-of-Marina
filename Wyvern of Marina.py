@@ -20,13 +20,14 @@ file_checks={file:False for file in files}
 lists={file:{} for file in files}
 snipe_data={"content":{}, "author":{}, "id":{}, "attachment":{}}
 editsnipe_data={"content":{}, "author":{}, "id":{}}
-cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":30.0, "slots":10.0}
+cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":30.0, "slots":10.0, "steal":10.0}
 last_executed={cooldown:time.time() for cooldown in cooldowns}
 starboard_emoji='<:spuperman:670852114070634527>'
 bot=commands.Bot(command_prefix = '!w ', intents=discord.Intents.all())
 bot.remove_command('help')
 
 # bot helper functions
+# create_list, assert_cooldown, check_starboard, add_to_starboard, add_coins, remove_coins
 def create_list(filename):
     global file_checks
     global lists
@@ -104,21 +105,47 @@ def add_coins(userID: int, coins: int):
             writer.writerow(row)
     create_list("coins")
 
+def subtract_coins(userID: int, coins: int):
+    fieldnames = ['user_id', 'coins']
+    found = False
+    rows = []
+    with open('coins.csv', 'r', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if row['user_id'] == str(userID):
+                balance = int(row['coins'])
+                if balance >= coins:
+                    row = {'user_id': row['user_id'], 'coins': balance - coins}
+                    found = True
+                else:
+                    return False
+            rows.append(row)
+    if not found:
+        return False
+    with open('coins.csv', 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+    create_list("coins")
+    return True
+
 
 # bot help command redifined
 # functions are created in order of placement in this list for ease of user reading
 @bot.command(name='help')
 async def help(ctx, page:int=0):
     embed = discord.Embed(color = discord.Color.purple())
-    if page < 0 or page > 4:
+    if page < 0 or page > 5:
         return await ctx.reply('Wups! Invalid page number...', mention_author=False)
       
     if page == 0:
         embed.title='Need help?'
         embed.add_field(name='!w help 1', value = 'All the fun commands for everyone to enjoy!', inline=False)
-        embed.add_field(name='!w help 2', value = 'All the administrative commands.', inline=False)
-        embed.add_field(name='!w help 3', value = 'All the flair commands.', inline=False)
-        embed.add_field(name='!w help 4', value = 'All the miscellaneous commands.', inline=False)  
+        embed.add_field(name='!w help 2', value = 'All the fun economy commands!', inline=False)
+        embed.add_field(name='!w help 3', value = 'All the administrative commands.', inline=False)
+        embed.add_field(name='!w help 4', value = 'All the flair commands.', inline=False)
+        embed.add_field(name='!w help 5', value = 'All the miscellaneous commands.', inline=False)  
       
     elif page == 1:
         embed.title='Fun Commands'
@@ -133,11 +160,14 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w 8ball (question)', value='I\'ll give you the magic response to your yes or no question!', inline=False)
         embed.add_field(name='!w roulette ([Admin Only] @member)', value='Try your luck... 😈', inline=False)
         embed.add_field(name='!w trivia', value='I\'ll give you a multiple-choice trivia question on either general knowledge or some form of entertainment media. You have 15 seconds to answer with the correct letter option!', inline=False)
+
+    elif page == 2:
+        embed.title='Economical Commands'
         embed.add_field(name='!w slots', value='Win some Zenny! 🤑', inline=False)
         embed.add_field(name='!w balance', value='I\'ll tell you how much Zenny you have.', inline=False)
         embed.add_field(name='!w leaderboard', value='Displays the top 5 richest members in the server.', inline=False)
       
-    elif page == 2:
+    elif page == 3:
         embed.title='Administrative Commands'
         embed.add_field(name='!w createcommand (name) (output)', value='Create your own commands that make me send custom text or links.', inline=False)
         embed.add_field(name='!w deletecommand (name)', value='Delete commands that have already been created.', inline=False)
@@ -149,19 +179,19 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w addflair (@role)', value='Adds this role as a flair to this server.', inline=False)
         embed.add_field(name='!w deleteflair (@role)', value='Removes this role as a flair from this server.', inline=False)
       
-    elif page == 3:
+    elif page == 4:
         embed.title='Flair Commands'
         embed.add_field(name='!w listflairs', value='Lists all the flairs for this server.', inline=False)
         embed.add_field(name='!w im (role name)', value='Gives or removes the flair you ask for.', inline=False)
       
-    elif page == 4:
+    elif page == 5:
         embed.title='Miscellaneous Commands'
         embed.add_field(name='!w ping', value='Returns my response time in milliseconds.', inline=False)
         embed.add_field(name='!w whomuted', value='Returns the name of every member who is currently muted.', inline=False)
         embed.add_field(name='!w avatar ([Optional] @member)', value='I\'ll send you the avatar of the given user. Defaults to yourself.', inline=False) 
       
     if page > 0:
-        embed.set_footer(text=f'Viewing page {page}/4')
+        embed.set_footer(text=f'Viewing page {page}/5')
     return await ctx.reply(embed=embed, mention_author=False)
 
 
@@ -286,7 +316,8 @@ async def roulette(ctx, member:discord.Member=None):
             if random.randint(1,6) == 1:
                 await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
                 return await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
-            return await ctx.reply("🚬🔫 Looks like you\'re safe, for now...", mention_author=False)
+            add_coins(member.id,1)
+            return await ctx.reply("🚬🔫 Looks like you\'re safe, for now... You also won 1z!", mention_author=False)
         return await ctx.reply("❌🔫 Looks like you\'re safe, you filthy admin...", mention_author=False)
       
     else: # if an admin wants to roulette a member they specify
@@ -295,7 +326,8 @@ async def roulette(ctx, member:discord.Member=None):
                 if random.randint(1,6) == 1:
                     await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
                     return await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
-                return await ctx.reply("🚬🔫 Looks like you\'re safe, for now...", mention_author=False)
+                add_coins(member.id,1)
+                return await ctx.reply("🚬🔫 Looks like you\'re safe, for now... You also won 1z!", mention_author=False)
             return await ctx.reply("❌🔫 A lowlife like you can\'t possibly fire the gun at someone else...", mention_author=False)
         elif member == ctx.author: # admin tries rouletting themself
             return await ctx.reply("❌🔫 Admins are valued. Don\'t roulette an admin like yourself...", mention_author=False)
@@ -306,7 +338,8 @@ async def roulette(ctx, member:discord.Member=None):
                 if random.randint(1,6) == 1:
                     await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
                     return await ctx.reply("🔥🔫 This user died! (muted for 1 hour)", mention_author=False)
-                return await ctx.reply("🚬🔫 Looks like they\'re safe, for now...", mention_author=False)
+                add_coins(member.id,1)
+                return await ctx.reply("🚬🔫 Looks like they\'re safe, for now... They also won 1z!", mention_author=False)
             return await ctx.reply("❌🔫 Looks like they\'re safe, that filthy admin...", mention_author=False)
 
 @bot.command(name='trivia')
@@ -347,13 +380,18 @@ async def trivia(ctx):
         if selected_answer == correct_answer:
             return await answer_message.reply(f"Correct! The answer is **{correct_answer}**.", mention_author=False)
         return await answer_message.reply(f"Sorry, that's incorrect. The correct answer is **{correct_answer}**.", mention_author=False)
+      
 
+# economy commands
+# slots, balance, leaderboard
 @bot.command(name='slots')
 async def slots(ctx):
     if assert_cooldown('slots') != 0:
         await ctx.message.add_reaction('🦈')
         return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('slots')} seconds...", mention_author=False)
-      
+    if not subtract_coins(ctx.author.id, 10):
+        return await ctx.reply("Wups! You don't have enough Zenny to play...", mention_author=False)
+
     emojis = ["🍒", "🍇", "🍊", "🍋", "🍉","7️⃣"]
     reels = ["❓","❓","❓"]
     msg = await ctx.reply(f"{reels[0]} | {reels[1]} | {reels[2]}", mention_author=False)
@@ -397,6 +435,32 @@ async def leaderboard(ctx):
         if i == 0:
             embed.set_thumbnail(url=user.avatar.url)
     return await ctx.reply(embed=embed, mention_author=False)
+
+@bot.command(name='steal')
+async def steal(ctx, target: discord.Member):
+    if assert_cooldown('steal') != 0:
+        await ctx.message.add_reaction('🦈')
+        return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('steal')} seconds...", mention_author=False)
+    if target.bot or target == ctx.author:
+        return await ctx.reply("Wups! You can't steal from a bot or from yourself...", mention_author=False)
+
+    richest_person = discord.utils.get(ctx.guild.members, id=int(max(lists['coins'].keys(), key=(lambda k: lists['coins'][k]))))
+    steal_chance = 0.6 if target.id == richest_person.id else 0.4
+    
+    if random.random() <= steal_chance:
+        random_steal = random.randint(1,100)
+        if subtract_coins(target.id, random_steal):
+            add_coins(ctx.author.id, random_steal)
+            return await ctx.reply(f"You successfully stole {random_steal} coins from {target.name}!", mention_author=False)
+        else:
+            return await ctx.reply(f"You tried stealing {random_steal} coins from {target.name}, but they don't have enough coins...", mention_author=False)
+    else:
+        lost_coins = random.randint(1, 20)
+        if subtract_coins(ctx.author.id, lost_coins):
+            return await ctx.reply(f"You failed to steal from {target.name} and lost {lost_coins} coins...", mention_author=False)
+        else:
+            return await ctx.reply(f"You failed to steal from {target.name}! You also don't have enough coins to lose...", mention_author=False)
+
 
 # administrative commands start here
 # cc, dc, clear, kick, ban, mute, unmute, addf, delf
@@ -632,6 +696,10 @@ async def avatar(ctx, member:discord.Member=None):
 # on_ready, on_message, on_command_error, on_message_delete, on_message_edit, on_member_join, on_member_update, on_member_ban, on_reaction_add, on_member_remove
 @bot.event
 async def on_ready():
+    marina = bot.guilds[0]
+    for member in marina.members:
+        if not member.bot:
+            add_coins(member.id,100)
     for file in files:
         create_list(file)
     print(f'Logged in as: {bot.user.name}\nID: {bot.user.id}')
@@ -653,8 +721,8 @@ async def on_message(message):
                 await message.channel.send(random.choice([member.name.lower() for member in message.guild.members if not member.bot]))
 
         # trigger reactions
-        triggers = ['yoshi','3ds','yuri','yaoi','crank','kys','chan']
-        trigger_emojis = ['<:full:1028536660918550568>','<:megalon:1078914494132129802>','<:vers:804766992644702238>','🐍','🔧','⚡','🦄']
+        triggers = ['yoshi','3ds','wednesday','yuri','yaoi','crank','kys','chan']
+        trigger_emojis = ['<:full:1028536660918550568>','<:megalon:1078914494132129802>','<:wednesday:798691076092198993>','<:vers:804766992644702238>','🐍','🔧','⚡','🦄']
         for trigger, emoji in zip(triggers, trigger_emojis):
             if trigger in message.content.lower().split(" "):
                 await message.add_reaction(emoji)
@@ -675,11 +743,12 @@ async def on_message(message):
 @bot.event
 async def on_command_error(ctx, error):
     if not ctx.message.content.split()[1] in list(lists["commands"].keys()):
+        await ctx.message.add_reaction('🦈')
         return await ctx.reply(f'Wups! try "!w help"... ({error})', mention_author=False)
 
 @bot.event
 async def on_message_delete(message):
-    if not message.content[0:7] == '!w say ' or message.author.bot:
+    if not message.content[0:3] == '!w ' or message.author.bot:
         global snipe_data
         channel = message.channel.id
         if message.author.bot:
@@ -693,16 +762,17 @@ async def on_message_delete(message):
 
 @bot.event
 async def on_message_edit(message_before, message_after):
-    global editsnipe_data
-    channel = message_after.channel.id
-    if message_before.author.bot:
-        return
+    if not message_after.author.bot:
+        global editsnipe_data
+        channel = message_after.channel.id
+        if message_before.author.bot:
+            return
+          
+        editsnipe_data[channel]={"content":str(message_before.content), "author":message_before.author, "id":message_before.id}
       
-    editsnipe_data[channel]={"content":str(message_before.content), "author":message_before.author, "id":message_before.id}
-  
-    await asyncio.sleep(60)
-    if message_before.id == editsnipe_data[channel]["id"]:
-        del editsnipe_data[channel]
+        await asyncio.sleep(60)
+        if message_before.id == editsnipe_data[channel]["id"]:
+            del editsnipe_data[channel]
 
 @bot.event
 async def on_member_join(member):
