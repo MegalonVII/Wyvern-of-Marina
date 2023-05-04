@@ -675,7 +675,7 @@ async def im(ctx, *roleName:str):
   
 
 # misc commands start here
-# ping, whomuted, avi
+# ping, whomuted, avi, emote
 @bot.command(name='ping')
 async def ping(ctx):
     await ctx.message.delete()
