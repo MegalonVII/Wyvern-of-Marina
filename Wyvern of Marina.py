@@ -416,7 +416,7 @@ async def slots(ctx):
 async def balance(ctx):
     for userID in lists['coins'].keys():
         if str(ctx.author.id) == userID:
-            return await ctx.reply(f"You have {lists['coins'][str(ctx.author.id)]}z!", mention_author=False)
+            return await ctx.reply(f"You have {lists['coins'][str(ctx.author.id)]} <:zenny:1103457227362287616>!", mention_author=False)
     return await ctx.reply("Wups! Get some bread, broke ass...", mention_author=False)
 
 @bot.command(name='leaderboard', aliases=['lb'])
@@ -433,7 +433,7 @@ async def leaderboard(ctx):
         return await ctx.reply('Wups! No one is in this economy...', mention_author=False)
     for i, (user_id, z) in enumerate(top_users):
         user = await bot.fetch_user(user_id)
-        embed.add_field(name=f'#{i+1}: {user.name}', value=f'{z}z', inline=False)
+        embed.add_field(name=f'#{i+1}: {user.name}', value=f'{z} <:zenny:1103457227362287616>', inline=False)
         if i == 0:
             embed.set_thumbnail(url=user.avatar.url)
     return await ctx.reply(embed=embed, mention_author=False)
