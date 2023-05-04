@@ -697,6 +697,10 @@ async def avatar(ctx, member:discord.Member=None):
 # on_ready, on_message, on_command_error, on_message_delete, on_message_edit, on_member_join, on_member_update, on_member_ban, on_reaction_add, on_member_remove
 @bot.event
 async def on_ready():
+    marina = bot.guilds[0]
+    for member in marina.members:
+        if not member.bot:
+            add_coins(member.id,100)
     for file in files:
         create_list(file)
     print(f'Logged in as: {bot.user.name}\nID: {bot.user.id}')
