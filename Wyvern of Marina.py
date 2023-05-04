@@ -318,7 +318,7 @@ async def roulette(ctx, member:discord.Member=None):
                 await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
                 return await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
             add_coins(member.id,1)
-            return await ctx.reply("🚬🔫 Looks like you\'re safe, for now... You also won 1z!", mention_author=False)
+            return await ctx.reply("🚬🔫 Looks like you\'re safe, for now... You also won 1 <:zenny:1103457227362287616>!", mention_author=False)
         return await ctx.reply("❌🔫 Looks like you\'re safe, you filthy admin...", mention_author=False)
       
     else: # if an admin wants to roulette a member they specify
@@ -328,7 +328,7 @@ async def roulette(ctx, member:discord.Member=None):
                     await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
                     return await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
                 add_coins(member.id,1)
-                return await ctx.reply("🚬🔫 Looks like you\'re safe, for now... You also won 1z!", mention_author=False)
+                return await ctx.reply("🚬🔫 Looks like you\'re safe, for now... You also won 1 <:zenny:1103457227362287616>!", mention_author=False)
             return await ctx.reply("❌🔫 A lowlife like you can\'t possibly fire the gun at someone else...", mention_author=False)
         elif member == ctx.author: # admin tries rouletting themself
             return await ctx.reply("❌🔫 Admins are valued. Don\'t roulette an admin like yourself...", mention_author=False)
@@ -340,7 +340,7 @@ async def roulette(ctx, member:discord.Member=None):
                     await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
                     return await ctx.reply("🔥🔫 This user died! (muted for 1 hour)", mention_author=False)
                 add_coins(member.id,1)
-                return await ctx.reply("🚬🔫 Looks like they\'re safe, for now... They also won 1z!", mention_author=False)
+                return await ctx.reply("🚬🔫 Looks like they\'re safe, for now... They also won 1 <:zenny:1103457227362287616>!", mention_author=False)
             return await ctx.reply("❌🔫 Looks like they\'re safe, that filthy admin...", mention_author=False)
 
 @bot.command(name='trivia')
@@ -379,7 +379,8 @@ async def trivia(ctx):
             selected_answer = options[3]
 
         if selected_answer == correct_answer:
-            return await answer_message.reply(f"Correct! The answer is **{correct_answer}**.", mention_author=False)
+            add_coins(ctx.author.id, 5)
+            return await answer_message.reply(f"Correct! The answer is **{correct_answer}**. 10 <:zenny:1103457227362287616>!", mention_author=False)
         return await answer_message.reply(f"Sorry, that's incorrect. The correct answer is **{correct_answer}**.", mention_author=False)
       
 
@@ -391,7 +392,7 @@ async def slots(ctx):
         await ctx.message.add_reaction('🦈')
         return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('slots')} seconds...", mention_author=False)
     if not subtract_coins(ctx.author.id, 10):
-        return await ctx.reply("Wups! You don't have enough Zenny to play...", mention_author=False)
+        return await ctx.reply("Wups! You don't have enough <:zenny:1103457227362287616> to play...", mention_author=False)
 
     emojis = ["🍒", "🍇", "🍊", "🍋", "🍉","7️⃣"]
     reels = ["❓","❓","❓"]
@@ -402,13 +403,13 @@ async def slots(ctx):
         await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}", allowed_mentions=discord.AllowedMentions.none())
     if all(reel == "7️⃣" for reel in reels):
         add_coins(ctx.author.id,500)
-        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\n**Jackpot**! 500 Zenny!", allowed_mentions=discord.AllowedMentions.none())
+        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\n**Jackpot**! 500 <:zenny:1103457227362287616>!", allowed_mentions=discord.AllowedMentions.none())
     elif len(set(reels)) == 1 and reels[0] != "7️⃣":
         add_coins(ctx.author.id,100)
-        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nSmall prize! 100 Zenny!", allowed_mentions=discord.AllowedMentions.none())
+        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nSmall prize! 100 <:zenny:1103457227362287616>!", allowed_mentions=discord.AllowedMentions.none())
     elif len(set(reels)) == 2:
         add_coins(ctx.author.id,25)
-        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nNice! 25 Zenny!", allowed_mentions=discord.AllowedMentions.none())
+        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nNice! 25 <:zenny:1103457227362287616>!", allowed_mentions=discord.AllowedMentions.none())
     return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nBetter luck next time...", allowed_mentions=discord.AllowedMentions.none())
 
 @bot.command(name='balance', aliases=['bal'])
@@ -452,15 +453,15 @@ async def steal(ctx, target: discord.Member):
         random_steal = random.randint(1,100)
         if subtract_coins(target.id, random_steal):
             add_coins(ctx.author.id, random_steal)
-            return await ctx.reply(f"You successfully stole {random_steal} coins from {target.name}!", mention_author=False)
+            return await ctx.reply(f"You successfully stole {random_steal} <:zenny:1103457227362287616> from {target.name}!", mention_author=False)
         else:
-            return await ctx.reply(f"You tried stealing {random_steal} coins from {target.name}, but they don't have enough coins...", mention_author=False)
+            return await ctx.reply(f"You tried stealing {random_steal} <:zenny:1103457227362287616> from {target.name}, but they don't have enough coins...", mention_author=False)
     else:
         lost_coins = random.randint(1, 20)
         if subtract_coins(ctx.author.id, lost_coins):
-            return await ctx.reply(f"You failed to steal from {target.name} and lost {lost_coins} coins...", mention_author=False)
+            return await ctx.reply(f"You failed to steal from {target.name} and lost {lost_coins} <:zenny:1103457227362287616>...", mention_author=False)
         else:
-            return await ctx.reply(f"You failed to steal from {target.name}! You also don't have enough coins to lose...", mention_author=False)
+            return await ctx.reply(f"You failed to steal from {target.name}! You also don't have enough <:zenny:1103457227362287616> to lose...", mention_author=False)
 
 
 # administrative commands start here
@@ -696,10 +697,6 @@ async def avatar(ctx, member:discord.Member=None):
 # on_ready, on_message, on_command_error, on_message_delete, on_message_edit, on_member_join, on_member_update, on_member_ban, on_reaction_add, on_member_remove
 @bot.event
 async def on_ready():
-    marina = bot.guilds[0]
-    for member in marina.members:
-        if not member.bot:
-            add_coins(member.id,100)
     for file in files:
         create_list(file)
     print(f'Logged in as: {bot.user.name}\nID: {bot.user.id}')
@@ -778,15 +775,18 @@ async def on_message_edit(message_before, message_after):
 async def on_member_join(member):
     if not member.bot:
         try:
-            peep_role = discord.utils.get(ctx.guild.roles, name="Peep")
+            peep_role = discord.utils.get(member.guild.roles, name="Peep")
             await member.add_roles(peep_role)
         except:
             pass
+        add_coins(member.id,100)
         return await member.guild.system_channel.send(f"Welcome, {member.mention}, to **The Marina**! This is your one-way ticket to Hell. There\'s no going back from here...\nFor a grasp of the rules, however (yes, we have those), we do ask that you check <#822341695411847249>.\n*Remember to take breaks, nya?*")
     else:
         try:
-            beep = discord.utils.get(ctx.guild.roles, name="beep")
-            await member.add_roles(beep)
+            beep = discord.utils.get(member.guild.roles, name="beep")
+            return await member.add_roles(beep)
+        except:
+            pass
 
 @bot.event
 async def on_member_update(before, after):
