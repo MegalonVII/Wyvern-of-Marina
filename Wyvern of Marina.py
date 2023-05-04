@@ -20,11 +20,14 @@ file_checks={file:False for file in files}
 lists={file:{} for file in files}
 snipe_data={"content":{}, "author":{}, "id":{}, "attachment":{}}
 editsnipe_data={"content":{}, "author":{}, "id":{}}
-cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":30.0, "slots":10.0, "steal":10.0}
+cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":25.0, "slots":10.0, "steal":30.0}
 last_executed={cooldown:time.time() for cooldown in cooldowns}
 starboard_emoji='<:spuperman:670852114070634527>'
+starboard_count=4
+zenny='<:zenny:1103457227362287616>'
 bot=commands.Bot(command_prefix = '!w ', intents=discord.Intents.all())
 bot.remove_command('help')
+
 
 # bot helper functions
 # create_list, assert_cooldown, check_starboard, add_to_starboard, add_coins, remove_coins
@@ -56,7 +59,7 @@ def assert_cooldown(command):
 async def check_starboard(message):
     if message.reactions:
         for reaction in message.reactions:
-            if str(reaction.emoji)==starboard_emoji and reaction.count>=4:
+            if str(reaction.emoji)==starboard_emoji and reaction.count>=starboard_count:
                 return True
     return False
 
@@ -190,6 +193,7 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w ping', value='Returns my response time in milliseconds.', inline=False)
         embed.add_field(name='!w whomuted', value='Returns the name of every member who is currently muted.', inline=False)
         embed.add_field(name='!w avatar ([Optional] @member)', value='I\'ll send you the avatar of the given user. Defaults to yourself.', inline=False) 
+        embed.add_field(name='!w emote (emote from this server)', value='Returns information of the given emote. It MUST be from this server!', inline=False)
       
     if page > 0:
         embed.set_footer(text=f'Viewing page {page}/5')
@@ -318,7 +322,7 @@ async def roulette(ctx, member:discord.Member=None):
                 await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
                 return await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
             add_coins(member.id,1)
-            return await ctx.reply("🚬🔫 Looks like you\'re safe, for now... You also won 1 <:zenny:1103457227362287616>!", mention_author=False)
+            return await ctx.reply(f"🚬🔫 Looks like you\'re safe, for now... You also won 1 {zenny}!", mention_author=False)
         return await ctx.reply("❌🔫 Looks like you\'re safe, you filthy admin...", mention_author=False)
       
     else: # if an admin wants to roulette a member they specify
@@ -328,7 +332,7 @@ async def roulette(ctx, member:discord.Member=None):
                     await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
                     return await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
                 add_coins(member.id,1)
-                return await ctx.reply("🚬🔫 Looks like you\'re safe, for now... You also won 1 <:zenny:1103457227362287616>!", mention_author=False)
+                return await ctx.reply(f"🚬🔫 Looks like you\'re safe, for now... You also won 1 {zenny}!", mention_author=False)
             return await ctx.reply("❌🔫 A lowlife like you can\'t possibly fire the gun at someone else...", mention_author=False)
         elif member == ctx.author: # admin tries rouletting themself
             return await ctx.reply("❌🔫 Admins are valued. Don\'t roulette an admin like yourself...", mention_author=False)
@@ -340,7 +344,7 @@ async def roulette(ctx, member:discord.Member=None):
                     await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
                     return await ctx.reply("🔥🔫 This user died! (muted for 1 hour)", mention_author=False)
                 add_coins(member.id,1)
-                return await ctx.reply("🚬🔫 Looks like they\'re safe, for now... They also won 1 <:zenny:1103457227362287616>!", mention_author=False)
+                return await ctx.reply(f"🚬🔫 Looks like they\'re safe, for now... They also won 1 {zenny}!", mention_author=False)
             return await ctx.reply("❌🔫 Looks like they\'re safe, that filthy admin...", mention_author=False)
 
 @bot.command(name='trivia')
@@ -380,7 +384,7 @@ async def trivia(ctx):
 
         if selected_answer == correct_answer:
             add_coins(ctx.author.id, 5)
-            return await answer_message.reply(f"Correct! The answer is **{correct_answer}**. 10 <:zenny:1103457227362287616>!", mention_author=False)
+            return await answer_message.reply(f"Correct! The answer is **{correct_answer}**. 10 {zenny}!", mention_author=False)
         return await answer_message.reply(f"Sorry, that's incorrect. The correct answer is **{correct_answer}**.", mention_author=False)
       
 
@@ -392,7 +396,7 @@ async def slots(ctx):
         await ctx.message.add_reaction('🦈')
         return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('slots')} seconds...", mention_author=False)
     if not subtract_coins(ctx.author.id, 10):
-        return await ctx.reply("Wups! You don't have enough <:zenny:1103457227362287616> to play...", mention_author=False)
+        return await ctx.reply(f"Wups! You don't have enough {zenny} to play...", mention_author=False)
 
     emojis = ["🍒", "🍇", "🍊", "🍋", "🍉","7️⃣"]
     reels = ["❓","❓","❓"]
@@ -403,20 +407,20 @@ async def slots(ctx):
         await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}", allowed_mentions=discord.AllowedMentions.none())
     if all(reel == "7️⃣" for reel in reels):
         add_coins(ctx.author.id,500)
-        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\n**Jackpot**! 500 <:zenny:1103457227362287616>!", allowed_mentions=discord.AllowedMentions.none())
+        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\n**Jackpot**! 500 {zenny}!", allowed_mentions=discord.AllowedMentions.none())
     elif len(set(reels)) == 1 and reels[0] != "7️⃣":
         add_coins(ctx.author.id,100)
-        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nSmall prize! 100 <:zenny:1103457227362287616>!", allowed_mentions=discord.AllowedMentions.none())
+        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nSmall prize! 100 {zenny}!", allowed_mentions=discord.AllowedMentions.none())
     elif len(set(reels)) == 2:
         add_coins(ctx.author.id,25)
-        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nNice! 25 <:zenny:1103457227362287616>!", allowed_mentions=discord.AllowedMentions.none())
+        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nNice! 25 {zenny}!", allowed_mentions=discord.AllowedMentions.none())
     return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nBetter luck next time...", allowed_mentions=discord.AllowedMentions.none())
 
 @bot.command(name='balance', aliases=['bal'])
 async def balance(ctx):
     for userID in lists['coins'].keys():
         if str(ctx.author.id) == userID:
-            return await ctx.reply(f"You have {lists['coins'][str(ctx.author.id)]} <:zenny:1103457227362287616>!", mention_author=False)
+            return await ctx.reply(f"You have {lists['coins'][str(ctx.author.id)]} {zenny}!", mention_author=False)
     return await ctx.reply("Wups! Get some bread, broke ass...", mention_author=False)
 
 @bot.command(name='leaderboard', aliases=['lb'])
@@ -433,7 +437,7 @@ async def leaderboard(ctx):
         return await ctx.reply('Wups! No one is in this economy...', mention_author=False)
     for i, (user_id, z) in enumerate(top_users):
         user = await bot.fetch_user(user_id)
-        embed.add_field(name=f'#{i+1}: {user.name}', value=f'{z} <:zenny:1103457227362287616>', inline=False)
+        embed.add_field(name=f'#{i+1}: {user.name}', value=f'{z} {zenny}', inline=False)
         if i == 0:
             embed.set_thumbnail(url=user.avatar.url)
     return await ctx.reply(embed=embed, mention_author=False)
@@ -452,16 +456,18 @@ async def steal(ctx, target: discord.Member):
     if random.random() <= steal_chance:
         random_steal = random.randint(1,100)
         if subtract_coins(target.id, random_steal):
-            add_coins(ctx.author.id, random_steal)
-            return await ctx.reply(f"You successfully stole {random_steal} <:zenny:1103457227362287616> from {target.name}!", mention_author=False)
+            add_coins(ctx.author.id, random_steal) # successful steal
+            return await ctx.reply(f"You successfully stole {random_steal} {zenny} from {target.name}!", mention_author=False)
         else:
-            return await ctx.reply(f"You tried stealing {random_steal} <:zenny:1103457227362287616> from {target.name}, but they don't have enough coins...", mention_author=False)
-    else:
-        lost_coins = random.randint(1, 20)
-        if subtract_coins(ctx.author.id, lost_coins):
-            return await ctx.reply(f"You failed to steal from {target.name} and lost {lost_coins} <:zenny:1103457227362287616>...", mention_author=False)
+            return await ctx.reply(f"You tried stealing {random_steal} {zenny} from {target.name}, but they don't have enough {zenny}...", mention_author=False) # successful steal, but couldn't do it
+          
+    else: 
+        lost_coins = random.randint(1, 100)
+        if subtract_coins(ctx.author.id, lost_coins): # unsuccessful steal
+            add_coins(target.id, lost_coins)
+            return await ctx.reply(f"You got caught trying to steal {lost_coins} {zenny} from {target.name}! You were forced to pay them back instead...", mention_author=False)
         else:
-            return await ctx.reply(f"You failed to steal from {target.name}! You also don't have enough <:zenny:1103457227362287616> to lose...", mention_author=False)
+            return await ctx.reply(f"You got caught trying to steal {lost_coins} {zenny} from {target.name}! However, you weren't able to pay them back...", mention_author=False) # successful steal, couldn't pay back
 
 
 # administrative commands start here
@@ -691,16 +697,19 @@ async def avatar(ctx, member:discord.Member=None):
     e.set_image(url=member.display_avatar.url)
     e.set_footer(text=f"Requested by: {ctx.message.author.name}")
     return await ctx.reply(embed=e, mention_author=False)
+
+@bot.command(name='emote')
+async def emote(ctx, emote:discord.Emoji):
+    embed = discord.Embed(color=discord.Color.purple())
+    embed.description=f"**__Emote Information__**\n**URL**: {emote.url}\n**Name**: {emote.name}\n**ID**: {emote.id}"
+    embed.set_image(url=emote.url)
+    return await ctx.reply(embed=embed, mention_author=False)
   
 
 # bot events start here
 # on_ready, on_message, on_command_error, on_message_delete, on_message_edit, on_member_join, on_member_update, on_member_ban, on_reaction_add, on_member_remove
 @bot.event
 async def on_ready():
-    marina = bot.guilds[0]
-    for member in marina.members:
-        if not member.bot:
-            add_coins(member.id,100)
     for file in files:
         create_list(file)
     print(f'Logged in as: {bot.user.name}\nID: {bot.user.id}')
@@ -737,9 +746,10 @@ async def on_message(message):
             except:
                 return await message.channel.send(f"Wups! I tried sending {message.author.mention} top secret classified government information, but for some reason I couldn\'t...")
         else:
+            add_coins(message.author.id,500)
             with open("shiny.png", "rb") as f:
                 file = discord.File(f)
-                return await message.channel.send(content="A wild Wyvern of Marina appeared! ✨", file=file)
+                return await message.channel.send(content=f"{message.author.name} stumbled across 500 {zenny} and a wild Wyvern of Marina! ✨", file=file)
 
 @bot.event
 async def on_command_error(ctx, error):
