@@ -24,7 +24,7 @@ cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0,
 last_executed={cooldown:time.time() for cooldown in cooldowns}
 starboard_emoji='<:spuperman:670852114070634527>'
 starboard_count=4
-zenny='<:zenny:1103457227362287616>'
+zenny='<:zenny:1104179194780450906>'
 bot=commands.Bot(command_prefix = '!w ', intents=discord.Intents.all())
 bot.remove_command('help')
 
@@ -170,6 +170,7 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w balance', value='I\'ll tell you how much Zenny you have.', inline=False)
         embed.add_field(name='!w leaderboard', value='Displays the top 5 richest members in the server.', inline=False)
         embed.add_field(name='!w steal (@member)', value='Do a little bit of thievery... 😈', inline=False)
+        embed.add_field(name='!w paypal (@member) (amount)', value='Pay your pal some Zenny!', inline=False)
       
     elif page == 3:
         embed.title='Administrative Commands'
@@ -201,7 +202,7 @@ async def help(ctx, page:int=0):
 
 
 # fun commands start here
-# say, custc, snipe, esnipe, choose, who, howgay, rps, 8ball, roulette, trivia, slots, balance, leaderboard
+# say, custc, snipe, esnipe, choose, who, howgay, rps, 8ball, roulette, trivia
 @bot.command(name='say')
 async def say(ctx, *args):
     try:
@@ -468,6 +469,13 @@ async def steal(ctx, target: discord.Member):
             return await ctx.reply(f"You got caught trying to steal {lost_coins} {zenny} from {target.name}! You were forced to pay them back instead...", mention_author=False)
         else:
             return await ctx.reply(f"You got caught trying to steal {lost_coins} {zenny} from {target.name}! However, you weren't able to pay them back...", mention_author=False) # successful steal, couldn't pay back
+
+@bot.command(name='paypal')
+async def paypal(ctx, recipient:discord.Member, amount:int):
+    if subtract_coins(ctx.author.id,amount):
+        add_coins(recipient.id,amount)
+        return await ctx.reply(f"{recipient.name} has received {amount} {zenny} from you!", mention_author=False)
+    return await ctx.reply(f"Wups! You don't have that much {zenny}", mention_author=False)
 
 
 # administrative commands start here
