@@ -475,7 +475,7 @@ async def paypal(ctx, recipient:discord.Member, amount:int):
     if subtract_coins(ctx.author.id,amount):
         add_coins(recipient.id,amount)
         return await ctx.reply(f"{recipient.name} has received {amount} {zenny} from you!", mention_author=False)
-    return await ctx.reply(f"Wups! You don't have that much {zenny}", mention_author=False)
+    return await ctx.reply(f"Wups! You don't have that much {zenny}...", mention_author=False)
 
 
 # administrative commands start here
