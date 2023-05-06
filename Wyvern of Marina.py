@@ -20,8 +20,10 @@ file_checks={file:False for file in files}
 lists={file:{} for file in files}
 snipe_data={"content":{}, "author":{}, "id":{}, "attachment":{}}
 editsnipe_data={"content":{}, "author":{}, "id":{}}
-cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":25.0, "slots":10.0, "steal":30.0}
+cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":25.0, "slots":10.0, "steal":30.0, 'bet':60.0}
 last_executed={cooldown:time.time() for cooldown in cooldowns}
+prev_steal_targets={}
+target_counts={}
 starboard_emoji='<:spuperman:670852114070634527>'
 starboard_count=4
 zenny='<:zenny:1104179194780450906>'
@@ -30,7 +32,7 @@ bot.remove_command('help')
 
 
 # bot helper functions
-# create_list, assert_cooldown, check_starboard, add_to_starboard, add_coins, remove_coins
+# create_list, assert_cooldown, check_starboard, add_to_starboard, add_coins, remove_coins, in_bot_shenanigans
 def create_list(filename):
     global file_checks
     global lists
@@ -133,6 +135,18 @@ def subtract_coins(userID: int, coins: int):
     create_list("coins")
     return True
 
+async def in_bot_shenanigans(ctx):
+    bot_shenanigans = discord.utils.get(ctx.guild.channels, name='bot-shenanigans')
+    if bot_shenanigans is None:
+        await ctx.message.add_reaction('🦈')
+        await ctx.reply("ask for or make a bot-shenanigans channel first, stupid", mention_author=False)
+        return False
+    if not ctx.message.channel.id == bot_shenanigans.id:
+        await ctx.message.add_reaction('🦈')
+        await ctx.reply(f"go to <#{bot_shenanigans.id}>, jackass", mention_author=False)
+        return False
+    return True
+
 
 # bot help command redifined
 # functions are created in order of placement in this list for ease of user reading
@@ -171,6 +185,7 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w leaderboard', value='Displays the top 5 richest members in the server.', inline=False)
         embed.add_field(name='!w steal (@member)', value='Do a little bit of thievery... 😈', inline=False)
         embed.add_field(name='!w paypal (@member) (amount)', value='Pay your pal some Zenny!', inline=False)
+        embed.add_field(name='!w bet (amount)', value='Bet your Zenny for double that bet if you roll 2 dice and they both result to 7.', inline=False)
       
     elif page == 3:
         embed.title='Administrative Commands'
@@ -225,7 +240,7 @@ async def snipe(ctx):
         data = snipe_data[channel.id]
         if data["attachment"] and 'video' in data["attachment"].content_type:
             data["content"] += f"\n[Attached Video]({data['attachment'].url})"
-        embed = discord.Embed(title=f"Last deleted message in #{channel.name}", color = discord.Color.purple(), description=data["content"])
+        embed = discord.Embed(title=f"Last deleted message in #{channel.name}", color = discord.Color.purple(), description=str(data["content"]))
         if data["attachment"] and 'image' in data["attachment"].content_type:
             embed.set_image(url=data["attachment"].url)
         embed.set_footer(text=f"This message was sent by {data['author']}")
@@ -239,7 +254,7 @@ async def editsnipe(ctx):
     channel = ctx.channel
     try:
         data = editsnipe_data[channel.id]
-        embed = discord.Embed(title=f"Last edited message in #{channel.name}", color = discord.Color.purple(), description=data["content"])
+        embed = discord.Embed(title=f"Last edited message in #{channel.name}", color = discord.Color.purple(), description=str(data["content"]))
         embed.set_footer(text=f"This message was sent by {data['author']}")
         embed.set_thumbnail(url=data["author"].avatar.url)
         return await ctx.reply(embed=embed, mention_author=False)
@@ -278,26 +293,27 @@ async def howgay(ctx, member:discord.Member=None):
 
 @bot.command(name='rps')
 async def rps(ctx, playerChoice: str=None):
-    if assert_cooldown("rps") != 0 :
-        await ctx.message.add_reaction('🦈')
-        return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('rps')} seconds...", mention_author=False)
-    if playerChoice is None:
-        return await ctx.reply("Wups! You need to give me your choice...", mention_author=False)
-      
-    playerChoice = playerChoice.lower()
-    choices = ['rock', 'paper', 'scissors']
-    if playerChoice not in choices:
-        return await ctx.reply("Wups! Invalid choice...", mention_author=False)
-    else:
-        botChoice = random.choice(choices)
-        if playerChoice == botChoice: # tie
-            return await ctx.reply(f"I chose `{botChoice}`.\nUgh! Boring! We tied...", mention_author=False)
-        elif (playerChoice == choices[0] and botChoice == choices[1]) or \
-            (playerChoice == choices[1] and botChoice == choices[2]) or \
-            (playerChoice == choices[2] and botChoice == choices[0]): # win
-                return await ctx.reply(f"I chose `{botChoice}`.\nHah! I win, sucker! Why'd you pick that one, stupid?", mention_author=False)
-        else: # lose
-            return await ctx.reply(f"I chose `{botChoice}`.\nWell played there. You have bested me...", mention_author=False)
+    if await in_bot_shenanigans(ctx):
+        if assert_cooldown("rps") != 0 :
+            await ctx.message.add_reaction('🦈')
+            return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('rps')} seconds...", mention_author=False)
+        if playerChoice is None:
+            return await ctx.reply("Wups! You need to give me your choice...", mention_author=False)
+          
+        playerChoice = playerChoice.lower()
+        choices = ['rock', 'paper', 'scissors']
+        if playerChoice not in choices:
+            return await ctx.reply("Wups! Invalid choice...", mention_author=False)
+        else:
+            botChoice = random.choice(choices)
+            if playerChoice == botChoice: # tie
+                return await ctx.reply(f"I chose `{botChoice}`.\nUgh! Boring! We tied...", mention_author=False)
+            elif (playerChoice == choices[0] and botChoice == choices[1]) or \
+                (playerChoice == choices[1] and botChoice == choices[2]) or \
+                (playerChoice == choices[2] and botChoice == choices[0]): # win
+                    return await ctx.reply(f"I chose `{botChoice}`.\nHah! I win, sucker! Why'd you pick that one, stupid?", mention_author=False)
+            else: # lose
+                return await ctx.reply(f"I chose `{botChoice}`.\nWell played there. You have bested me...", mention_author=False)
 
 @bot.command(name='8ball')
 async def eightball(ctx):
@@ -350,72 +366,75 @@ async def roulette(ctx, member:discord.Member=None):
 
 @bot.command(name='trivia')
 async def trivia(ctx):
-    if assert_cooldown('trivia') != 0:
-        await ctx.message.add_reaction('🦈')
-        return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('trivia')} seconds...", mention_author=False)
+    if await in_bot_shenanigans(ctx):
+        if assert_cooldown('trivia') != 0:
+            await ctx.message.add_reaction('🦈')
+            return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('trivia')} seconds...", mention_author=False)
+        
+        async with ctx.typing():
+            response = requests.get(f"https://opentdb.com/api.php?amount=1&category={random.choice([9, 11, 12, 14, 15, 31])}&type=multiple&encode=url3986")
+            data = json.loads(response.text)
+            correct_answer = urllib.parse.unquote(data['results'][0]['correct_answer'])
+            incorrect_answers = data['results'][0]['incorrect_answers']
+            options = [urllib.parse.unquote(answer) for answer in incorrect_answers] + [correct_answer]
+            random.shuffle(options)
+            quiz_embed = discord.Embed(title="❓ Trivia ❓", description=urllib.parse.unquote(data['results'][0]['question']), color=discord.Color.purple())
+            quiz_embed.add_field(name="Options", value="\n".join(options), inline=False)
+            quiz_embed.set_footer(text="You have 15 seconds to answer. Type the letter of your answer (A, B, C, D).")
+            await ctx.reply(embed=quiz_embed, mention_author=False)
     
-    async with ctx.typing():
-        response = requests.get(f"https://opentdb.com/api.php?amount=1&category={random.choice([9, 11, 12, 14, 15, 31])}&type=multiple&encode=url3986")
-        data = json.loads(response.text)
-        correct_answer = urllib.parse.unquote(data['results'][0]['correct_answer'])
-        incorrect_answers = data['results'][0]['incorrect_answers']
-        options = [urllib.parse.unquote(answer) for answer in incorrect_answers] + [correct_answer]
-        random.shuffle(options)
-        quiz_embed = discord.Embed(title="❓ Trivia ❓", description=urllib.parse.unquote(data['results'][0]['question']), color=discord.Color.purple())
-        quiz_embed.add_field(name="Options", value="\n".join(options), inline=False)
-        quiz_embed.set_footer(text="You have 15 seconds to answer. Type the letter of your answer (A, B, C, D).")
-        await ctx.reply(embed=quiz_embed, mention_author=False)
-
-    def check_answer(message):
-        return message.author == ctx.author and message.content.lower() in ['a', 'b', 'c', 'd']
-
-    try:
-        answer_message = await bot.wait_for('message', timeout=15.0, check=check_answer)
-    except asyncio.TimeoutError:
-        return await ctx.reply(f"Time's up! The correct answer was **{correct_answer}**.", mention_author=False)
-    else:
-        if answer_message.content.lower() == 'a':
-            selected_answer = options[0]
-        elif answer_message.content.lower() == 'b':
-            selected_answer = options[1]
-        elif answer_message.content.lower() == 'c':
-            selected_answer = options[2]
-        elif answer_message.content.lower() == 'd':
-            selected_answer = options[3]
-
-        if selected_answer == correct_answer:
-            add_coins(ctx.author.id, 5)
-            return await answer_message.reply(f"Correct! The answer is **{correct_answer}**. 10 {zenny}!", mention_author=False)
-        return await answer_message.reply(f"Sorry, that's incorrect. The correct answer is **{correct_answer}**.", mention_author=False)
+        def check_answer(message):
+            return message.author == ctx.author and message.content.lower() in ['a', 'b', 'c', 'd']
+    
+        try:
+            answer_message = await bot.wait_for('message', timeout=15.0, check=check_answer)
+        except asyncio.TimeoutError:
+            return await ctx.reply(f"Time's up! The correct answer was **{correct_answer}**.", mention_author=False)
+        else:
+            if answer_message.content.lower() == 'a':
+                selected_answer = options[0]
+            elif answer_message.content.lower() == 'b':
+                selected_answer = options[1]
+            elif answer_message.content.lower() == 'c':
+                selected_answer = options[2]
+            elif answer_message.content.lower() == 'd':
+                selected_answer = options[3]
+    
+            if selected_answer == correct_answer:
+                add_coins(ctx.author.id, 5)
+                return await answer_message.reply(f"Correct! The answer is **{correct_answer}**. 10 {zenny}!", mention_author=False)
+            return await answer_message.reply(f"Sorry, that's incorrect. The correct answer is **{correct_answer}**.", mention_author=False)
       
 
 # economy commands
-# slots, balance, leaderboard
+# slots, balance, leaderboard, paypal, bet
 @bot.command(name='slots')
 async def slots(ctx):
-    if assert_cooldown('slots') != 0:
-        await ctx.message.add_reaction('🦈')
-        return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('slots')} seconds...", mention_author=False)
-    if not subtract_coins(ctx.author.id, 10):
-        return await ctx.reply(f"Wups! You don't have enough {zenny} to play...", mention_author=False)
-
-    emojis = ["🍒", "🍇", "🍊", "🍋", "🍉","7️⃣"]
-    reels = ["❓","❓","❓"]
-    msg = await ctx.reply(f"{reels[0]} | {reels[1]} | {reels[2]}", mention_author=False)
-    for i in range(0,3):
-        await asyncio.sleep(1)
-        reels[i] = random.choice(emojis)
-        await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}", allowed_mentions=discord.AllowedMentions.none())
-    if all(reel == "7️⃣" for reel in reels):
-        add_coins(ctx.author.id,500)
-        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\n**Jackpot**! 500 {zenny}!", allowed_mentions=discord.AllowedMentions.none())
-    elif len(set(reels)) == 1 and reels[0] != "7️⃣":
-        add_coins(ctx.author.id,100)
-        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nSmall prize! 100 {zenny}!", allowed_mentions=discord.AllowedMentions.none())
-    elif len(set(reels)) == 2:
-        add_coins(ctx.author.id,25)
-        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nNice! 25 {zenny}!", allowed_mentions=discord.AllowedMentions.none())
-    return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nBetter luck next time...", allowed_mentions=discord.AllowedMentions.none())
+    if await in_bot_shenanigans(ctx):
+        if assert_cooldown('slots') != 0:
+            await ctx.message.add_reaction('🦈')
+            return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('slots')} seconds...", mention_author=False)
+        if not subtract_coins(ctx.author.id, 10):
+            await ctx.message.add_reaction('🦈')
+            return await ctx.reply(f"Wups! You don't have enough {zenny} to play...", mention_author=False)
+    
+        emojis = ["🍒", "🍇", "🍊", "🍋", "🍉","7️⃣"]
+        reels = ["❓","❓","❓"]
+        msg = await ctx.reply(f"{reels[0]} | {reels[1]} | {reels[2]}", mention_author=False)
+        for i in range(0,3):
+            await asyncio.sleep(1)
+            reels[i] = random.choice(emojis)
+            await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}", allowed_mentions=discord.AllowedMentions.none())
+        if all(reel == "7️⃣" for reel in reels):
+            add_coins(ctx.author.id,500)
+            return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\n**Jackpot**! 500 {zenny}!", allowed_mentions=discord.AllowedMentions.none())
+        elif len(set(reels)) == 1 and reels[0] != "7️⃣":
+            add_coins(ctx.author.id,100)
+            return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nSmall prize! 100 {zenny}!", allowed_mentions=discord.AllowedMentions.none())
+        elif len(set(reels)) == 2:
+            add_coins(ctx.author.id,25)
+            return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nNice! 25 {zenny}!", allowed_mentions=discord.AllowedMentions.none())
+        return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nBetter luck next time...", allowed_mentions=discord.AllowedMentions.none())
 
 @bot.command(name='balance', aliases=['bal'])
 async def balance(ctx):
@@ -445,37 +464,65 @@ async def leaderboard(ctx):
 
 @bot.command(name='steal')
 async def steal(ctx, target: discord.Member):
-    if assert_cooldown('steal') != 0:
-        await ctx.message.add_reaction('🦈')
-        return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('steal')} seconds...", mention_author=False)
-    if target.bot or target == ctx.author:
-        return await ctx.reply("Wups! You can't steal from a bot or from yourself...", mention_author=False)
-
-    richest_person = discord.utils.get(ctx.guild.members, id=int(max(lists['coins'].keys(), key=(lambda k: lists['coins'][k]))))
-    steal_chance = 0.6 if target.id == richest_person.id else 0.4
+    global prev_steal_targets, target_counts
+    if await in_bot_shenanigans(ctx):
+        if target.bot or target == ctx.author:
+            await ctx.message.add_reaction('🦈')
+            return await ctx.reply("Wups! You can't steal from a bot or from yourself...", mention_author=False)
+        if prev_steal_targets.get(ctx.author.id) == target and target_counts.get(ctx.author.id, 0) < 2:
+            await ctx.message.add_reaction('🦈')
+            return await ctx.reply("Wups! You can't target this person again so soon. Choose a different target...", mention_author=False)
+        if assert_cooldown('steal') != 0:
+            await ctx.message.add_reaction('🦈')
+            return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('steal')} seconds...", mention_author=False)
     
-    if random.random() <= steal_chance:
-        random_steal = random.randint(1,100)
-        if subtract_coins(target.id, random_steal):
-            add_coins(ctx.author.id, random_steal) # successful steal
-            return await ctx.reply(f"You successfully stole {random_steal} {zenny} from {target.name}!", mention_author=False)
-        else:
-            return await ctx.reply(f"You tried stealing {random_steal} {zenny} from {target.name}, but they don't have enough {zenny}...", mention_author=False) # successful steal, but couldn't do it
+        if prev_steal_targets.get(ctx.author.id) != target:
+            target_counts[ctx.author.id] = target_counts.get(ctx.author.id, 0) + 1
+            prev_steal_targets[ctx.author.id] = target
+        if target_counts.get(ctx.author.id, 0) >= 2:
+            target_counts[ctx.author.id] = 0
+        richest_person = discord.utils.get(ctx.guild.members, id=int(max(lists['coins'].keys(), key=(lambda k: lists['coins'][k]))))
+        steal_chance = 6 if target == richest_person else 4
+        
+        if random.randint(1,10) <= steal_chance:
+            random_steal = random.randint(1,100)
+            if subtract_coins(target.id, random_steal):
+                add_coins(ctx.author.id, random_steal) # successful steal
+                return await ctx.reply(f"You successfully stole {random_steal} {zenny} from {target.name}!", mention_author=False)
+            else:
+                return await ctx.reply(f"You tried stealing {random_steal} {zenny} from {target.name}, but they don't have enough {zenny}...", mention_author=False) # successful steal, but couldn't do it
           
-    else: 
-        lost_coins = random.randint(1, 100)
-        if subtract_coins(ctx.author.id, lost_coins): # unsuccessful steal
-            add_coins(target.id, lost_coins)
-            return await ctx.reply(f"You got caught trying to steal {lost_coins} {zenny} from {target.name}! You were forced to pay them back instead...", mention_author=False)
-        else:
-            return await ctx.reply(f"You got caught trying to steal {lost_coins} {zenny} from {target.name}! However, you weren't able to pay them back...", mention_author=False) # successful steal, couldn't pay back
+        else: 
+            lost_coins = random.randint(1, 100)
+            if subtract_coins(ctx.author.id, lost_coins): # unsuccessful steal
+                add_coins(target.id, lost_coins)
+                return await ctx.reply(f"You got caught trying to steal {lost_coins} {zenny} from {target.name}! You were forced to pay them back instead...", mention_author=False)
+            else:
+                return await ctx.reply(f"You got caught trying to steal {lost_coins} {zenny} from {target.name}! However, you weren't able to pay them back...", mention_author=False) # successful steal, couldn't pay back
 
 @bot.command(name='paypal')
 async def paypal(ctx, recipient:discord.Member, amount:int):
-    if subtract_coins(ctx.author.id,amount):
-        add_coins(recipient.id,amount)
-        return await ctx.reply(f"{recipient.name} has received {amount} {zenny} from you!", mention_author=False)
-    return await ctx.reply(f"Wups! You don't have that much {zenny}...", mention_author=False)
+    if await in_bot_shenanigans(ctx):
+        if subtract_coins(ctx.author.id,amount):
+            add_coins(recipient.id,amount)
+            return await ctx.reply(f"{recipient.name} has received {amount} {zenny} from you!", mention_author=False)
+        return await ctx.reply(f"Wups! You don't have that much {zenny}...", mention_author=False)
+
+@bot.command(name='bet')
+async def bet(ctx, amount:int):
+    if await in_bot_shenanigans(ctx):
+        if assert_cooldown('bet'):
+            await ctx.message.add_reaction('🦈')
+            return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('bet')} seconds...", mention_author=False)
+        if subtract_coins(ctx.author.id, amount):
+            roll = random.randint(1,6)
+            roll2 = random.randint(1,6)
+            result = roll + roll2
+            if result == 7:
+                add_coins(ctx.author.id, 2*amount)
+                return await ctx.reply(f"You rolled a {result}! You win!", mention_author=False)
+            return await ctx.reply(f"You rolled a {result}! Sorry, you lost...", mention_author=False)
+        return await ctx.reply(f"Wups! You can't bet that much {zenny} as you don't have that much...",mention_author=False)    
 
 
 # administrative commands start here
@@ -833,11 +880,10 @@ async def on_reaction_add(reaction, user):
 
 @bot.event
 async def on_member_remove(member):
-    if str(member.id) in lists['coins'].keys():
-      coins = pd.read_csv('coins.csv')
-      coins = coins[coins['user_id'] != member.id]
-      coins.to_csv('coins.csv', index=False)
-      create_list("coins")
+    coins = pd.read_csv('coins.csv')
+    coins = coins[coins['user_id'] != member.id]
+    coins.to_csv('coins.csv', index=False)
+    create_list("coins")
           
     
 # everything has finally been set up
