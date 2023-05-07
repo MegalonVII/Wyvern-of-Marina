@@ -20,7 +20,7 @@ file_checks={file:False for file in files}
 lists={file:{} for file in files}
 snipe_data={"content":{}, "author":{}, "id":{}, "attachment":{}}
 editsnipe_data={"content":{}, "author":{}, "id":{}}
-cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":25.0, "slots":10.0, "steal":30.0, 'bet':30.0}
+cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":25.0, "slots":10.0, "steal":30.0, 'bet':30.0, 'quote':45.0}
 last_executed={cooldown:0 for cooldown in cooldowns}
 prev_steal_targets={}
 target_counts={}
@@ -176,12 +176,13 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w rps (your choice)', value='Play a simple game of Rock-Paper-Scissors with me!', inline=False)
         embed.add_field(name='!w 8ball (question)', value='I\'ll give you the magic response to your yes or no question!', inline=False)
         embed.add_field(name='!w roulette ([Admin Only] @member)', value='Try your luck... 😈', inline=False)
-        embed.add_field(name='!w trivia', value='I\'ll give you a multiple-choice trivia question on either general knowledge or some form of entertainment media. You have 15 seconds to answer with the correct letter option!', inline=False)
+        embed.add_field(name='!w trivia ([Optional] type)', value='I\'ll give you a multiple-choice trivia question. If you do not provide a type, it will be a random question on either general knowledge or some form of media. If you do, the types you may choose from are "general", "music", "film", "tv", "games", or "anime".', inline=False)
+        embed.add_field(name='!w quote', value='Returns a random quote from a video game!', inline=False)
 
     elif page == 2:
         embed.title='Economical Commands'
         embed.add_field(name='!w slots', value='Win some Zenny! 🤑', inline=False)
-        embed.add_field(name='!w balance', value='I\'ll tell you how much Zenny you have.', inline=False)
+        embed.add_field(name='!w balance ([Optional] @member)', value='I\'ll tell you how much Zenny you or the person you mention have. It will cost you to peer into someone else\'s balance!', inline=False)
         embed.add_field(name='!w leaderboard', value='Displays the top 5 richest members in the server.', inline=False)
         embed.add_field(name='!w steal (@member)', value='Do a little bit of thievery... 😈', inline=False)
         embed.add_field(name='!w paypal (@member) (amount)', value='Pay your pal some Zenny!', inline=False)
@@ -217,7 +218,7 @@ async def help(ctx, page:int=0):
 
 
 # fun commands start here
-# say, custc, snipe, esnipe, choose, who, howgay, rps, 8ball, roulette, trivia
+# say, custc, snipe, esnipe, choose, who, howgay, rps, 8ball, roulette, trivia, quote
 @bot.command(name='say')
 async def say(ctx, *args):
     try:
@@ -365,26 +366,37 @@ async def roulette(ctx, member:discord.Member=None):
             return await ctx.reply("❌🔫 Looks like they\'re safe, that filthy admin...", mention_author=False)
 
 @bot.command(name='trivia')
-async def trivia(ctx):
+async def trivia(ctx, type:str = None):
     if await in_bot_shenanigans(ctx):
+        types = ['general', 'film', 'music', 'tv', 'games', 'anime']
+        categories = [9, 11, 12, 14, 15, 31]
         if assert_cooldown('trivia') != 0:
             await ctx.message.add_reaction('🦈')
             return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('trivia')} seconds...", mention_author=False)
+        if not type is None and type.lower() not in types:
+            await ctx.message.add_reaction('🦈')
+            return await ctx.reply("Wups! Invalid trivia type...", mention_author=False)
         
         async with ctx.typing():
-            response = requests.get(f"https://opentdb.com/api.php?amount=1&category={random.choice([9, 11, 12, 14, 15, 31])}&type=multiple&encode=url3986")
+            if type is None:
+                response = requests.get(f"https://opentdb.com/api.php?amount=1&category={random.choice(categories)}&type=multiple&encode=url3986")
+            else:
+                for typing, category in zip(types, categories):
+                    if type.lower() == typing:
+                        response = requests.get(f"https://opentdb.com/api.php?amount=1&category={category}&type=multiple&encode=url3986")
+                        break
             data = json.loads(response.text)
             correct_answer = urllib.parse.unquote(data['results'][0]['correct_answer'])
             incorrect_answers = data['results'][0]['incorrect_answers']
             options = [urllib.parse.unquote(answer) for answer in incorrect_answers] + [correct_answer]
-            random.shuffle(options)
-            quiz_embed = discord.Embed(title="❓ Trivia ❓", description=urllib.parse.unquote(data['results'][0]['question']), color=discord.Color.purple())
-            quiz_embed.add_field(name="Options", value="\n".join(options), inline=False)
-            quiz_embed.set_footer(text="You have 15 seconds to answer. Type the letter of your answer (A, B, C, D).")
-            await ctx.reply(embed=quiz_embed, mention_author=False)
+        random.shuffle(options)
+        quiz_embed = discord.Embed(title="❓ Trivia ❓", description=urllib.parse.unquote(data['results'][0]['question']), color=discord.Color.purple())
+        quiz_embed.add_field(name="Options", value="\n".join(options), inline=False)
+        quiz_embed.set_footer(text="You have 15 seconds to answer. Type the letter of your answer (A, B, C, D).")
+        await ctx.reply(embed=quiz_embed, mention_author=False)
     
         def check_answer(message):
-            return message.author == ctx.author and message.content.lower() in ['a', 'b', 'c', 'd']
+            return message.author == ctx.author and message.content.lower() in ['a', 'b', 'c', 'd'] and message.channel == ctx.message.channel
     
         try:
             answer_message = await bot.wait_for('message', timeout=15.0, check=check_answer)
@@ -404,6 +416,24 @@ async def trivia(ctx):
                 add_coins(ctx.author.id, 10)
                 return await answer_message.reply(f"Correct! The answer is **{correct_answer}**. 10 {zenny}!", mention_author=False)
             return await answer_message.reply(f"Sorry, that's incorrect. The correct answer is **{correct_answer}**.", mention_author=False)
+
+@bot.command(name='quote')
+async def quote(ctx):
+    if await in_bot_shenanigans(ctx):
+        if assert_cooldown('quote') != 0:
+            await ctx.message.add_reaction('🦈')
+            return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('quote')} seconds...", mention_author=False)
+
+        async with ctx.typing():
+            response = requests.get('https://ultima.rest/api/quote/random')
+            data = json.loads(response.text)
+        quote = data['quote']
+        character = data['character']
+        title = data['title']
+        release = data['release']
+        embed = discord.Embed(title="💬 Quote 💬", description=f'"{quote}"', color=discord.Color.purple())
+        embed.set_footer(text=f"From: {character} - {title}, {release}")
+        return await ctx.reply(embed=embed, mention_author=False)
       
 
 # economy commands
@@ -437,10 +467,20 @@ async def slots(ctx):
         return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nBetter luck next time...", allowed_mentions=discord.AllowedMentions.none())
 
 @bot.command(name='balance', aliases=['bal'])
-async def balance(ctx):
+async def balance(ctx, member:discord.Member = None):
+    member = member or ctx.author
+    if not member == ctx.author:
+        if subtract_coins(ctx.author.id, 10):
+            add_coins(member.id, 10)
+        else:
+            await ctx.message.add_reaction('🦈')
+            return await ctx.reply("Wups! Insufficient funds...", mention_author=False)
     for userID in lists['coins'].keys():
-        if str(ctx.author.id) == userID:
-            return await ctx.reply(f"You have {lists['coins'][str(ctx.author.id)]} {zenny}!", mention_author=False)
+        if str(member.id) == userID:
+            if not member == ctx.author:
+                return await ctx.reply(f"{member.name} has {lists['coins'][str(member.id)]} {zenny}!", mention_author=False)
+            return await ctx.reply(f"You have {lists['coins'][str(member.id)]} {zenny}!", mention_author=False)
+    await ctx.message.add_reaction('🦈')
     return await ctx.reply("Wups! Get some bread, broke ass...", mention_author=False)
 
 @bot.command(name='leaderboard', aliases=['lb'])
