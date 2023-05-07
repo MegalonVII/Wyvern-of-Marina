@@ -20,8 +20,8 @@ file_checks={file:False for file in files}
 lists={file:{} for file in files}
 snipe_data={"content":{}, "author":{}, "id":{}, "attachment":{}}
 editsnipe_data={"content":{}, "author":{}, "id":{}}
-cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":25.0, "slots":10.0, "steal":30.0, 'bet':60.0}
-last_executed={cooldown:time.time() for cooldown in cooldowns}
+cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":25.0, "slots":10.0, "steal":30.0, 'bet':30.0}
+last_executed={cooldown:0 for cooldown in cooldowns}
 prev_steal_targets={}
 target_counts={}
 starboard_emoji='<:spuperman:670852114070634527>'
@@ -401,7 +401,7 @@ async def trivia(ctx):
                 selected_answer = options[3]
     
             if selected_answer == correct_answer:
-                add_coins(ctx.author.id, 5)
+                add_coins(ctx.author.id, 10)
                 return await answer_message.reply(f"Correct! The answer is **{correct_answer}**. 10 {zenny}!", mention_author=False)
             return await answer_message.reply(f"Sorry, that's incorrect. The correct answer is **{correct_answer}**.", mention_author=False)
       
@@ -445,10 +445,11 @@ async def balance(ctx):
 
 @bot.command(name='leaderboard', aliases=['lb'])
 async def leaderboard(ctx):
-    df = pd.read_csv("coins.csv")
-    df_sorted = df.sort_values("coins", ascending=False)
-    df_sorted.to_csv("coins.csv", index=False)
-    create_list('coins')
+    async with ctx.typing():
+        df = pd.read_csv("coins.csv")
+        df_sorted = df.sort_values("coins", ascending=False)
+        df_sorted.to_csv("coins.csv", index=False)
+        create_list('coins')
     top_users = [(k, lists['coins'][k]) for k in list(lists['coins'])[:5]]
     embed = discord.Embed(title=f'Top {len(top_users)} Richest Users', color=discord.Color.purple())
     if len(top_users) == 1:
@@ -503,9 +504,13 @@ async def steal(ctx, target: discord.Member):
 @bot.command(name='paypal')
 async def paypal(ctx, recipient:discord.Member, amount:int):
     if await in_bot_shenanigans(ctx):
+        if recipient.bot:
+            await ctx.message.add_reaction('🦈')
+            return await ctx.reply(f"Wups! You can't pay a bot...", mention_author=False)
         if subtract_coins(ctx.author.id,amount):
             add_coins(recipient.id,amount)
             return await ctx.reply(f"{recipient.name} has received {amount} {zenny} from you!", mention_author=False)
+        await ctx.message.add_reaction('🦈')
         return await ctx.reply(f"Wups! You don't have that much {zenny}...", mention_author=False)
 
 @bot.command(name='bet')
@@ -522,6 +527,7 @@ async def bet(ctx, amount:int):
                 add_coins(ctx.author.id, 2*amount)
                 return await ctx.reply(f"You rolled a {result}! You win!", mention_author=False)
             return await ctx.reply(f"You rolled a {result}! Sorry, you lost...", mention_author=False)
+        await ctx.message.add_reaction('🦈')
         return await ctx.reply(f"Wups! You can't bet that much {zenny} as you don't have that much...",mention_author=False)    
 
 
