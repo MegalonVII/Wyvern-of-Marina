@@ -135,15 +135,15 @@ def subtract_coins(userID: int, coins: int):
     create_list("coins")
     return True
 
-async def in_bot_shenanigans(ctx):
-    bot_shenanigans = discord.utils.get(ctx.guild.channels, name='bot-shenanigans')
-    if bot_shenanigans is None:
+async def in_wom_shenanigans(ctx):
+    wom_shenanigans = discord.utils.get(ctx.guild.channels, name='wom-shenanigans')
+    if wom_shenanigans is None:
         await ctx.message.add_reaction('🦈')
-        await ctx.reply("ask for or make a bot-shenanigans channel first, stupid", mention_author=False)
+        await ctx.reply("ask for or make a wom-shenanigans channel first, stupid", mention_author=False)
         return False
-    if not ctx.message.channel.id == bot_shenanigans.id:
+    if not ctx.message.channel.id == wom_shenanigans.id:
         await ctx.message.add_reaction('🦈')
-        await ctx.reply(f"go to <#{bot_shenanigans.id}>, jackass", mention_author=False)
+        await ctx.reply(f"go to <#{wom_shenanigans.id}>, jackass", mention_author=False)
         return False
     return True
 
@@ -294,7 +294,7 @@ async def howgay(ctx, member:discord.Member=None):
 
 @bot.command(name='rps')
 async def rps(ctx, playerChoice: str=None):
-    if await in_bot_shenanigans(ctx):
+    if await in_wom_shenanigans(ctx):
         if assert_cooldown("rps") != 0 :
             await ctx.message.add_reaction('🦈')
             return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('rps')} seconds...", mention_author=False)
@@ -367,7 +367,7 @@ async def roulette(ctx, member:discord.Member=None):
 
 @bot.command(name='trivia')
 async def trivia(ctx, type:str = None):
-    if await in_bot_shenanigans(ctx):
+    if await in_wom_shenanigans(ctx):
         types = ['general', 'film', 'music', 'tv', 'games', 'anime']
         categories = [9, 11, 12, 14, 15, 31]
         if assert_cooldown('trivia') != 0:
@@ -419,7 +419,7 @@ async def trivia(ctx, type:str = None):
 
 @bot.command(name='quote')
 async def quote(ctx):
-    if await in_bot_shenanigans(ctx):
+    if await in_wom_shenanigans(ctx):
         if assert_cooldown('quote') != 0:
             await ctx.message.add_reaction('🦈')
             return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('quote')} seconds...", mention_author=False)
@@ -440,7 +440,7 @@ async def quote(ctx):
 # slots, balance, leaderboard, paypal, bet
 @bot.command(name='slots')
 async def slots(ctx):
-    if await in_bot_shenanigans(ctx):
+    if await in_wom_shenanigans(ctx):
         if assert_cooldown('slots') != 0:
             await ctx.message.add_reaction('🦈')
             return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('slots')} seconds...", mention_author=False)
@@ -506,7 +506,7 @@ async def leaderboard(ctx):
 @bot.command(name='steal')
 async def steal(ctx, target: discord.Member):
     global prev_steal_targets, target_counts
-    if await in_bot_shenanigans(ctx):
+    if await in_wom_shenanigans(ctx):
         if target.bot or target == ctx.author:
             await ctx.message.add_reaction('🦈')
             return await ctx.reply("Wups! You can't steal from a bot or from yourself...", mention_author=False)
@@ -543,10 +543,10 @@ async def steal(ctx, target: discord.Member):
 
 @bot.command(name='paypal')
 async def paypal(ctx, recipient:discord.Member, amount:int):
-    if await in_bot_shenanigans(ctx):
+    if await in_wom_shenanigans(ctx):
         if recipient.bot:
             await ctx.message.add_reaction('🦈')
-            return await ctx.reply(f"Wups! You can't pay a bot...", mention_author=False)
+            return await ctx.reply("Wups! You can't pay a bot...", mention_author=False)
         if subtract_coins(ctx.author.id,amount):
             add_coins(recipient.id,amount)
             return await ctx.reply(f"{recipient.name} has received {amount} {zenny} from you!", mention_author=False)
@@ -555,7 +555,7 @@ async def paypal(ctx, recipient:discord.Member, amount:int):
 
 @bot.command(name='bet')
 async def bet(ctx, amount:int):
-    if await in_bot_shenanigans(ctx):
+    if await in_wom_shenanigans(ctx):
         if assert_cooldown('bet'):
             await ctx.message.add_reaction('🦈')
             return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('bet')} seconds...", mention_author=False)
