@@ -425,7 +425,7 @@ async def quote(ctx):
             return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('quote')} seconds...", mention_author=False)
 
         async with ctx.typing():
-            response = requests.get('https://ultima.rest/api/quote/random')
+            response = requests.get(f'https://ultima.rest/api/quote?id={random.randint(1,516)}')
             data = json.loads(response.text)
         quote = data['quote']
         character = data['character']
