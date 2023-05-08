@@ -547,9 +547,9 @@ async def paypal(ctx, recipient:discord.Member, amount:int):
         if amount <= 0:
             await ctx.message.add_reaction('🦈')
             return await ctx.reply("Wups! Invalid payment amount...", mention_author=False)
-        if recipient.bot:
+        if recipient.bot or recipient.id == ctx.author.id:
             await ctx.message.add_reaction('🦈')
-            return await ctx.reply("Wups! You can't pay a bot...", mention_author=False)
+            return await ctx.reply("Wups! You can't pay a bot or yourself...", mention_author=False)
         if subtract_coins(ctx.author.id,amount):
             add_coins(recipient.id,amount)
             return await ctx.reply(f"{recipient.name} has received {amount} {zenny} from you!", mention_author=False)
