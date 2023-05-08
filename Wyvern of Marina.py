@@ -544,6 +544,9 @@ async def steal(ctx, target: discord.Member):
 @bot.command(name='paypal')
 async def paypal(ctx, recipient:discord.Member, amount:int):
     if await in_wom_shenanigans(ctx):
+        if amount <= 0:
+            await ctx.message.add_reaction('🦈')
+            return await ctx.reply("Wups! Invalid payment amount...", mention_author=False)
         if recipient.bot:
             await ctx.message.add_reaction('🦈')
             return await ctx.reply("Wups! You can't pay a bot...", mention_author=False)
