@@ -2,15 +2,6 @@ import discord
 import time
 import os
 import csv
-from discord.ext import commands
-from keep_alive import keep_alive
-import random
-import pandas as pd
-import asyncio
-import datetime
-import requests
-import json
-import urllib.parse
 
 files=["commands", "flairs", "coins"]
 file_checks={file:False for file in files}
