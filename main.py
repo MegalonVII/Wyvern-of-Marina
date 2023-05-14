@@ -2,19 +2,15 @@ import discord
 import os
 from discord.ext import commands
 from keep_alive import keep_alive
-import random
-import pandas as pd
-import asyncio
 from utils import *
 
 # bot instantiation
 TOKEN=os.getenv('DISCORD_TOKEN')
 bot=commands.Bot(command_prefix = '!w ', intents=discord.Intents.all())
 bot.remove_command('help')
-extensions=['fun', 'economy', 'admin', 'flair', 'misc']
+extensions=['fun', 'economy', 'admin', 'flair', 'misc', 'events']
 
 # bot help command redifined
-# functions are created in order of placement in this list for ease of user reading
 @bot.command(name='help')
 async def help(ctx, page:int=0):
     embed = discord.Embed(color = discord.Color.purple())
@@ -82,139 +78,16 @@ async def help(ctx, page:int=0):
     return await ctx.reply(embed=embed, mention_author=False)
 
 # on_ready
-
 @bot.event
 async def on_ready():
+    print("Logging in...")
     for file in files:
         create_list(file)
-    print(f'Logged in as: {bot.user.name}\nID: {bot.user.id}')
     for extension in extensions:
-        print(extension)
         await bot.load_extension(extension)
-
-
-# bot events start here
-# on_message, on_command_error, on_message_delete, on_message_edit, on_member_join, on_member_update, on_member_ban, on_reaction_add, on_member_remove
-# TODO move to a cog
-@bot.event
-async def on_message(message):
-    if message.author.bot:
-        return
-      
-    if message.content[0:3] == "!w " and message.content.split()[1] in list(lists["commands"].keys()): # custom commands
-        await message.channel.send(lists["commands"][message.content.split()[1]])
-    else:   # any specific word triggers
-        if message.content.lower() == "me":
-            await message.channel.send('<:WoM:836128658828558336>')
-        if message.content.lower() == "which":
-            if assert_cooldown("which") != 0:
-                await message.add_reaction('🦈')
-            else:
-                await message.channel.send(random.choice([member.name.lower() for member in message.guild.members if not member.bot]))
-
-        # trigger reactions
-        triggers = ['yoshi','3ds','wednesday','yuri','yaoi','crank','kys','chan']
-        trigger_emojis = ['<:full:1028536660918550568>','<:megalon:1078914494132129802>','<:wednesday:798691076092198993>','<:vers:804766992644702238>','🐍','🔧','⚡','🦄']
-        for trigger, emoji in zip(triggers, trigger_emojis):
-            if trigger in message.content.lower().split(" "):
-                await message.add_reaction(emoji)
-          
-    await bot.process_commands(message)
-  
-    if random.randint(1,4096) == 1:  
-        if random.randint(1,2) == 1:
-            try:
-                return await message.author.send(f"Hey {message.author.name}. Hope this finds you well.\n\nJust wanted to say that I know that this server might make some jabs at you or do some things that might rub you the wrong way, but that aside I wanted to personally tell you that I value that you\'re here. I think you\'re amazing and you deserve only good things coming to you. Hope you only succeed from here!\nIf you\'re ever feeling down, I hope you can look back at this message just to cheer you up. Also, this message might come back to you again so maybe you\'ll need it again?\n\nOh well. Been nice talking to ya! <3")
-            except:
-                return await message.channel.send(f"Wups! I tried sending {message.author.mention} top secret classified government information, but for some reason I couldn\'t...")
-        else:
-            add_coins(message.author.id,500)
-            with open("shiny.png", "rb") as f:
-                file = discord.File(f)
-                return await message.channel.send(content=f"{message.author.name} stumbled across 500 {zenny} and a wild Wyvern of Marina! ✨", file=file)
-
-@bot.event
-async def on_command_error(ctx, error):
-    if not ctx.message.content.split()[1] in list(lists["commands"].keys()):
-        await ctx.message.add_reaction('🦈')
-        return await ctx.reply(f'Wups! try "!w help"... ({error})', mention_author=False)
-
-@bot.event
-async def on_message_delete(message):
-    if not message.content[0:3] == '!w ' or message.author.bot:
-        global snipe_data
-        channel = message.channel.id
-        if message.author.bot:
-            return
-          
-        snipe_data[channel]={"content":str(message.content), "author":message.author, "id":message.id, "attachment":message.attachments[0] if message.attachments else None}
-      
-        await asyncio.sleep(60)
-        if message.id == snipe_data[channel]["id"]:
-            del snipe_data[channel]
-
-@bot.event
-async def on_message_edit(message_before, message_after):
-    if not message_after.author.bot:
-        global editsnipe_data
-        channel = message_after.channel.id
-        if message_before.author.bot:
-            return
-          
-        editsnipe_data[channel]={"content":str(message_before.content), "author":message_before.author, "id":message_before.id}
-      
-        await asyncio.sleep(60)
-        if message_before.id == editsnipe_data[channel]["id"]:
-            del editsnipe_data[channel]
-
-@bot.event
-async def on_member_join(member):
-    if not member.bot:
-        try:
-            peep_role = discord.utils.get(member.guild.roles, name="Peep")
-            await member.add_roles(peep_role)
-        except:
-            pass
-        add_coins(member.id,100)
-        return await member.guild.system_channel.send(f"Welcome, {member.mention}, to **The Marina**! This is your one-way ticket to Hell. There\'s no going back from here...\nFor a grasp of the rules, however (yes, we have those), we do ask that you check <#822341695411847249>.\n*Remember to take breaks, nya?*")
-    else:
-        try:
-            beep = discord.utils.get(member.guild.roles, name="beep")
-            return await member.add_roles(beep)
-        except:
-            pass
-
-@bot.event
-async def on_member_update(before, after):
-    if after.is_timed_out() == True and before.is_timed_out() == False:
-        return await before.guild.system_channel.send(f"That fucking bozo {after.mention} got timed out! Point and laugh at this user! <:you:765067257008881715>")
-      
-    if after.is_timed_out() == False and before.is_timed_out() == True:
-        return await before.guild.system_channel.send(f"Welcome back, {after.mention}. Don\'t do that again, idiot. <:do_not:1077435360537223238>")
-
-@bot.event
-async def on_member_ban(guild, user):
-    return await guild.system_channel.send(f"{user.name} has been banned! Rest in fucking piss, bozo. <:kysNOW:896223569288241175>")
-
-@bot.event
-async def on_reaction_add(reaction, user):
-    if reaction.message.author == user or user.bot:
-        return
-      
-    if str(reaction.emoji) == starboard_emoji:
-        if await check_starboard(reaction.message):
-            return await add_to_starboard(reaction.message)
-
-@bot.event
-async def on_member_remove(member):
-    coins = pd.read_csv('coins.csv')
-    coins = coins[coins['user_id'] != member.id]
-    coins.to_csv('coins.csv', index=False)
-    create_list("coins")
-          
+    print(f'Logged in as: {bot.user.name}\nID: {bot.user.id}')
     
 # everything has finally been set up
 # we can now run the bot
-
 keep_alive()
 bot.run(TOKEN)
