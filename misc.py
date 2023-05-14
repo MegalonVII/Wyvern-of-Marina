@@ -1,18 +1,5 @@
-# fun commands start here
-# say, custc, snipe, esnipe, choose, who, howgay, rps, 8ball, roulette, trivia, quote
 import discord
-import os
-import csv
 from discord.ext import commands
-from keep_alive import keep_alive
-import random
-import pandas as pd
-import asyncio
-import datetime
-import requests
-import json
-import urllib.parse
-from utils import *
 
 # misc commands start here
 # ping, whomuted, avi, emote
