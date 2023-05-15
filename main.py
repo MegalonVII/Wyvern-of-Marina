@@ -1,6 +1,8 @@
 import discord
 import os
 from discord.ext import commands
+from datetime import datetime
+import pytz
 from keep_alive import keep_alive
 from utils import *
 
@@ -48,6 +50,10 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w steal (@member)', value='Do a little bit of thievery... 😈', inline=False)
         embed.add_field(name='!w paypal (@member) (amount)', value='Pay your pal some Zenny!', inline=False)
         embed.add_field(name='!w bet (amount)', value='Bet your Zenny for double that bet if you roll 2 dice and they both result to 7.', inline=False)
+        embed.add_field(name='!w marketplace', value='I\'ll show you all the items that you can buy with Zenny!', inline=False)
+        embed.add_field(name='!w buy (item name)', value='If you have enough Zenny, you may buy an item from the Marketplace!', inline=False)
+        embed.add_field(name='!w inventory', value='I\'ll tell you the items that you have!', inline=False)
+        embed.add_field(name='!w use (item name)', value='If you purchased the item you give me, you may use it!', inline=False)
       
     elif page == 3:
         embed.title='Administrative Commands'
@@ -85,7 +91,7 @@ async def on_ready():
         create_list(file)
     for extension in extensions:
         await bot.load_extension(extension)
-    print(f'Logged in as: {bot.user.name}\nID: {bot.user.id}')
+    print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\nTime: {datetime.now(pytz.timezone('US/Pacific')).strftime('%m/%d/%Y, %H:%M:%S Pacific')}")
     
 # everything has finally been set up
 # we can now run the bot
