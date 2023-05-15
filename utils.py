@@ -3,7 +3,7 @@ import time
 import os
 import csv
 
-files=["commands", "flairs", "coins"]
+files=["commands", "flairs", "coins", "delivery", "blueshell", "bomb", "ticket"]
 file_checks={file:False for file in files}
 lists={file:{} for file in files}
 snipe_data={"content":{}, "author":{}, "id":{}, "attachment":{}}
@@ -17,14 +17,14 @@ starboard_count=4
 zenny='<:zenny:1104179194780450906>'
 
 # bot helper functions
-# create_list, assert_cooldown, check_starboard, add_to_starboard, add_coins, remove_coins, in_bot_shenanigans
+# create_list, assert_cooldown, check_starboard, add_to_starboard, add_coins, subtract_coins, add_item, subtract_item, in_bot_shenanigans
 def create_list(filename):
     global file_checks
     global lists
     file_checks[filename]=False
     if not os.path.exists(f'{filename}.csv'):
-        with open(f'{filename}.csv'):
-            pass
+        with open(f'{filename}.csv', 'w'):
+            pass # creates csv file
     with open(f'{filename}.csv', mode='r') as csv_file:
         csv_reader = csv.DictReader(csv_file)
         rows = list(csv_reader)
@@ -88,7 +88,7 @@ def add_coins(userID: int, coins: int):
             writer.writerow(row)
     create_list("coins")
 
-def subtract_coins(userID: int, coins: int):
+def subtract_coins(userID: int, coins: int) -> bool:
     fieldnames = ['user_id', 'coins']
     found = False
     rows = []
@@ -111,6 +111,51 @@ def subtract_coins(userID: int, coins: int):
         for row in rows:
             writer.writerow(row)
     create_list("coins")
+    return True
+
+def add_item(itemName:str, userID:int, quantity:int):
+    fieldnames = ['user_id', f'{itemName}s']
+    found = False
+    rows = []
+    with open(f'{itemName}.csv', 'r', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if row['user_id'] == str(userID):
+                row = {'user_id': str(userID), f'{itemName}s': int(row[f'{itemName}s']) + quantity}
+                found = True
+            rows.append(row)
+    if not found:
+        rows.append({'user_id': str(userID), f'{itemName}s': quantity})
+    with open(f'{itemName}.csv', 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+    create_list(itemName)
+
+def subtract_item(itemName:str, userID:int, quantity:int) -> bool:
+    fieldnames = ['user_id', f'{itemName}s']
+    found = False
+    rows = []
+    with open(f'{itemName}.csv', 'r', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if row['user_id'] == str(userID):
+                balance = int(row[f'{itemName}s'])
+                if balance >= quantity:
+                    row = {'user_id': row['user_id'], f'{itemName}s': balance - quantity}
+                    found = True
+                else:
+                    return False
+            rows.append(row)
+    if not found:
+        return False
+    with open(f'{itemName}.csv', 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+    create_list(itemName)
     return True
 
 async def in_wom_shenanigans(ctx):
