@@ -39,7 +39,7 @@ class Events(commands.Cog):
                 try:
                     return await message.author.send(f"Hey {message.author.name}. Hope this finds you well.\n\nJust wanted to say that I know that this server might make some jabs at you or do some things that might rub you the wrong way, but that aside I wanted to personally tell you that I value that you\'re here. I think you\'re amazing and you deserve only good things coming to you. Hope you only succeed from here!\nIf you\'re ever feeling down, I hope you can look back at this message just to cheer you up. Also, this message might come back to you again so maybe you\'ll need it again?\n\nOh well. Been nice talking to ya! <3")
                 except:
-                    return await message.channel.send(f"Wups! I tried sending {message.author.mention} top secret classified government information, but for some reason I couldn\'t...")
+                    return await message.channel.send(f"I tried sending {message.author.mention} top secret classified government information, but for some reason I couldn\'t...")
             else:
                 add_coins(message.author.id,500)
                 with open("shiny.png", "rb") as f:
