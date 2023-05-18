@@ -5,6 +5,7 @@ from datetime import datetime
 import pytz
 from keep_alive import keep_alive
 from utils import *
+from math import ceil
 
 # bot instantiation
 TOKEN=os.getenv('DISCORD_TOKEN')
@@ -44,12 +45,15 @@ async def help(ctx, page:int=0):
 
     elif page == 2:
         embed.title='Economical Commands'
-        embed.add_field(name='!w slots', value='Win some Zenny! 🤑', inline=False)
-        embed.add_field(name='!w balance ([Optional] @member)', value='I\'ll tell you how much Zenny you or the person you mention have. It will cost you to peer into someone else\'s balance!', inline=False)
         embed.add_field(name='!w leaderboard', value='Displays the top 5 richest members in the server.', inline=False)
+        embed.add_field(name='!w slots', value='Win some Zenny! 🤑', inline=False)
         embed.add_field(name='!w steal (@member)', value='Do a little bit of thievery... 😈', inline=False)
-        embed.add_field(name='!w paypal (@member) (amount)', value='Pay your pal some Zenny!', inline=False)
         embed.add_field(name='!w bet (amount)', value='Bet your Zenny for double that bet if you roll 2 dice and they both result to 7.', inline=False)
+        embed.add_field(name='!w deposit (amount)', value='Deposit your Zenny to the bank!', inline=False)
+        embed.add_field(name='!w withdraw (amount)', value='Withdraw the Zenny in your bank account!', inline=False)
+        embed.add_field(name='!w balance ([Optional] @member)', value='I\'ll tell you how much Zenny you or the person you mention have. It will cost you to peer into someone else\'s balance!', inline=False)
+        embed.add_field(name='!w bankbalance', value='I\'ll tell you how much Zenny you have in the bank.', inline=False)
+        embed.add_field(name='!w paypal (@member) (amount)', value='Pay your pal some Zenny!', inline=False)
         embed.add_field(name='!w marketplace', value='I\'ll show you all the items that you can buy with Zenny!', inline=False)
         embed.add_field(name='!w buy (item name)', value='If you have enough Zenny, you may buy an item from the Marketplace!', inline=False)
         embed.add_field(name='!w inventory', value='I\'ll tell you the items that you have!', inline=False)
@@ -91,6 +95,9 @@ async def on_ready():
         create_list(file)
     for extension in extensions:
         await bot.load_extension(extension)
+    for member in bot.guilds[0].members:
+        if str(member.id) in lists['bank'].keys():
+            direct_to_bank(member.id, ceil(int(lists['bank'][str(member.id)])/10))
     print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\nTime: {datetime.now(pytz.timezone('US/Pacific')).strftime('%m/%d/%Y, %H:%M:%S Pacific')}")
     
 # everything has finally been set up
