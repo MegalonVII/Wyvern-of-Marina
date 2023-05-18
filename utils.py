@@ -3,13 +3,13 @@ import time
 import os
 import csv
 
-files=["commands", "flairs", "coins", "delivery", "blueshell", "bomb", "ticket"]
+files=["commands", "flairs", "coins", "bank", "delivery", "blueshell", "bomb", "ticket", "letter", "banana"]
 file_checks={file:False for file in files}
 lists={file:{} for file in files}
 snipe_data={"content":{}, "author":{}, "id":{}, "attachment":{}}
 editsnipe_data={"content":{}, "author":{}, "id":{}}
 prev_steal_targets={}
-cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":25.0, "slots":10.0, "steal":30.0, 'bet':30.0, 'quote':45.0}
+cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":25.0, "slots":10.0, "steal":30.0, 'bet':30.0, 'quote':45.0, 'deposit':300.0}
 last_executed={cooldown:0 for cooldown in cooldowns}
 target_counts={}
 starboard_emoji='<:spuperman:670852114070634527>'
@@ -157,6 +157,70 @@ def subtract_item(itemName:str, userID:int, quantity:int) -> bool:
             writer.writerow(row)
     create_list(itemName)
     return True
+
+def dep(userID: int, coins: int) -> bool:
+    if subtract_coins(userID, coins):
+        fieldnames = ['user_id', 'coins']
+        found = False
+        rows = []
+        with open('bank.csv', 'r', newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if row['user_id'] == str(userID):
+                    row = {'user_id': row['user_id'], 'coins': int(row['coins']) + coins}
+                    found = True
+                rows.append(row)
+        if not found:
+            rows.append({'user_id': str(userID), 'coins': coins})
+        with open('bank.csv', 'w', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for row in rows:
+                writer.writerow(row)
+        create_list("bank")
+        return True
+    return False
+
+def wd(userID: int, coins: int) -> bool:
+    fieldnames = ['user_id', 'coins']
+    found = False
+    rows = []
+    with open('bank.csv', 'r', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if row['user_id'] == str(userID):
+                if int(row['coins']) >= coins:
+                    row = {'user_id': row['user_id'], 'coins': int(row['coins']) - coins}
+                    found = True
+                else:
+                    return False
+            rows.append(row)
+    if not found:
+        return False
+    with open('bank.csv', 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+    create_list("bank")
+    add_coins(userID, coins)
+    return True
+
+def direct_to_bank(userID: int, coins: int):
+    fieldnames = ['user_id', 'coins']
+    rows = []
+    with open('bank.csv', 'r', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if row['user_id'] == str(userID):
+                row = {'user_id': row['user_id'], 'coins': int(row['coins']) + coins}
+            rows.append(row)
+    with open('bank.csv', 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+    create_list("bank")
 
 async def in_wom_shenanigans(ctx):
     wom_shenanigans = discord.utils.get(ctx.guild.channels, name='wom-shenanigans')
