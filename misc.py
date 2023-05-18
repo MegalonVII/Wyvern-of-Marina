@@ -17,6 +17,7 @@ class Miscellaneous(commands.Cog):
         try:
             return await ctx.reply(", ".join([member.name for member in ctx.guild.members if member.is_timed_out()]), mention_author=False)
         except:
+            await ctx.message.add_reaction('🦈')
             return await ctx.reply("Wups! No one is muted currently...", mention_author=False)
     
     @commands.command(name='avatar', aliases=['avi'])
