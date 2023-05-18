@@ -22,7 +22,7 @@ class Admin(commands.Cog):
                 return await ctx.reply("Wups! You do not have the required permissions...", mention_author=False)
             elif name in list(lists["commands"].keys()):
                 await ctx.message.add_reaction('🦈')
-                return await ctx.reply('Wups, this command already exists...', mention_author=False)
+                return await ctx.reply('Wups! This command already exists...', mention_author=False)
             
             output = ' '.join(output).replace('"', '\"').replace("'", "\'")
             with open('commands.csv', 'a', newline='') as csvfile:
