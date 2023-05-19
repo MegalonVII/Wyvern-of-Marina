@@ -2,44 +2,18 @@ import discord
 from discord.ext import commands
 import random
 import datetime
-import pandas as pd
 import asyncio
 from utils import *
 
 # economy commands
-# lb, slots, steal, bet, dep, wd, bal, bankbal, paypal, mp, buy inv, use
+# slots, bet, steal, heist, dep, wd, bal, bankbal, paypal, mp, buy, sell, inv, use
 class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.items = ['delivery', 'bomb','ticket', 'letter', 'blueshell', 'banana']
+        self.items = ['delivery', 'bomb','ticket', 'letter', 'shell', 'banana']
         self.prices = [100000, 10000, 2500, 1000, 500, 10]
         self.priceStrs = ['100,000', '10,000', '2,500', '1,000', '500', '10']
-        self.descs = ['Have Blues personally deliver their WoM plushie to you!', 'Mute a random member for 30 minutes!', 'Siphon half of the Zenny from the richest person that they have on hand! This will have no effect if you are the richest person.', 'Redeem this ticket for a custom role!', 'Send a letter to anyone in this server!', 'Grab this illusive, mysterious banana!']
-
-    @commands.command(name='leaderboard', aliases=['lb'])
-    async def leaderboard(self, ctx):
-        csvs = ['coins', 'bank']
-        async with ctx.typing():
-            df = pd.read_csv("coins.csv")
-            df_sorted = df.sort_values("coins", ascending=False)
-            df_sorted.to_csv("coins.csv", index=False)
-            create_list('coins')
-        top_users = [(k, int(lists['coins'][k])) for k in list(lists['coins'])[:5]]
-        for i, (user_id, z) in enumerate(top_users):
-            if user_id in lists["bank"].keys():
-                top_users[i] = (user_id, z + int(lists["bank"][user_id]))
-        embed = discord.Embed(title=f'Top {len(top_users)} Richest Users', color=discord.Color.purple())
-        if len(top_users) == 1:
-            embed.title='Richest User'
-        elif len(top_users) == 0:
-            await ctx.message.add_reaction('🦈')
-            return await ctx.reply('Wups! No one is in this economy...', mention_author=False)
-        for i, (user_id, z) in enumerate(top_users):
-            user = await self.bot.fetch_user(user_id)
-            embed.add_field(name=f'#{i+1}: {user.name}', value=f'{z} {zenny}', inline=False)
-            if i == 0:
-                embed.set_thumbnail(url=user.avatar.url)
-        return await ctx.reply(embed=embed, mention_author=False)
+        self.descs = ['Have Blues personally deliver their WoM plushie to you!', 'Mute a random member for 30 minutes!', 'Redeem this ticket for a custom role!', 'Send a letter to anyone in this server!', 'Siphon half of the Zenny from the random person that they have on hand!', 'Grab this illusive, mysterious banana!']
   
     @commands.command(name='slots')
     async def slots(self, ctx):
@@ -72,6 +46,23 @@ class Economy(commands.Cog):
                 return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nNice! 25 {zenny}!", allowed_mentions=discord.AllowedMentions.none())
             return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nBetter luck next time...", allowed_mentions=discord.AllowedMentions.none())
 
+    @commands.command(name='bet')
+    async def bet(self, ctx, amount:int):
+        if await in_wom_shenanigans(ctx):
+            if assert_cooldown('bet'):
+                await ctx.message.add_reaction('🦈')
+                return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('bet')} seconds...", mention_author=False)
+            if subtract_coins(ctx.author.id, amount):
+                roll = random.randint(1,6)
+                roll2 = random.randint(1,6)
+                result = roll + roll2
+                if result == 7:
+                    add_coins(ctx.author.id, 2*amount)
+                    return await ctx.reply(f"You rolled a {result}! You win!", mention_author=False)
+                return await ctx.reply(f"You rolled a {result}! Sorry, you lost...", mention_author=False)
+            await ctx.message.add_reaction('🦈')
+            return await ctx.reply(f"Wups! You can't bet that much {zenny} as you don't have that much...",mention_author=False)
+
     @commands.command(name='steal')
     async def steal(self, ctx, target: discord.Member):
         global prev_steal_targets, target_counts
@@ -91,21 +82,8 @@ class Economy(commands.Cog):
                 prev_steal_targets[ctx.author.id] = target
             if target_counts.get(ctx.author.id, 0) >= 2:
                 target_counts[ctx.author.id] = 0
-
-            async with ctx.typing():
-                df = pd.read_csv("coins.csv")
-                df_sorted = df.sort_values("coins", ascending=False)
-                df_sorted.to_csv("coins.csv", index=False)
-                create_list('coins')
-            richest_person_list = [(k, int(lists['coins'][k])) for k in list(lists['coins'])[:1]]
-            for i, (user_id, z) in enumerate(richest_person_list):
-                if user_id in lists["bank"].keys():
-                    richest_person_list[i] = (user_id, z + int(lists["bank"][user_id]))
-            richest_person_id = int(richest_person_list[0][0])
-            richest_person = discord.utils.get(ctx.guild.members, id=richest_person_id)
-            steal_chance = 6 if target == richest_person else 4
             
-            if random.randint(1,10) <= steal_chance:
+            if random.randint(1,10) <= 5:
                 random_steal = random.randint(1,100)
                 if subtract_coins(target.id, random_steal):
                     add_coins(ctx.author.id, random_steal) # successful steal
@@ -121,29 +99,31 @@ class Economy(commands.Cog):
                 else:
                     return await ctx.reply(f"You got caught trying to steal {lost_coins} {zenny} from {target.name}! However, you weren't able to pay them back...", mention_author=False) # successful steal, couldn't pay back
 
-    @commands.command(name='bet')
-    async def bet(self, ctx, amount:int):
+    @commands.command(name='heist')
+    async def heist(self, ctx):
         if await in_wom_shenanigans(ctx):
-            if assert_cooldown('bet'):
+            if assert_cooldown("heist") != 0:
                 await ctx.message.add_reaction('🦈')
-                return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('bet')} seconds...", mention_author=False)
-            if subtract_coins(ctx.author.id, amount):
-                roll = random.randint(1,6)
-                roll2 = random.randint(1,6)
-                result = roll + roll2
-                if result == 7:
-                    add_coins(ctx.author.id, 2*amount)
-                    return await ctx.reply(f"You rolled a {result}! You win!", mention_author=False)
-                return await ctx.reply(f"You rolled a {result}! Sorry, you lost...", mention_author=False)
-            await ctx.message.add_reaction('🦈')
-            return await ctx.reply(f"Wups! You can't bet that much {zenny} as you don't have that much...",mention_author=False)
+                return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('heist')} seconds...", mention_author=False)
+            if random.randint(1,100) == 1:
+                total = 0
+                for key in lists['bank'].keys():
+                    if not int(key) == ctx.author.id:
+                        amount = int(lists['bank'][key])
+                        if stolen_funds(int(key), amount):
+                            total += amount
+                            add_coins(ctx.author.id, amount)
+                return await ctx.reply(f"Successful heist! {total} {zenny}!", mention_author=False)
+            else:
+                if not ctx.author.guild_permissions.administrator:
+                    await ctx.author.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=24))
+                    return await ctx.reply("Unsuccessful heist! <:PoM:888677251615449158> arrested you! (muted for 1 day)", mention_author=False)
+                await ctx.message.add_reaction('🦈')
+                return await ctx.reply("Wups! You work for the bank, you admin. Your employer, <:jobslime:670901431527669780>, wouldn't be too happy if you robbed the workplace...", mention_author=False)
 
     @commands.command(name='deposit', aliases=['dep'])
     async def deposit(self, ctx, amt:int):
         if await in_wom_shenanigans(ctx):
-            if assert_cooldown('deposit'):
-                await ctx.message.add_reaction('🦈')
-                return await ctx.reply(f"Wups! The bank is slow, and cannot take any more deposits for another {assert_cooldown('deposit')} seconds...")
             if dep(ctx.author.id, amt):
                 return await ctx.reply(f"Successfully deposited {amt} {zenny}!", mention_author=False)
             await ctx.message.add_reaction('🦈')
@@ -208,6 +188,7 @@ class Economy(commands.Cog):
     @commands.command(name='buy')
     async def buy(self, ctx, item:str):
         if await in_wom_shenanigans(ctx):
+            item = item.lower()
             for item_name, item_price in zip(self.items, self.prices):
                 if item.lower() == item_name:
                     if not subtract_coins(ctx.author.id, item_price):
@@ -218,6 +199,21 @@ class Economy(commands.Cog):
             await ctx.message.add_reaction('🦈')
             return await ctx.reply("Wups! Invalid item...", mention_author=False)
 
+    @commands.command(name='sell')
+    async def sell(self, ctx, item:str):
+        if await in_wom_shenanigans(ctx):
+            item = item.lower()
+            for name, price in zip(self.items, self.prices):
+                sell = price // 2
+                if item == name:
+                    if subtract_item(item, ctx.author.id, 1):
+                        add_coins(ctx.author.id, sell)
+                        return await ctx.reply(f'Successfully sold a {item}!', mention_author=False)
+                    await ctx.message.add_reaction('🦈')
+                    return await ctx.reply(f"Wups! You don't have a {item}...", mention_author=False) 
+            await ctx.message.add_reaction('🦈')
+            return await ctx.reply("Wups! Invalid item...", mention_author=False)
+  
     @commands.command(name='inventory', aliases=['inv'])
     async def inventory(self, ctx):
         if await in_wom_shenanigans(ctx):
@@ -303,31 +299,18 @@ class Economy(commands.Cog):
                     await content.reply("Message sent!", mention_author=False)
                     return await content.delete()
 
-            elif item == 'blueshell':
-                async with ctx.typing():
-                    df = pd.read_csv("coins.csv")
-                    df_sorted = df.sort_values("coins", ascending=False)
-                    df_sorted.to_csv("coins.csv", index=False)
-                    create_list('coins')
-                    richest_person_list = [(k, int(lists['coins'][k])) for k in list(lists['coins'])[:1]]
-                    for i, (user_id, z) in enumerate(richest_person_list):
-                        if user_id in lists["bank"].keys():
-                            richest_person_list[i] = (user_id, z + int(lists["bank"][user_id]))
-                    richest_person_id = int(richest_person_list[0][0])
-                    richest_person = discord.utils.get(ctx.guild.members, id=richest_person_id)
-                    if ctx.author == richest_person:
-                        await ctx.message.add_reaction('🦈')
-                        return await ctx.reply(f"Wups! You can't {item} yourself! You're the richest person...", mention_author=False)
-                    if subtract_item(item, ctx.author.id, 1):
-                        balance = int(lists['coins'][str(richest_person_id)])
-                        if balance % 2 == 1:
-                            add_coins(richest_person_id, 1)
-                            balance = int(lists['coins'][str(richest_person_id)])
-                        if subtract_coins(richest_person_id, balance // 2):
-                            add_coins(ctx.author.id, balance // 2)
-                            return await ctx.reply(f"{richest_person.name} got hit by a {item}! You received {balance // 2} {zenny} from them!", mention_author=False)
-                    await ctx.message.add_reaction('🦈')
-                    return await ctx.reply(f"Wups! You don't have a {item}...", mention_author=False)
+            elif item == 'shell':
+                if subtract_item(item, ctx.author.id, 1):
+                    target = random.choice([member for member in ctx.guild.members if not member.bot and not member == ctx.author])
+                    balance = int(lists['coins'][str(target.id)])
+                    if balance % 2 == 1:
+                        add_coins(target.id, 1)
+                        balance = int(lists['coins'][str(target.id)])
+                    if subtract_coins(target.id, int(balance // 2)):
+                        add_coins(ctx.author.id, int(balance // 2))
+                        return await ctx.reply(f"{target.name} got hit by a {item}! You received {balance // 2} {zenny} from them!", mention_author=False)
+                await ctx.message.add_reaction('🦈')
+                return await ctx.reply(f"Wups! You don't have a {item}...", mention_author=False)
 
             elif item == 'banana':
                 if subtract_item(item, ctx.author.id, 1):
