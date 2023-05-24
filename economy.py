@@ -3,6 +3,7 @@ from discord.ext import commands
 import random
 import datetime
 import asyncio
+from math import ceil
 from utils import *
 
 # economy commands
@@ -105,7 +106,7 @@ class Economy(commands.Cog):
             if assert_cooldown("heist") != 0:
                 await ctx.message.add_reaction('🦈')
                 return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('heist')} seconds...", mention_author=False)
-            if random.randint(1,100) == 1:
+            if random.randint(1,100) == 1: # successful heist
                 total = 0
                 for key in lists['bank'].keys():
                     if not int(key) == ctx.author.id:
@@ -114,12 +115,19 @@ class Economy(commands.Cog):
                             total += amount
                             add_coins(ctx.author.id, amount)
                 return await ctx.reply(f"Successful heist! {total} {zenny}!", mention_author=False)
-            else:
-                if not ctx.author.guild_permissions.administrator:
-                    await ctx.author.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=24))
-                    return await ctx.reply("Unsuccessful heist! <:PoM:888677251615449158> arrested you! (muted for 1 day)", mention_author=False)
-                await ctx.message.add_reaction('🦈')
-                return await ctx.reply("Wups! You work for the bank, you admin. Your employer, <:jobslime:670901431527669780>, wouldn't be too happy if you robbed the workplace...", mention_author=False)
+            else: # unsuccesful heist
+                handBal = int(lists['coins'][str(ctx.author.id)])
+                bankBal = int(lists['bank'][str(ctx.author.id)])
+                if handBal != 0: # check if can take from hand
+                    bail = ceil(handBal * 0.2)
+                    if subtract_coins(ctx.author.id, bail):
+                        return await ctx.reply(f"Unsuccessful heist! <:PoM:888677251615449158> arrested you! You paid {bail} {zenny} as bail...", mention_author=False)
+                elif handBal == 0 and bankBal != 0: # can't take from hand, takes from bank instead
+                    bail = ceil(bankBal * 0.2)
+                    if stolen_funds(ctx.author.id, bail):
+                        return await ctx.reply(f"Unsuccessful heist! <:PoM:888677251615449158> arrested you! You paid {bail} {zenny} from the bank as bail...", mention_author=False)
+                else: # can't take from either
+                    return await ctx.reply("Unsuccessful heist! <:PoM:888677251615449158> arrested you! You couldn't pay a bail, however, so you spent the night in jail...", mention_author=False)
 
     @commands.command(name='deposit', aliases=['dep'])
     async def deposit(self, ctx, amt:int):
