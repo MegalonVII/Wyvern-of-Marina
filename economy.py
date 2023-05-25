@@ -109,11 +109,10 @@ class Economy(commands.Cog):
             if random.randint(1,100) == 1: # successful heist
                 total = 0
                 for key in lists['bank'].keys():
-                    if not int(key) == ctx.author.id:
-                        amount = int(lists['bank'][key])
-                        if stolen_funds(int(key), amount):
-                            total += amount
-                            add_coins(ctx.author.id, amount)
+                    amount = int(lists['bank'][key])
+                    if stolen_funds(int(key), amount):
+                        total += amount
+                        add_coins(ctx.author.id, amount)
                 return await ctx.reply(f"Successful heist! {total} {zenny}!", mention_author=False)
             else: # unsuccesful heist
                 handBal = int(lists['coins'][str(ctx.author.id)])
