@@ -99,6 +99,9 @@ async def on_ready():
     for member in bot.guilds[0].members:
         if str(member.id) in lists['bank'].keys():
             direct_to_bank(member.id, ceil(int(lists['bank'][str(member.id)])/10))
+        else:
+            if not member.bot:
+                direct_to_bank(member.id, 0)
     print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\nTime: {datetime.now(pytz.timezone('US/Pacific')).strftime('%m/%d/%Y, %H:%M:%S Pacific')}")
     
 # everything has finally been set up
