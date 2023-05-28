@@ -106,7 +106,7 @@ class Economy(commands.Cog):
             if assert_cooldown("heist") != 0:
                 await ctx.message.add_reaction('🦈')
                 return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('heist')} seconds...", mention_author=False)
-            if random.randint(1,100) == 1: # successful heist
+            if random.randint(1, 100) == 1: # successful heist
                 total = 0
                 for key in lists['bank'].keys():
                     amount = int(lists['bank'][key])
