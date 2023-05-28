@@ -36,10 +36,12 @@ class Events(commands.Cog):
       
         if random.randint(1,4096) == 1:  
             if random.randint(1,2) == 1:
-                try:
-                    return await message.author.send(f"Hey {message.author.name}. Hope this finds you well.\n\nJust wanted to say that I know that this server might make some jabs at you or do some things that might rub you the wrong way, but that aside I wanted to personally tell you that I value that you\'re here. I think you\'re amazing and you deserve only good things coming to you. Hope you only succeed from here!\nIf you\'re ever feeling down, I hope you can look back at this message just to cheer you up. Also, this message might come back to you again so maybe you\'ll need it again?\n\nOh well. Been nice talking to ya! <3")
-                except:
-                    return await message.channel.send(f"I tried sending {message.author.mention} top secret classified government information, but for some reason I couldn\'t...")
+                versal = discord.utils.get(message.guild.members, id = 357279142640746497) # versal asked to not get spammed with this dm because they talk a lot in this server
+                if versal is None or message.author.id != versal.id:
+                    try:
+                        return await message.author.send(f"Hey {message.author.name}. Hope this finds you well.\n\nJust wanted to say that I know that this server might make some jabs at you or do some things that might rub you the wrong way, but that aside I wanted to personally tell you that I value that you\'re here. I think you\'re amazing and you deserve only good things coming to you. Hope you only succeed from here!\nIf you\'re ever feeling down, I hope you can look back at this message just to cheer you up. Also, this message might come back to you again so maybe you\'ll need it again?\n\nOh well. Been nice talking to ya! <3")
+                    except:
+                        return await message.channel.send(f"I tried sending {message.author.mention} top secret classified government information, but for some reason I couldn\'t...")
             else:
                 add_coins(message.author.id,500)
                 with open("shiny.png", "rb") as f:
@@ -89,6 +91,7 @@ class Events(commands.Cog):
             except:
                 pass
             add_coins(member.id,100)
+            direct_to_bank(member.id, 0)
             return await member.guild.system_channel.send(f"Welcome, {member.mention}, to **The Marina**! This is your one-way ticket to Hell. There\'s no going back from here...\nFor a grasp of the rules, however (yes, we have those), we do ask that you check <#822341695411847249>.\n*Remember to take breaks, nya?*")
         else:
             try:
