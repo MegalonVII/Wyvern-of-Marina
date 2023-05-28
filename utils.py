@@ -208,13 +208,17 @@ def wd(userID: int, coins: int) -> bool:
 
 def direct_to_bank(userID: int, coins: int):
     fieldnames = ['user_id', 'coins']
+    found = False
     rows = []
     with open('bank.csv', 'r', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             if row['user_id'] == str(userID):
                 row = {'user_id': row['user_id'], 'coins': int(row['coins']) + coins}
+                found = True
             rows.append(row)
+    if not found:
+        rows.append({'user_id': str(userID), 'coins': coins})
     with open('bank.csv', 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
