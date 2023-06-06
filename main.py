@@ -43,6 +43,7 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w roulette ([Admin Only] @member)', value='Try your luck... 😈', inline=False)
         embed.add_field(name='!w trivia ([Optional] type)', value='I\'ll give you a multiple-choice trivia question. If you do not provide a type, it will be a random question on either general knowledge or some form of media. If you do, the types you may choose from are "general", "music", "film", "tv", "games", or "anime".', inline=False)
         embed.add_field(name='!w quote', value='Returns a random quote from a video game!', inline=False)
+        embed.add_field(name='!w deathbattle (@user)', value='Fight someone... 🤠', inline=False)
 
     elif page == 2:
         embed.title='Economical Commands'
