@@ -3,6 +3,7 @@ import os
 from discord.ext import commands
 from datetime import datetime
 import pytz
+import pandas as pd
 from keep_alive import keep_alive
 from utils import *
 from math import ceil
@@ -98,7 +99,13 @@ async def on_ready():
         await bot.load_extension(extension)
     for member in bot.guilds[0].members:
         if str(member.id) in lists['bank'].keys():
-            direct_to_bank(member.id, ceil(int(lists['bank'][str(member.id)])/10))
+            df = pd.read_csv('bank.csv')
+            df_sorted = df.sort_values(by='coins', ascending=False)
+            df_sorted.to_csv('bank.csv', index=False)
+            create_list('bank')
+            richest_id = int(list(lists['bank'].keys())[0])
+            if not member.id == richest_id:
+                direct_to_bank(member.id, ceil(int(lists['bank'][str(member.id)])/10))
         else:
             if not member.bot:
                 direct_to_bank(member.id, 0)
