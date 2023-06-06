@@ -14,7 +14,7 @@ class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.actions = ["{} poisons {}'s drink!", "{} places a frag mine beneath {}'s feet!", "{} passes {} a blunt!", "{} burns down {}'s house!"]
-        self.deaths = [" {} dies of dysentery!", " {} explodes!", " {} took one hit of the Blunt9000™️ and descended straight to Hell!", " {} got caught in the fire and burns down to a crisp!"]
+        self.deaths = [" {} dies of dysentery!", " {} explodes!", " {} took one hit of the Blunt9000™️ and descends straight to Hell!", " {} got caught in the fire and burns down to a crisp!"]
         self.survivals = [" {} notices this and gets another drink...", " {} quickly steps aside...", " {} kindly rejects the offer...", " {} quickly got out of the fire and finds shelter elsewhere..."]
         self.currentFight = False
 
