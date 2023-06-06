@@ -9,10 +9,14 @@ import urllib.parse
 from utils import *
 
 # fun commands start here
-# say, custc, snipe, esnipe, choose, who, howgay, rps, 8ball, roulette, trivia, quote
+# say, custc, snipe, esnipe, choose, who, howgay, rps, 8ball, roulette, trivia, quote, deathbattle
 class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.actions = ["{} poisons {}'s drink!", "{} places a frag mine beneath {}'s feet!", "{} passes {} a blunt!", "{} burns down {}'s house!"]
+        self.deaths = [" {} dies of dysentery!", " {} explodes!", " {} took one hit of the Blunt9000™️ and descended straight to Hell!", " {} got caught in the fire and burns down to a crisp!"]
+        self.survivals = [" {} notices this and gets another drink...", " {} quickly steps aside...", " {} kindly rejects the offer...", " {} quickly got out of the fire and finds shelter elsewhere..."]
+        self.currentFight = False
 
     @commands.command(name='say')
     async def say(self, ctx, *args):
@@ -228,7 +232,7 @@ class Fun(commands.Cog):
                 return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('quote')} seconds...", mention_author=False)
 
             async with ctx.typing():
-                response = requests.get(f'https://ultima.rest/api/quote?id={random.randint(1,516)}')
+                response = requests.get(f'https://ultima.rest/api/quote?id={random.randint(1,552)}')
                 data = json.loads(response.text)
             quote = data['quote']
             character = data['character']
@@ -237,6 +241,48 @@ class Fun(commands.Cog):
             embed = discord.Embed(title="💬 Quote 💬", description=f'"{quote}"', color=discord.Color.purple())
             embed.set_footer(text=f"From: {character} - {title}, {release}")
             return await ctx.reply(embed=embed, mention_author=False)
+
+    @commands.command(name='deathbattle', aliases=['db'])
+    async def deathbattle(self, ctx, member: discord.Member):
+        if await in_wom_shenanigans(ctx):
+            if self.currentFight:
+                await ctx.message.add_reaction('🦈')
+                return await ctx.reply(f"Wups! There is currently a fight going on...", mention_author=False)
+            if member.bot:
+                await ctx.message.add_reaction('🦈')
+                return await ctx.reply(f"Wups! You can't fight a bot...", mention_author=False)
+              
+        self.currentFight = True
+        players = [ctx.author, member] if random.choice([True, False]) else [member, ctx.author]
+        turn = 0
+        am = discord.AllowedMentions.none()
+        msg = await ctx.reply(f"{ctx.author.name} challenges {member.name} to the death!", mention_author=False)
+        await asyncio.sleep(3)
+        while True:
+            if turn % 2 == 0:
+                actor = players[0]
+                target = players[1]
+            else:
+                actor = players[1]
+                target = players[0]
+            choiceNum = random.randint(0, len(self.actions) - 1)
+            action = self.actions[choiceNum]
+            await msg.edit(content=action.format(actor.name, target.name), allowed_mentions=am)
+            await asyncio.sleep(2)
+            determinant = random.randint(1, 5)
+            if determinant == 1:
+                response = action + self.deaths[choiceNum]
+            else:
+                response = action + self.survivals[choiceNum]
+            await msg.edit(content=response.format(actor.name, target.name, target.name), allowed_mentions=am)
+            if determinant == 1:
+                self.currentFight = False
+                break
+            else:
+                turn += 1
+                await asyncio.sleep(3)
+        return None
+                
 
 async def setup(bot):
     await bot.add_cog(Fun(bot))
