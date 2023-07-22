@@ -14,7 +14,7 @@ class Economy(commands.Cog):
         self.items = ['delivery', 'bomb','ticket', 'letter', 'shell', 'banana']
         self.prices = [100000, 10000, 2500, 1000, 500, 10]
         self.priceStrs = ['100,000', '10,000', '2,500', '1,000', '500', '10']
-        self.descs = ['Have Blues personally deliver their WoM plushie to you!', 'Mute a random member for 30 minutes!', 'Redeem this ticket for a custom role!', 'Send a letter to anyone in this server!', 'Siphon half of the Zenny from the random person that they have on hand!', 'Grab this illusive, mysterious banana!']
+        self.descs = ['Have Blues personally deliver their WoM plushie to you!', 'Siphon half of the Zenny from a random person that they have in the bank!', 'Redeem this ticket for a custom role!', 'Send a letter to anyone in this server!', 'Siphon half of the Zenny from a random person that they have on hand!', 'Grab this illusive, mysterious banana!']
   
     @commands.command(name='slots')
     async def slots(self, ctx):
@@ -193,31 +193,43 @@ class Economy(commands.Cog):
         return await ctx.reply(embed=embed, mention_author=False)
 
     @commands.command(name='buy')
-    async def buy(self, ctx, item:str):
+    async def buy(self, ctx, item:str, number:int = 1):
         if await in_wom_shenanigans(ctx):
+            if number < 1:
+                await ctx.message.add_reaction('🦈')
+                return await ctx.reply("Wups! Invalid number requested...", mention_author=False)
             item = item.lower()
             for item_name, item_price in zip(self.items, self.prices):
                 if item.lower() == item_name:
-                    if not subtract_coins(ctx.author.id, item_price):
+                    if not subtract_coins(ctx.author.id, number * item_price):
                         await ctx.message.add_reaction('🦈')
                         return await ctx.reply(f"Wups! You don't have enough {zenny}...", mention_author=False)
-                    add_item(item, ctx.author.id, 1)
-                    return await ctx.reply(f"You have successfully purchased a {item_name}!", mention_author=False)
+                    add_item(item, ctx.author.id, number)
+                    if number > 1:
+                        return await ctx.reply(f"You have successfully purchased {number} {item_name}s!", mention_author=False)
+                    else:
+                        return await ctx.reply(f"You have successfully purchased {number} {item_name}!", mention_author=False)
             await ctx.message.add_reaction('🦈')
             return await ctx.reply("Wups! Invalid item...", mention_author=False)
 
     @commands.command(name='sell')
-    async def sell(self, ctx, item:str):
+    async def sell(self, ctx, item:str, number:int = 1):
         if await in_wom_shenanigans(ctx):
+            if number < 1:
+                await ctx.message.add_reaction('🦈')
+                return await ctx.reply("Wups! Invalid number requested...", mention_author=False)
             item = item.lower()
             for name, price in zip(self.items, self.prices):
                 sell = price // 2
                 if item == name:
-                    if subtract_item(item, ctx.author.id, 1):
-                        add_coins(ctx.author.id, sell)
-                        return await ctx.reply(f'Successfully sold a {item}!', mention_author=False)
+                    if subtract_item(item, ctx.author.id, number):
+                        add_coins(ctx.author.id, number * sell)
+                        if number == 1:
+                            return await ctx.reply(f'Successfully sold {number} {item}! {sell} {zenny}!', mention_author=False)
+                        else:
+                            return await ctx.reply(f'Successfully sold {number} {item}s! {sell} {zenny}!', mention_author=False)
                     await ctx.message.add_reaction('🦈')
-                    return await ctx.reply(f"Wups! You don't have a {item}...", mention_author=False) 
+                    return await ctx.reply(f"Wups! You don't have that many {item}s...", mention_author=False) 
             await ctx.message.add_reaction('🦈')
             return await ctx.reply("Wups! Invalid item...", mention_author=False)
   
@@ -249,9 +261,14 @@ class Economy(commands.Cog):
 
             elif item == 'bomb':
                 if subtract_item(item, ctx.author.id, 1):
-                    bombed = random.choice([member for member in ctx.guild.members if not member == ctx.author and not member.bot and not member.guild_permissions.administrator])
-                    await ctx.message.delete()
-                    return await bombed.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(minutes=30))
+                    id = random.choice([key for key in lists['bank'].keys() if not key == str(ctx.author.id)])
+                    balance = int(lists['bank'][id])
+                    id = int(id)
+                    stolen = balance // 2
+                    member = discord.utils.get(ctx.guild.members, id=id)
+                    if stolen_funds(id, stolen):
+                        direct_to_bank(ctx.author.id, stolen)
+                        return await ctx.reply(f"Stole {stolen} {zenny} from {member.name}'s bank account! That {zenny} has been deposited into your bank account!", mention_author=False)
                 await ctx.message.add_reaction('🦈')
                 return await ctx.reply(f"Wups! You don't have a {item}...", mention_author=False)
 
