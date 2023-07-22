@@ -57,8 +57,8 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w bankbalance', value='I\'ll tell you how much Zenny you have in the bank.', inline=False)
         embed.add_field(name='!w paypal (@member) (amount)', value='Pay your pal some Zenny!', inline=False)
         embed.add_field(name='!w marketplace', value='I\'ll show you all the items that you can buy with Zenny!', inline=False)
-        embed.add_field(name='!w buy (item name)', value='If you have enough Zenny, you may buy an item from the Marketplace!', inline=False)
-        embed.add_field(name='!w sell (item name)', value='Sell an item in your inventory for half the price.', inline=False)
+        embed.add_field(name='!w buy (item name) ([Optional] number requested)', value='If you have enough Zenny, you may buy an item from the Marketplace! Number value defaults to 1.', inline=False)
+        embed.add_field(name='!w sell (item name) ([Optional] number requested)', value='Sell an item in your inventory for half the price. Number value defaults to 1.', inline=False)
         embed.add_field(name='!w inventory', value='I\'ll tell you the items that you have!', inline=False)
         embed.add_field(name='!w use (item name)', value='If you purchased the item you give me, you may use it!', inline=False)
       
@@ -85,6 +85,7 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w whomuted', value='Returns the name of every member who is currently muted.', inline=False)
         embed.add_field(name='!w avatar ([Optional] @member)', value='I\'ll send you the avatar of the given user. Defaults to yourself.', inline=False) 
         embed.add_field(name='!w emote (emote from this server)', value='Returns information of the given emote. It MUST be from this server!', inline=False)
+        embed.add_field(name='!w startpoll', value='Start a poll!', inline=False)
       
     if page > 0:
         embed.set_footer(text=f'Viewing page {page}/5')
@@ -94,22 +95,23 @@ async def help(ctx, page:int=0):
 @bot.event
 async def on_ready():
     print("Logging in...")
-    for file in files:
+    for file in files: # creates all lists wom stores
         create_list(file)
-    for extension in extensions:
+      
+    for extension in extensions: # loads extensions for other commands
         await bot.load_extension(extension)
-    for member in bot.guilds[0].members:
+
+    for member in bot.guilds[0].members: # interest
         if str(member.id) in lists['bank'].keys():
             df = pd.read_csv('bank.csv')
             df_sorted = df.sort_values(by='coins', ascending=False)
             df_sorted.to_csv('bank.csv', index=False)
             create_list('bank')
-            richest_id = int(list(lists['bank'].keys())[0])
-            if not member.id == richest_id:
-                direct_to_bank(member.id, ceil(int(lists['bank'][str(member.id)])/10))
+            direct_to_bank(member.id, ceil(int(lists['bank'][str(member.id)])/100))
         else:
             if not member.bot:
                 direct_to_bank(member.id, 0)
+
     print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\nTime: {datetime.now(pytz.timezone('US/Pacific')).strftime('%m/%d/%Y, %H:%M:%S Pacific')}")
     
 # everything has finally been set up
