@@ -14,7 +14,7 @@ class Economy(commands.Cog):
         self.items = ['delivery', 'bomb','ticket', 'letter', 'shell', 'banana']
         self.prices = [100000, 10000, 2500, 1000, 500, 10]
         self.priceStrs = ['100,000', '10,000', '2,500', '1,000', '500', '10']
-        self.descs = ['Have Blues personally deliver their WoM plushie to you!', 'Siphon half of the Zenny from a random person that they have in the bank!', 'Redeem this ticket for a custom role!', 'Send a letter to anyone in this server!', 'Siphon half of the Zenny from a random person that they have on hand!', 'Grab this illusive, mysterious banana!']
+        self.descs = ['Have Blues personally deliver their WoM plushie to you!', 'Siphon half of the Zenny from a random that they have in the bank!', 'Redeem this ticket for a custom role!', 'Send a letter to anyone in this server!', 'Siphon half of the Zenny from a random person that they have on hand!', 'Grab this illusive, mysterious banana!']
   
     @commands.command(name='slots')
     async def slots(self, ctx):
