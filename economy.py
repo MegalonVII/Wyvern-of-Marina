@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 import random
-import datetime
 import asyncio
 from math import ceil
 from utils import *
@@ -225,9 +224,9 @@ class Economy(commands.Cog):
                     if subtract_item(item, ctx.author.id, number):
                         add_coins(ctx.author.id, number * sell)
                         if number == 1:
-                            return await ctx.reply(f'Successfully sold {number} {item}! {sell} {zenny}!', mention_author=False)
+                            return await ctx.reply(f'Successfully sold {number} {item}! {number*sell} {zenny}!', mention_author=False)
                         else:
-                            return await ctx.reply(f'Successfully sold {number} {item}s! {sell} {zenny}!', mention_author=False)
+                            return await ctx.reply(f'Successfully sold {number} {item}s! {number*sell} {zenny}!', mention_author=False)
                     await ctx.message.add_reaction('🦈')
                     return await ctx.reply(f"Wups! You don't have that many {item}s...", mention_author=False) 
             await ctx.message.add_reaction('🦈')
