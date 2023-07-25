@@ -13,11 +13,12 @@ target_counts={}
 cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":25.0, "slots":10.0, "steal":30.0, 'bet':30.0, 'quote':45.0, "heist":600.0}
 last_executed={cooldown:0 for cooldown in cooldowns}
 starboard_emoji='<:spuperman:670852114070634527>'
+shame_emoji='🪳'
 starboard_count=4
 zenny='<:zenny:1104179194780450906>'
 
 # bot helper functions
-# create_list, check_starboard, add_to_starboard, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, assert_cooldown
+# create_list, check_reaction_board, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, assert_cooldown
 def create_list(filename):
     global file_checks
     global lists
@@ -36,16 +37,26 @@ def create_list(filename):
                 dict = list(row.values())
                 lists[filename][dict[0]]=dict[1]
 
-async def check_starboard(message):
+async def check_reaction_board(message, reaction_type):
+    emoji, count = None, None
+
+    if reaction_type == "starboard":
+        emoji, count = starboard_emoji, starboard_count
+    elif reaction_type == "shameboard":
+        emoji, count = shame_emoji, starboard_count
     if message.reactions:
         for reaction in message.reactions:
-            if str(reaction.emoji)==starboard_emoji and reaction.count>=starboard_count:
+            if str(reaction.emoji) == emoji and reaction.count >= count:
                 return True
     return False
 
-async def add_to_starboard(message):
-    channel = discord.utils.get(message.guild.channels, name='hot-seat')
-    embed = discord.Embed(color=discord.Color.gold(), description=f'[Original Message]({message.jump_url})') # creates embed
+async def add_to_board(message, board_type):
+    board_name = "hot-seat" if board_type == "starboard" else "cold-seat"
+    board_emoji = starboard_emoji if board_type == "starboard" else shame_emoji
+    board_text = "⭐" if board_type == "starboard" else "🍅"
+
+    channel = discord.utils.get(message.guild.channels, name=board_name)
+    embed = discord.Embed(color=discord.Color.gold(), description=f'[Original Message]({message.jump_url})')
     embed.set_author(name=message.author.name, icon_url=message.author.avatar.url)
     embed.set_thumbnail(url=message.author.avatar.url)
     embed.add_field(name='Channel', value=f'<#{message.channel.id}>', inline=True)
@@ -53,19 +64,19 @@ async def add_to_starboard(message):
     if message.attachments:
         embed.set_image(url=message.attachments[0].url)
     for reaction in message.reactions:
-        if str(reaction.emoji) == starboard_emoji:
-            star_reaction = reaction
-            embed.set_footer(text=f'{star_reaction.count} ⭐')
+        if str(reaction.emoji) == board_emoji:
+            board_reaction = reaction
+            embed.set_footer(text=f'{board_reaction.count} {board_text}')
             break
-    async for star_msg in channel.history(): # edits embed in case of added reaction
-        if star_msg.embeds and star_msg.embeds[0].description == f'[Original Message]({message.jump_url})':
-            embed = star_msg.embeds[0]
+    async for board_msg in channel.history():
+        if board_msg.embeds and board_msg.embeds[0].description == f'[Original Message]({message.jump_url})':
+            embed = board_msg.embeds[0]
             for reaction in message.reactions:
-                if str(reaction.emoji) == starboard_emoji:
-                    star_reaction = reaction
-                    embed.set_footer(text=f'{star_reaction.count} ⭐')
+                if str(reaction.emoji) == board_emoji:
+                    board_reaction = reaction
+                    embed.set_footer(text=f'{board_reaction.count} {board_text}')
                     break
-            return await star_msg.edit(embed=embed)
+            return await board_msg.edit(embed=embed)
     return await channel.send(embed=embed)
 
 def add_coins(userID: int, coins: int):
