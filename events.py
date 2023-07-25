@@ -116,10 +116,12 @@ class Events(commands.Cog):
     async def on_reaction_add(self, reaction, user):
         if reaction.message.author == user or user.bot:
             return
-          
-        if str(reaction.emoji) == starboard_emoji:
-            if await check_starboard(reaction.message):
-                return await add_to_starboard(reaction.message)
+        
+        if str(reaction.emoji) == starboard_emoji or str(reaction.emoji) == shame_emoji:
+            board_type = "starboard" if str(reaction.emoji) == starboard_emoji else "shameboard"
+            if await check_reaction_board(reaction.message, board_type):
+                return await add_to_board(reaction.message, board_type)
+
     
     @commands.Cog.listener()
     async def on_member_remove(self, member):
