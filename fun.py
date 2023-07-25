@@ -147,7 +147,7 @@ class Fun(commands.Cog):
                     await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
                     return await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
                 add_coins(member.id,1)
-                return await ctx.reply(f"🚬🔫 Looks like you\'re safe, for now... You also won 1 {zenny}!", mention_author=False)
+                return await ctx.reply(f"🚬🔫 Looks like you\'re safe, for now... Here's 1 {zenny} as a pity prize...", mention_author=False)
             return await ctx.reply("❌🔫 Looks like you\'re safe, you filthy admin...", mention_author=False)
         
         else: # if an admin wants to roulette a member they specify
@@ -157,7 +157,7 @@ class Fun(commands.Cog):
                         await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
                         return await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
                     add_coins(member.id,1)
-                    return await ctx.reply(f"🚬🔫 Looks like you\'re safe, for now... You also won 1 {zenny}!", mention_author=False)
+                    return await ctx.reply(f"🚬🔫 Looks like you\'re safe, for now... Here's 1 {zenny} as a pity prize...", mention_author=False)
                 return await ctx.reply("❌🔫 A lowlife like you can\'t possibly fire the gun at someone else...", mention_author=False)
             elif member == ctx.author: # admin tries rouletting themself
                 return await ctx.reply("❌🔫 Admins are valued. Don\'t roulette an admin like yourself...", mention_author=False)
@@ -169,7 +169,7 @@ class Fun(commands.Cog):
                         await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
                         return await ctx.reply("🔥🔫 This user died! (muted for 1 hour)", mention_author=False)
                     add_coins(member.id,1)
-                    return await ctx.reply(f"🚬🔫 Looks like they\'re safe, for now... They also won 1 {zenny}!", mention_author=False)
+                    return await ctx.reply(f"🚬🔫 Looks like they\'re safe, for now... I gave them 1 {zenny} as a pity prize...", mention_author=False)
                 return await ctx.reply("❌🔫 Looks like they\'re safe, that filthy admin...", mention_author=False)
 
     @commands.command(name='trivia')
@@ -252,36 +252,36 @@ class Fun(commands.Cog):
                 await ctx.message.add_reaction('🦈')
                 return await ctx.reply(f"Wups! You can't fight a bot...", mention_author=False)
               
-        self.currentFight = True
-        players = [ctx.author, member] if random.choice([True, False]) else [member, ctx.author]
-        turn = 0
-        am = discord.AllowedMentions.none()
-        msg = await ctx.reply(f"{ctx.author.name} challenges {member.name} to the death!", mention_author=False)
-        await asyncio.sleep(3)
-        while True:
-            if turn % 2 == 0:
-                actor = players[0]
-                target = players[1]
-            else:
-                actor = players[1]
-                target = players[0]
-            choiceNum = random.randint(0, len(self.actions) - 1)
-            action = self.actions[choiceNum]
-            await msg.edit(content=action.format(actor.name, target.name), allowed_mentions=am)
-            await asyncio.sleep(2)
-            determinant = random.randint(1, 5)
-            if determinant == 1:
-                response = action + self.deaths[choiceNum]
-            else:
-                response = action + self.survivals[choiceNum]
-            await msg.edit(content=response.format(actor.name, target.name, target.name), allowed_mentions=am)
-            if determinant == 1:
-                self.currentFight = False
-                break
-            else:
-                turn += 1
-                await asyncio.sleep(3)
-        return None
+            self.currentFight = True
+            players = [ctx.author, member] if random.choice([True, False]) else [member, ctx.author]
+            turn = 0
+            am = discord.AllowedMentions.none()
+            msg = await ctx.reply(f"{ctx.author.name} challenges {member.name} to the death!", mention_author=False)
+            await asyncio.sleep(3)
+            while True:
+                if turn % 2 == 0:
+                    actor = players[0]
+                    target = players[1]
+                else:
+                    actor = players[1]
+                    target = players[0]
+                choiceNum = random.randint(0, len(self.actions) - 1)
+                action = self.actions[choiceNum]
+                await msg.edit(content=action.format(actor.name, target.name), allowed_mentions=am)
+                await asyncio.sleep(2)
+                determinant = random.randint(1, 5)
+                if determinant == 1:
+                    response = action + self.deaths[choiceNum]
+                else:
+                    response = action + self.survivals[choiceNum]
+                await msg.edit(content=response.format(actor.name, target.name, target.name), allowed_mentions=am)
+                if determinant == 1:
+                    self.currentFight = False
+                    break
+                else:
+                    turn += 1
+                    await asyncio.sleep(3)
+            return None
                 
 
 async def setup(bot):
