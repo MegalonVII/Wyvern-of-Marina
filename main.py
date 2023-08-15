@@ -12,13 +12,13 @@ from math import ceil
 TOKEN=os.getenv('DISCORD_TOKEN')
 bot=commands.Bot(command_prefix = '!w ', intents=discord.Intents.all())
 bot.remove_command('help')
-extensions=['fun', 'economy', 'admin', 'flair', 'misc', 'events']
+extensions=['fun', 'economy', 'admin', 'flair', 'misc', 'events', 'music']
 
 # bot help command redifined
 @bot.command(name='help')
 async def help(ctx, page:int=0):
     embed = discord.Embed(color = discord.Color.purple())
-    if page < 0 or page > 5:
+    if page < 0 or page > 6:
         return await ctx.reply('Wups! Invalid page number...', mention_author=False)
       
     if page == 0:
@@ -27,7 +27,8 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w help 2', value = 'All the fun economy commands!', inline=False)
         embed.add_field(name='!w help 3', value = 'All the administrative commands.', inline=False)
         embed.add_field(name='!w help 4', value = 'All the flair commands.', inline=False)
-        embed.add_field(name='!w help 5', value = 'All the miscellaneous commands.', inline=False)  
+        embed.add_field(name='!w help 5', value = 'All the miscellaneous commands.', inline=False) 
+        embed.add_field(name='!w help 6', value = 'All the music commands.', inline=False)
       
     elif page == 1:
         embed.title='Fun Commands'
@@ -86,9 +87,23 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w avatar ([Optional] @member)', value='I\'ll send you the avatar of the given user. Defaults to yourself.', inline=False) 
         embed.add_field(name='!w emote (emote from this server)', value='Returns information of the given emote. It MUST be from this server!', inline=False)
         embed.add_field(name='!w startpoll', value='Start a poll!', inline=False)
+
+    elif page == 6:
+        embed.title='Music Commands'
+        embed.add_field(name='!w join', value='Joins the voice chat that you are in', inline=False)
+        embed.add_field(name='!w leave', value='Leaves the voice chat that I am in', inline=False)
+        embed.add_field(name='!w play (YouTube URL or search query)', value= 'While I\'m in voice call, I will play the song from the YouTube URL or search query you provide me.', inline=False)
+        embed.add_field(name='!w now', value='Displays the current song that I\'m playing', inline=False)
+        embed.add_field(name='!w queue (optional: page number)', value='Displays the queue of songs. Page value defaults to 1. Each page displays the first 25 songs in the queue', inline=False)
+        embed.add_field(name='!w shuffle', value='Shuffles the current queue. *[DJs/Admin Only]*', inline=False)
+        embed.add_field(name='!w remove (index)', value='Removes the song at the provided index from the queue', inline=False)
+        embed.add_field(name='!w pause', value='Pauses any music that I\'m playing', inline=False)
+        embed.add_field(name='!w resume', value='Resumes any paused music', inline=False)
+        embed.add_field(name='!w stop', value='Stops any playing music entirely', inline=False)
+        embed.add_field(name='!w skip', value='Skips the current playing song to the next one in the queue. Only the song requester can do this, though DJs and Admins are unaffected', inline=False)
       
     if page > 0:
-        embed.set_footer(text=f'Viewing page {page}/5')
+        embed.set_footer(text=f'Viewing page {page}/6')
     return await ctx.reply(embed=embed, mention_author=False)
 
 # on_ready
