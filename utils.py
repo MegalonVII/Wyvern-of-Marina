@@ -18,7 +18,7 @@ starboard_count=4
 zenny='<:zenny:1104179194780450906>'
 
 # bot helper functions
-# create_list, check_reaction_board, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, assert_cooldown
+# create_list, check_reaction_board, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, assert_cooldown, cog_check
 def create_list(filename):
     global file_checks
     global lists
@@ -280,3 +280,8 @@ def assert_cooldown(command):
         last_executed[command] = time.time()
         return 0
     return round(last_executed[command] + cooldowns[command] - time.time())
+
+async def cog_check(ctx):
+    if not ctx.guild:
+        return False
+    return True
