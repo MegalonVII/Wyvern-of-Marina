@@ -13,40 +13,41 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.author.bot:
-            return
+        if message.guild:
+            if message.author.bot:
+                return
+              
+            if message.content[0:3] == "!w " and message.content.split()[1] in list(lists["commands"].keys()): # custom commands
+                await message.channel.send(lists["commands"][message.content.split()[1]])
+            else:   # any specific word triggers
+                if message.content.lower() == "me":
+                    await message.channel.send('<:WoM:836128658828558336>')
+                if message.content.lower() == "which":
+                    if assert_cooldown("which") != 0:
+                        await message.add_reaction('🦈')
+                    else:
+                        await message.channel.send(random.choice([member.name.lower() for member in message.guild.members if not member.bot]))
+        
+                # trigger reactions
+                triggers = ['yoshi','3ds','wednesday','yuri','yaoi','crank','kys']
+                trigger_emojis = ['<:full:1028536660918550568>','<:megalon:1078914494132129802>','<:wednesday:798691076092198993>','<:vers:804766992644702238>','🐍','🔧','⚡']
+                for trigger, emoji in zip(triggers, trigger_emojis):
+                    if trigger in message.content.lower().split(" "):
+                        await message.add_reaction(emoji)
           
-        if message.content[0:3] == "!w " and message.content.split()[1] in list(lists["commands"].keys()): # custom commands
-            await message.channel.send(lists["commands"][message.content.split()[1]])
-        else:   # any specific word triggers
-            if message.content.lower() == "me":
-                await message.channel.send('<:WoM:836128658828558336>')
-            if message.content.lower() == "which":
-                if assert_cooldown("which") != 0:
-                    await message.add_reaction('🦈')
+            if random.randint(1,4096) == 1:  
+                if random.randint(1,2) == 1:
+                    versal = discord.utils.get(message.guild.members, id = 357279142640746497) # versal asked to not get spammed with this dm because they talk a lot in this server
+                    if versal is None or message.author.id != versal.id:
+                        try:
+                            return await message.author.send(f"Hey {message.author.name}. Hope this finds you well.\n\nJust wanted to say that I know that this server might make some jabs at you or do some things that might rub you the wrong way, but that aside I wanted to personally tell you that I value that you\'re here. I think you\'re amazing and you deserve only good things coming to you. Hope you only succeed from here!\nIf you\'re ever feeling down, I hope you can look back at this message just to cheer you up. Also, this message might come back to you again so maybe you\'ll need it again?\n\nOh well. Been nice talking to ya! <3")
+                        except:
+                            return await message.channel.send(f"I tried sending {message.author.mention} top secret classified government information, but for some reason I couldn\'t...")
                 else:
-                    await message.channel.send(random.choice([member.name.lower() for member in message.guild.members if not member.bot]))
-    
-            # trigger reactions
-            triggers = ['yoshi','3ds','wednesday','yuri','yaoi','crank','kys']
-            trigger_emojis = ['<:full:1028536660918550568>','<:megalon:1078914494132129802>','<:wednesday:798691076092198993>','<:vers:804766992644702238>','🐍','🔧','⚡']
-            for trigger, emoji in zip(triggers, trigger_emojis):
-                if trigger in message.content.lower().split(" "):
-                    await message.add_reaction(emoji)
-      
-        if random.randint(1,4096) == 1:  
-            if random.randint(1,2) == 1:
-                versal = discord.utils.get(message.guild.members, id = 357279142640746497) # versal asked to not get spammed with this dm because they talk a lot in this server
-                if versal is None or message.author.id != versal.id:
-                    try:
-                        return await message.author.send(f"Hey {message.author.name}. Hope this finds you well.\n\nJust wanted to say that I know that this server might make some jabs at you or do some things that might rub you the wrong way, but that aside I wanted to personally tell you that I value that you\'re here. I think you\'re amazing and you deserve only good things coming to you. Hope you only succeed from here!\nIf you\'re ever feeling down, I hope you can look back at this message just to cheer you up. Also, this message might come back to you again so maybe you\'ll need it again?\n\nOh well. Been nice talking to ya! <3")
-                    except:
-                        return await message.channel.send(f"I tried sending {message.author.mention} top secret classified government information, but for some reason I couldn\'t...")
-            else:
-                add_coins(message.author.id,500)
-                with open("shiny.png", "rb") as f:
-                    file = discord.File(f)
-                    return await message.channel.send(content=f"{message.author.name} stumbled across 500 {zenny} and a wild Wyvern of Marina! ✨", file=file)
+                    add_coins(message.author.id,500)
+                    with open("shiny.png", "rb") as f:
+                        file = discord.File(f)
+                        return await message.channel.send(content=f"{message.author.name} stumbled across 500 {zenny} and a wild Wyvern of Marina! ✨", file=file)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
