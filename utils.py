@@ -2,6 +2,8 @@ import discord
 import time
 import os
 import csv
+from datetime import datetime
+from pytz import timezone
 
 files=["commands", "flairs", "coins", "bank", "delivery", "shell", "bomb", "ticket", "letter", "banana"]
 file_checks={file:False for file in files}
@@ -18,7 +20,7 @@ starboard_count=4
 zenny='<:zenny:1104179194780450906>'
 
 # bot helper functions
-# create_list, check_reaction_board, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, assert_cooldown, cog_check
+# create_list, check_reaction_board, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, assert_cooldown, cog_check, get_login_time
 def create_list(filename):
     global file_checks
     global lists
@@ -285,3 +287,15 @@ async def cog_check(ctx):
     if not ctx.guild:
         return False
     return True
+
+def get_login_time(tz: str) -> str:
+    hour = int(datetime.now(timezone(tz)).strftime("%H"))
+    if hour >= 12:
+        AMorPM = "PM"
+        if hour >= 13:
+            hour -= 12
+    elif hour < 12:
+        AMorPM = "AM"
+        if hour == 0:
+            hour = 12
+    return f"Time: {datetime.now(timezone(tz)).strftime('%m/%d/%Y')}, {hour}:{datetime.now(timezone(tz)).strftime('%M:%S')} {AMorPM}\nTimezone: {tz}\n"
