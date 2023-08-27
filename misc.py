@@ -4,7 +4,7 @@ import asyncio
 from utils import *
 
 # misc commands start here
-# ping, whomuted, avi, emote, startpoll
+# ping, whomuted, avi, emote, startpoll, convert
 class Miscellaneous(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -85,6 +85,35 @@ class Miscellaneous(commands.Cog):
                 emoji = get_emoji(i)
                 await poll_message.add_reaction(emoji)
             return None
+
+    @commands.command(name='convert')
+    async def convert(self, ctx, value: float, org_unit: str, new_unit: str):
+        if await cog_check(ctx):
+            org_unit = org_unit.lower()
+            new_unit = new_unit.lower()
+            unit_mapping = {"f": "F", "c": "C"}
+          
+            conversions = {
+                ("c", "f"): lambda x: x * 9/5 + 32,
+                ("f", "c"): lambda x: (x - 32) * 5/9,
+                ("m", "ft"): lambda x: x * 3.28084,
+                ("ft", "m"): lambda x: x * 0.3048,
+                ("kg", "lb"): lambda x: x * 2.20462,
+                ("lb", "kg"): lambda x: x * 0.453592,
+                ("mi", "km"): lambda x: x * 1.60934,
+                ("km", "mi"): lambda x: x * 0.621371,
+                ("in", "cm"): lambda x: x * 2.54,
+                ("cm", "in"): lambda x: x * 0.393701
+            }
+    
+            if (org_unit, new_unit) in conversions:
+                result = conversions[(org_unit, new_unit)](value)
+                org_unit = unit_mapping.get(org_unit, org_unit)
+                new_unit = unit_mapping.get(new_unit, new_unit)
+                return await ctx.reply(f"{value} {org_unit} is equal to {result:.2f} {new_unit}.", mention_author=False)
+            else:
+                await ctx.message.add_reaction('🦈')
+                return await ctx.reply("Wups! Invalid conversion...", mention_author=False)
         
 
 async def setup(bot):
