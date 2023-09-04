@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import random
 import asyncio
-import datetime
+from datetime import timedelta
 import requests
 import json
 import urllib.parse
@@ -13,9 +13,29 @@ from utils import *
 class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.actions = ["{} poisons {}'s drink!", "{} places a frag mine beneath {}'s feet!", "{} passes {} a blunt!", "{} burns down {}'s house!"]
-        self.deaths = [" {} dies of dysentery!", " {} explodes!", " {} took one hit of the Blunt9000™️ and descends straight to Hell!", " {} got caught in the fire and burns down to a crisp!"]
-        self.survivals = [" {} noticed this and gets another drink...", " {} quickly steps aside...", " {} kindly rejects the offer...", " {} quickly got out of the fire and finds shelter elsewhere..."]
+      
+        self.actions = [
+          "{} poisons {}'s drink!", 
+          "{} places a frag mine beneath {}'s feet!", 
+          "{} passes {} a blunt!", 
+          "{} burns down {}'s house!",
+          "{} tries gaslighting {} into thinking a Yoshi stampede is real and is coming for them!"
+        ]  
+        self.deaths = [
+          " {} dies of dysentery!", 
+          " {} explodes!", 
+          " {} took one hit of the Blunt9000™️ and descends straight to Hell!", 
+          " {} got caught in the fire and burns down to a crisp!",
+          " {} develops schizophrenia and starts hallucinating Yoshis coming for them. It gets so bad that they kill themself!"
+        ]
+        self.survivals = [
+          " {} noticed this and gets another drink...", 
+          " {} quickly steps aside...", 
+          " {} kindly rejects the offer...", 
+          " {} quickly got out of the fire and finds shelter elsewhere...",
+          " {} laughs off such an incomprehensible thing..." 
+        ]
+      
         self.currentFight = False
 
     @commands.command(name='say')
@@ -154,7 +174,7 @@ class Fun(commands.Cog):
             if member == ctx.author: # if a member wants to roulette themselves
                 if not member.guild_permissions.administrator:
                     if random.randint(1,6) == 1:
-                        await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
+                        await member.edit(timed_out_until=discord.utils.utcnow() + timedelta(hours=1), reason='roulette')
                         return await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
                     add_coins(member.id,1)
                     return await ctx.reply(f"🚬🔫 Looks like you\'re safe, for now... Here's 1 {zenny} as a pity prize...", mention_author=False)
@@ -164,7 +184,7 @@ class Fun(commands.Cog):
                 if not ctx.message.author.guild_permissions.administrator:
                     if member == ctx.author:  # roulette themselves if not admin (pinged themself)
                         if random.randint(1,6) == 1:
-                            await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
+                            await member.edit(timed_out_until=discord.utils.utcnow() + timedelta(hours=1), reason='roulette')
                             return await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
                         add_coins(member.id,1)
                         return await ctx.reply(f"🚬🔫 Looks like you\'re safe, for now... Here's 1 {zenny} as a pity prize...", mention_author=False)
@@ -176,7 +196,7 @@ class Fun(commands.Cog):
                 else:
                     if not member.guild_permissions.administrator: # admin tries rouletting "alive" non admin
                         if random.randint(1,6) == 1:
-                            await member.edit(timed_out_until=discord.utils.utcnow() + datetime.timedelta(hours=1), reason='roulette')
+                            await member.edit(timed_out_until=discord.utils.utcnow() + timedelta(hours=1), reason='roulette')
                             return await ctx.reply("🔥🔫 This user died! (muted for 1 hour)", mention_author=False)
                         add_coins(member.id,1)
                         return await ctx.reply(f"🚬🔫 Looks like they\'re safe, for now... I gave them 1 {zenny} as a pity prize...", mention_author=False)
