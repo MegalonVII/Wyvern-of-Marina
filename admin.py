@@ -2,7 +2,7 @@ import discord
 import csv
 from discord.ext import commands
 import pandas as pd
-import datetime
+from datetime import timedelta
 from utils import *
 
 # administrative commands start here
@@ -125,31 +125,31 @@ class Admin(commands.Cog):
                 if gettime > 2419200:
                     await ctx.message.add_reaction('🦈')
                     return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
-                newtime = datetime.timedelta(seconds=gettime)
+                newtime = timedelta(seconds=gettime)
             if 'm' in timelimit:
                 gettime = int(timelimit.strip('m'))
                 if gettime > 40320:
                     await ctx.message.add_reaction('🦈')
                     return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
-                newtime = datetime.timedelta(minutes=gettime)
+                newtime = timedelta(minutes=gettime)
             if 'h' in timelimit:
                 gettime = int(timelimit.strip('h'))
                 if gettime > 672:
                     await ctx.message.add_reaction('🦈')
                     return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
-                newtime = datetime.timedelta(hours=gettime)
+                newtime = timedelta(hours=gettime)
             if 'd' in timelimit:
                 gettime = int(timelimit.strip('d'))
                 if gettime > 28:
                     await ctx.message.add_reaction('🦈')
                     return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
-                newtime = datetime.timedelta(days=gettime)
+                newtime = timedelta(days=gettime)
             if 'w' in timelimit:
                 gettime = int(timelimit.strip('w'))
                 if gettime > 4:
                     await ctx.message.add_reaction('🦈')
                     return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
-                newtime = datetime.timedelta(weeks=gettime)
+                newtime = timedelta(weeks=gettime)
             
             await member.edit(timed_out_until=current_time+newtime)
             return await ctx.message.delete()
