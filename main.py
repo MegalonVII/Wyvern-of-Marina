@@ -1,12 +1,10 @@
 import discord
 import os
 from discord.ext import commands
-from datetime import datetime
-import pytz
 import pandas as pd
 from keep_alive import keep_alive
-from utils import *
 from math import ceil
+from utils import *
 
 # bot instantiation
 TOKEN=os.getenv('DISCORD_TOKEN')
