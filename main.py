@@ -34,6 +34,7 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w snipe', value='Snipes the last deleted message in that channel. Only the first media attachment will be sniped from the message. Keep in mind, you only have 60 seconds to snipe the deleted message!', inline=False)  
         embed.add_field(name='!w editsnipe', value='Acts just like !w snipe, only for messages that were edited instead of deleted.', inline=False)
         embed.add_field(name='!w choose (any number of options, separated by a space)', value='Chooses a random option from all the options that you give me.', inline=False)
+        embed.add_field(name='!w pokedex (number between 1 and 1017)', value='Returns information about said Pokémon at the given index!', inline=False)
         embed.add_field(name='!w who (remainder of question)', value='I\'ll tell you the name of a random member who fits this description.', inline=False)
         embed.add_field(name='!w howgay ([Optional] @member)', value='I\'ll tell you either how gay you are or how gay the user you mention is.', inline=False)
         embed.add_field(name='!w rps (your choice)', value='Play a simple game of Rock-Paper-Scissors with me!', inline=False)
@@ -99,20 +100,20 @@ async def on_ready():
         create_list(file)
       
     for extension in extensions: # loads extensions for other commands
-        await bot.load_extension(extension)
+        await bot.load_extension(f'exts.{extension}')
 
     for member in bot.guilds[0].members: # interest
         if str(member.id) in lists['bank'].keys():
-            df = pd.read_csv('bank.csv')
+            df = pd.read_csv('csv/bank.csv')
             df_sorted = df.sort_values(by='coins', ascending=False)
-            df_sorted.to_csv('bank.csv', index=False)
+            df_sorted.to_csv('csv/bank.csv', index=False)
             create_list('bank')
             direct_to_bank(member.id, ceil(int(lists['bank'][str(member.id)])/100))
         else:
             if not member.bot:
                 direct_to_bank(member.id, 0)
 
-    print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\n" + get_login_time('US/Pacific')) # fully logged in with everything loaded in the backend. chose the timezone as pst because that's what blues is based in
+    print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\n" + get_login_time('US/Eastern')) # fully logged in with everything loaded in the backend. chose the timezone as pst because that's what blues is based in
     
 # everything has finally been set up
 # we can now run the bot
