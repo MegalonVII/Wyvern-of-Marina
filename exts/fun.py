@@ -6,36 +6,17 @@ from datetime import timedelta
 import requests
 import json
 import urllib.parse
+import pypokedex as dex
 from utils import *
 
 # fun commands start here
-# say, custc, snipe, esnipe, choose, who, howgay, rps, 8ball, roulette, trivia, quote, deathbattle
+# say, custc, snipe, esnipe, choose, pokedex, who, howgay, rps, 8ball, roulette, trivia, quote, deathbattle
 class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-      
-        self.actions = [
-          "{} poisons {}'s drink!", 
-          "{} places a frag mine beneath {}'s feet!", 
-          "{} passes {} a blunt!", 
-          "{} burns down {}'s house!",
-          "{} tries gaslighting {} into thinking a Yoshi stampede is real and is coming for them!"
-        ]  
-        self.deaths = [
-          " {} dies of dysentery!", 
-          " {} explodes!", 
-          " {} took one hit of the Blunt9000™️ and descends straight to Hell!", 
-          " {} got caught in the fire and burns down to a crisp!",
-          " {} develops schizophrenia and starts hallucinating Yoshis coming for them. It gets so bad that they kill themself!"
-        ]
-        self.survivals = [
-          " {} noticed this and gets another drink...", 
-          " {} quickly steps aside...", 
-          " {} kindly rejects the offer...", 
-          " {} quickly got out of the fire and finds shelter elsewhere...",
-          " {} laughs off such an incomprehensible thing..." 
-        ]
-      
+        self.actions = ["{} poisons {}'s drink!", "{} places a frag mine beneath {}'s feet!", "{} passes {} a blunt!", "{} burns down {}'s house!"]
+        self.deaths = [" {} dies of dysentery!", " {} explodes!", " {} took one hit of the Blunt9000™️ and descends straight to Hell!", " {} got caught in the fire and burns down to a crisp!"]
+        self.survivals = [" {} noticed this and gets another drink...", " {} quickly steps aside...", " {} kindly rejects the offer...", " {} quickly got out of the fire and finds shelter elsewhere..."]
         self.currentFight = False
 
     @commands.command(name='say')
@@ -96,6 +77,37 @@ class Fun(commands.Cog):
                 await ctx.message.add_reaction('🦈')
                 return await ctx.reply("Wups! You need at least 2 arguments for me to choose from...", mention_author=False)
             return await ctx.reply(f"I choose `{random.choice(args)}`!", mention_author=False)
+
+    @commands.command(name='pokedex')
+    async def pokedex(self, ctx, index: int):
+        if await cog_check(ctx):
+            if index > 1017 or index < 1:
+                await ctx.message.add_reaction('🦈')
+                return await ctx.reply("Wups! Invalid index...", mention_author=False)
+            pokemon = dex.get(dex=index)
+            embed = discord.Embed(title=f'{capitalize_string(pokemon.name)}, #{index}', color=discord.Color.red())
+            embed.description = ''
+            embed.description += f'**Height**: {pokemon.height}\n'
+            embed.description += f'**Weight**: {pokemon.weight}\n\n'
+            for i, type in enumerate(pokemon.types, 1):
+                embed.description += f'**Type {i}**: {capitalize_string(type)}\n'
+            embed.description += '\n'
+            for i, ability in enumerate(pokemon.abilities, 1):
+                embed.description += f'**Ability {i}**: {capitalize_string(ability.name)}{" *(Hidden)*" if ability.is_hidden else ""}\n'
+            embed.description += '\n'
+            embed.description += f'**Base HP**: {pokemon.base_stats.hp}\n'
+            embed.description += f'**Base Attack**: {pokemon.base_stats.attack}\n'
+            embed.description += f'**Base Defense**: {pokemon.base_stats.defense}\n'
+            embed.description += f'**Base Special Attack**: {pokemon.base_stats.sp_atk}\n'
+            embed.description += f'**Base Special Defense**: {pokemon.base_stats.sp_def}\n'
+            embed.description += f'**Base Speed**: {pokemon.base_stats.speed}\n'
+            embed.description += f'**Base Stat Total**: {pokemon.base_stats.hp + pokemon.base_stats.attack + pokemon.base_stats.defense + pokemon.base_stats.sp_atk + pokemon.base_stats.sp_def + pokemon.base_stats.speed}\n\n'
+            embed.description += f'**Base Experience**: {pokemon.base_experience}\n\n' if pokemon.base_experience is not None else 'No Base Experience\n\n'
+            try:
+                embed.set_image(url=pokemon.sprites.front.get('default'))
+            except:
+                pass
+            return await ctx.reply(embed=embed, mention_author=False)
 
     @commands.command(name='who')
     async def who(self, ctx):
