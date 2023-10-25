@@ -126,9 +126,9 @@ class Events(commands.Cog):
     
     @commands.Cog.listener()
     async def on_member_remove(self, member):
-        coins = pd.read_csv('coins.csv')
+        coins = pd.read_csv('csv/coins.csv')
         coins = coins[coins['user_id'] != member.id]
-        coins.to_csv('coins.csv', index=False)
+        coins.to_csv('csv/coins.csv', index=False)
         create_list("coins")
 
 async def setup(bot):
