@@ -92,7 +92,7 @@ class Miscellaneous(commands.Cog):
             org_unit = org_unit.lower()
             new_unit = new_unit.lower()
             unit_mapping = {"f": "F", "c": "C"}
-          
+
             conversions = {
                 ("c", "f"): lambda x: x * 9/5 + 32,
                 ("f", "c"): lambda x: (x - 32) * 5/9,
@@ -105,7 +105,7 @@ class Miscellaneous(commands.Cog):
                 ("in", "cm"): lambda x: x * 2.54,
                 ("cm", "in"): lambda x: x * 0.393701
             }
-    
+
             if (org_unit, new_unit) in conversions:
                 result = conversions[(org_unit, new_unit)](value)
                 org_unit = unit_mapping.get(org_unit, org_unit)
