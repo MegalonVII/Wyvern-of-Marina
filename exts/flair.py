@@ -25,7 +25,7 @@ class Flair(commands.Cog):
                     await ctx.message.add_reaction('🦈')
                     return await ctx.reply(f"Wups! '{role.name}' is already a flair...", mention_author=False)
                 
-                with open('flairs.csv', 'a', newline='') as csvfile:
+                with open('csv/flairs.csv', 'a', newline='') as csvfile:
                     fieldnames = ['role_name', 'role_id']
                     writer = csv.DictWriter(csvfile, fieldnames=fieldnames) 
                     if file_checks["flairs"]:
@@ -51,9 +51,9 @@ class Flair(commands.Cog):
                 await ctx.message.add_reaction('🦈')
                 return await ctx.reply('Wups! There are no flairs to delete in the first place...', mention_author=False)
             
-            flairs = pd.read_csv('flairs.csv')
+            flairs = pd.read_csv('csv/flairs.csv')
             flairs = flairs[flairs.role_name != role.name]
-            flairs.to_csv('flairs.csv', index=False)
+            flairs.to_csv('csv/flairs.csv', index=False)
             create_list("flairs")
             await ctx.message.add_reaction('✅')
             await asyncio.sleep(3)
