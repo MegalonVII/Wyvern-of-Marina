@@ -26,7 +26,7 @@ class Admin(commands.Cog):
                     return await ctx.reply('Wups! This command already exists...', mention_author=False)
                 
                 output = ' '.join(output).replace('"', '\"').replace("'", "\'")
-                with open('commands.csv', 'a', newline='') as csvfile:
+                with open('csv/commands.csv', 'a', newline='') as csvfile:
                     fieldnames = ['command_name', 'command_output']
                     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                     if file_checks["commands"]:
@@ -51,9 +51,9 @@ class Admin(commands.Cog):
                 await ctx.message.add_reaction('🦈')
                 return await ctx.reply('Wups! There are no commands to delete in the first place...', mention_author=False)
     
-            commands = pd.read_csv('commands.csv')
+            commands = pd.read_csv('csv/commands.csv')
             commands = commands[commands.command_name != name]
-            commands.to_csv('commands.csv', index=False)
+            commands.to_csv('csv/commands.csv', index=False)
             create_list("commands")
             return await ctx.reply(f'The command {name} has been deleted!', mention_author=False)
 
