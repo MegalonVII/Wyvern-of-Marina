@@ -20,15 +20,15 @@ starboard_count=4
 zenny='<:zenny:1104179194780450906>'
 
 # bot helper functions
-# create_list, check_reaction_board, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, assert_cooldown, cog_check, get_login_time
+# create_list, check_reaction_board, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, assert_cooldown, capitalize_string, cog_check, get_login_time
 def create_list(filename):
     global file_checks
     global lists
     file_checks[filename]=False
-    if not os.path.exists(f'{filename}.csv'):
-        with open(f'{filename}.csv', 'w'):
+    if not os.path.exists(f'csv/{filename}.csv'):
+        with open(f'csv/{filename}.csv', 'w'):
             pass # creates csv file
-    with open(f'{filename}.csv', mode='r') as csv_file:
+    with open(f'csv/{filename}.csv', mode='r') as csv_file:
         csv_reader = csv.DictReader(csv_file)
         rows = list(csv_reader)
         if len(rows)==0:
@@ -85,7 +85,7 @@ def add_coins(userID: int, coins: int):
     fieldnames = ['user_id', 'coins']
     found = False
     rows = []
-    with open('coins.csv', 'r', newline='') as csvfile:
+    with open('csv/coins.csv', 'r', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             if row['user_id'] == str(userID):
@@ -94,7 +94,7 @@ def add_coins(userID: int, coins: int):
             rows.append(row)
     if not found:
         rows.append({'user_id': str(userID), 'coins': coins})
-    with open('coins.csv', 'w', newline='') as csvfile:
+    with open('csv/coins.csv', 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for row in rows:
@@ -105,7 +105,7 @@ def subtract_coins(userID: int, coins: int) -> bool:
     fieldnames = ['user_id', 'coins']
     found = False
     rows = []
-    with open('coins.csv', 'r', newline='') as csvfile:
+    with open('csv/coins.csv', 'r', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             if row['user_id'] == str(userID):
@@ -118,7 +118,7 @@ def subtract_coins(userID: int, coins: int) -> bool:
             rows.append(row)
     if not found:
         return False
-    with open('coins.csv', 'w', newline='') as csvfile:
+    with open('csv/coins.csv', 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for row in rows:
@@ -130,7 +130,7 @@ def add_item(itemName:str, userID:int, quantity:int):
     fieldnames = ['user_id', f'{itemName}s']
     found = False
     rows = []
-    with open(f'{itemName}.csv', 'r', newline='') as csvfile:
+    with open(f'csv/{itemName}.csv', 'r', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             if row['user_id'] == str(userID):
@@ -139,7 +139,7 @@ def add_item(itemName:str, userID:int, quantity:int):
             rows.append(row)
     if not found:
         rows.append({'user_id': str(userID), f'{itemName}s': quantity})
-    with open(f'{itemName}.csv', 'w', newline='') as csvfile:
+    with open(f'csv/{itemName}.csv', 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for row in rows:
@@ -150,7 +150,7 @@ def subtract_item(itemName:str, userID:int, quantity:int) -> bool:
     fieldnames = ['user_id', f'{itemName}s']
     found = False
     rows = []
-    with open(f'{itemName}.csv', 'r', newline='') as csvfile:
+    with open(f'csv/{itemName}.csv', 'r', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             if row['user_id'] == str(userID):
@@ -163,7 +163,7 @@ def subtract_item(itemName:str, userID:int, quantity:int) -> bool:
             rows.append(row)
     if not found:
         return False
-    with open(f'{itemName}.csv', 'w', newline='') as csvfile:
+    with open(f'csv/{itemName}.csv', 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for row in rows:
@@ -176,7 +176,7 @@ def dep(userID: int, coins: int) -> bool:
         fieldnames = ['user_id', 'coins']
         found = False
         rows = []
-        with open('bank.csv', 'r', newline='') as csvfile:
+        with open('csv/bank.csv', 'r', newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 if row['user_id'] == str(userID):
@@ -185,7 +185,7 @@ def dep(userID: int, coins: int) -> bool:
                 rows.append(row)
         if not found:
             rows.append({'user_id': str(userID), 'coins': coins})
-        with open('bank.csv', 'w', newline='') as csvfile:
+        with open('csv/bank.csv', 'w', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
             for row in rows:
@@ -198,7 +198,7 @@ def wd(userID: int, coins: int) -> bool:
     fieldnames = ['user_id', 'coins']
     found = False
     rows = []
-    with open('bank.csv', 'r', newline='') as csvfile:
+    with open('csv/bank.csv', 'r', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             if row['user_id'] == str(userID):
@@ -210,7 +210,7 @@ def wd(userID: int, coins: int) -> bool:
             rows.append(row)
     if not found:
         return False
-    with open('bank.csv', 'w', newline='') as csvfile:
+    with open('csv/bank.csv', 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for row in rows:
@@ -223,7 +223,7 @@ def direct_to_bank(userID: int, coins: int):
     fieldnames = ['user_id', 'coins']
     found = False
     rows = []
-    with open('bank.csv', 'r', newline='') as csvfile:
+    with open('csv/bank.csv', 'r', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             if row['user_id'] == str(userID):
@@ -232,7 +232,7 @@ def direct_to_bank(userID: int, coins: int):
             rows.append(row)
     if not found:
         rows.append({'user_id': str(userID), 'coins': coins})
-    with open('bank.csv', 'w', newline='') as csvfile:
+    with open('csv/bank.csv', 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for row in rows:
@@ -243,7 +243,7 @@ def stolen_funds(userID: int, coins: int) -> bool:
     fieldnames = ['user_id', 'coins']
     found = False
     rows = []
-    with open('bank.csv', 'r', newline='') as csvfile:
+    with open('csv/bank.csv', 'r', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             if row['user_id'] == str(userID):
@@ -256,7 +256,7 @@ def stolen_funds(userID: int, coins: int) -> bool:
             rows.append(row)
     if not found:
         return False
-    with open('bank.csv', 'w', newline='') as csvfile:
+    with open('csv/bank.csv', 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for row in rows:
@@ -283,19 +283,13 @@ def assert_cooldown(command):
         return 0
     return round(last_executed[command] + cooldowns[command] - time.time())
 
+def capitalize_string(string: str) -> str:
+    return ' '.join(word.capitalize() for word in string.split('-'))
+
 async def cog_check(ctx):
     if not ctx.guild:
         return False
     return True
 
 def get_login_time(tz: str) -> str:
-    hour = int(datetime.now(timezone(tz)).strftime("%H"))
-    if hour >= 12:
-        AMorPM = "PM"
-        if hour >= 13:
-            hour -= 12
-    elif hour < 12:
-        AMorPM = "AM"
-        if hour == 0:
-            hour = 12
-    return f"Time: {datetime.now(timezone(tz)).strftime('%m/%d/%Y')}, {hour}:{datetime.now(timezone(tz)).strftime('%M:%S')} {AMorPM}\nTimezone: {tz}\n"
+    return f"Time: {datetime.now(timezone(tz)).strftime('%m/%d/%Y, %I:%M:%S %p')}\nTimezone: {tz}\n"
