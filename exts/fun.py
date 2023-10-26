@@ -84,30 +84,75 @@ class Fun(commands.Cog):
             if index > 1017 or index < 1:
                 await ctx.message.add_reaction('🦈')
                 return await ctx.reply("Wups! Invalid index...", mention_author=False)
-            pokemon = dex.get(dex=index)
-            embed = discord.Embed(title=f'{capitalize_string(pokemon.name)}, #{index}', color=discord.Color.red())
-            embed.description = ''
-            embed.description += f'**Height**: {pokemon.height}\n'
-            embed.description += f'**Weight**: {pokemon.weight}\n\n'
-            for i, type in enumerate(pokemon.types, 1):
-                embed.description += f'**Type {i}**: {capitalize_string(type)}\n'
-            embed.description += '\n'
-            for i, ability in enumerate(pokemon.abilities, 1):
-                embed.description += f'**Ability {i}**: {capitalize_string(ability.name)}{" *(Hidden)*" if ability.is_hidden else ""}\n'
-            embed.description += '\n'
-            embed.description += f'**Base HP**: {pokemon.base_stats.hp}\n'
-            embed.description += f'**Base Attack**: {pokemon.base_stats.attack}\n'
-            embed.description += f'**Base Defense**: {pokemon.base_stats.defense}\n'
-            embed.description += f'**Base Special Attack**: {pokemon.base_stats.sp_atk}\n'
-            embed.description += f'**Base Special Defense**: {pokemon.base_stats.sp_def}\n'
-            embed.description += f'**Base Speed**: {pokemon.base_stats.speed}\n'
-            embed.description += f'**Base Stat Total**: {pokemon.base_stats.hp + pokemon.base_stats.attack + pokemon.base_stats.defense + pokemon.base_stats.sp_atk + pokemon.base_stats.sp_def + pokemon.base_stats.speed}\n\n'
-            embed.description += f'**Base Experience**: {pokemon.base_experience}\n\n' if pokemon.base_experience is not None else 'No Base Experience\n\n'
-            try:
-                embed.set_image(url=pokemon.sprites.front.get('default'))
-            except:
-                pass
-            return await ctx.reply(embed=embed, mention_author=False)
+              
+            async with ctx.typing():
+                # data collections
+                pokemon = dex.get(dex=index)
+                res = requests.get(f'https://pokeapi.co/api/v2/pokemon-species/{index}')
+                encRes = requests.get(f'https://pokeapi.co/api/v2/pokemon/{index}/encounters')
+                pokRes = requests.get(f'https://pokeapi.co/api/v2/pokemon/{index}/')
+                data = res.json()
+                encData = encRes.json()
+                pokData = pokRes.json()
+
+                # random vars
+                shinyInt = random.randint(1,512)
+                name = [entry for entry in data["names"] if entry["language"]["name"] == "en"][0]["name"]
+
+                # gender ratio calc
+                if data['gender_rate'] == -1:
+                    gender_ratio = "Genderless"
+                elif data['gender_rate'] == 8:
+                    gender_ratio = "100% Female"
+                else:
+                    female_percentage = (data['gender_rate'] / 8) * 100
+                    male_percentage = 100 - female_percentage
+                    gender_ratio = f"{male_percentage}% Male / {female_percentage}% Female"
+
+                # location data calc
+                locations = []
+                for entry in encData:
+                    locations.append(capitalize_string(entry['location_area']['name']))
+
+                # moves data calc
+                moves = []
+                for entry in pokData['moves']:
+                    moves.append(capitalize_string(entry['move']['name']))
+
+                # make embed
+                embed = discord.Embed(title=f'{name}, #{index}', color=discord.Color.red())
+                embed.description = ''
+                for i, type in enumerate(pokemon.types, 1):
+                    embed.description += f'**Type {i}**: {capitalize_string(type)}\n'
+                embed.description += '\n'
+                for i, ability in enumerate(pokemon.abilities, 1):
+                    embed.description += f'**Ability {i}**: {capitalize_string(ability.name)}{" *(Hidden)*" if ability.is_hidden else ""}\n'
+                embed.description += '\n'
+                embed.description += f'**Base HP**: {pokemon.base_stats.hp}\n'
+                embed.description += f'**Base Attack**: {pokemon.base_stats.attack}\n'
+                embed.description += f'**Base Defense**: {pokemon.base_stats.defense}\n'
+                embed.description += f'**Base Special Attack**: {pokemon.base_stats.sp_atk}\n'
+                embed.description += f'**Base Special Defense**: {pokemon.base_stats.sp_def}\n'
+                embed.description += f'**Base Speed**: {pokemon.base_stats.speed}\n'
+                embed.description += f'**Base Stat Total**: {pokemon.base_stats.hp + pokemon.base_stats.attack + pokemon.base_stats.defense + pokemon.base_stats.sp_atk + pokemon.base_stats.sp_def + pokemon.base_stats.speed}\n\n'
+                embed.description += f'**Base Experience**: {pokemon.base_experience if pokemon.base_experience is not None else 0}\n'
+                embed.description += f'**Base Happiness**: {data["base_happiness"]}\n'
+                embed.description += f'**Capture Rate**: {data["capture_rate"]}\n\n'
+                embed.description += f"**Egg Groups**: {', '.join(capitalize_string(name['name']) for name in [entry for entry in data['egg_groups']])}\n"
+                embed.description += f"**Gender Ratio**: {gender_ratio}\n\n"
+                embed.description += f"**Found At**: {', '.join(str(location) for location in locations) if len(locations) != 0 else 'No Location Data'}\n"
+                embed.description += f"**Moves Learned**: {', '.join(str(move) for move in moves) if index != 151 else 'Every Move'}"
+
+                try:
+                    embed.set_thumbnail(url=pokemon.sprites.front.get('shiny')) if shinyInt == 1 else embed.set_thumbnail(url=pokemon.sprites.front.get('default'))
+                    embed.set_footer(text=[entry for entry in data['flavor_text_entries'] if entry['language']['name'] == 'en'][0]['flavor_text'])
+                except:
+                    pass
+
+                if shinyInt != 1:
+                    return await ctx.reply(embed=embed, mention_author=False)
+                else:
+                    return await ctx.reply(content=f'Woah! A Shiny {name}! ✨', embed=embed, mention_author=False)
 
     @commands.command(name='who')
     async def who(self, ctx):
