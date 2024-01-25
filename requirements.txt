@@ -1,0 +1,7 @@
+flask
+discord
+pandas
+pypokedex
+pytz
+requests
+urllib3

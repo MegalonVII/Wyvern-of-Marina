@@ -102,17 +102,6 @@ async def on_ready():
     for extension in extensions: # loads extensions for other commands
         await bot.load_extension(f'exts.{extension}')
 
-    for member in bot.guilds[0].members: # interest
-        if str(member.id) in lists['bank'].keys():
-            df = pd.read_csv('csv/bank.csv')
-            df_sorted = df.sort_values(by='coins', ascending=False)
-            df_sorted.to_csv('csv/bank.csv', index=False)
-            create_list('bank')
-            direct_to_bank(member.id, ceil(int(lists['bank'][str(member.id)])/100))
-        else:
-            if not member.bot:
-                direct_to_bank(member.id, 0)
-
     print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\n" + get_login_time('US/Eastern')) # fully logged in with everything loaded in the backend. chose the timezone as pst because that's what blues is based in
     
 # everything has finally been set up
