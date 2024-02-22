@@ -1,13 +1,15 @@
 import discord
 import os
 from discord.ext import commands
-import pandas as pd
 from keep_alive import keep_alive
-from math import ceil
+from dotenv import load_dotenv
 from utils import *
 
-# bot instantiation
+# token instantiation
+load_dotenv()
 TOKEN=os.getenv('DISCORD_TOKEN')
+
+# bot initialization
 bot=commands.Bot(command_prefix = '!w ', intents=discord.Intents.all())
 bot.remove_command('help')
 extensions=['fun', 'economy', 'admin', 'flair', 'misc', 'events']

@@ -5,3 +5,4 @@ pypokedex
 pytz
 requests
 urllib3
+python-dotenv
