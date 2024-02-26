@@ -130,3 +130,4 @@ dmypy.json
 
 # other shit i get pissy about
 .DS_Store
+csv/*
