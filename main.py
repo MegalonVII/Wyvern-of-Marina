@@ -1,7 +1,6 @@
 import discord
 import os
 from discord.ext import commands
-from keep_alive import keep_alive
 from dotenv import load_dotenv
 from utils import *
 
@@ -108,5 +107,4 @@ async def on_ready():
     
 # everything has finally been set up
 # we can now run the bot
-keep_alive()
 bot.run(TOKEN)
