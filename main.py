@@ -11,13 +11,14 @@ TOKEN=os.getenv('DISCORD_TOKEN')
 # bot initialization
 bot=commands.Bot(command_prefix = '!w ', intents=discord.Intents.all())
 bot.remove_command('help')
-extensions=['fun', 'economy', 'admin', 'flair', 'misc', 'events']
+extensions=['fun', 'economy', 'admin', 'flair', 'misc', 'birthday', 'events']
 
 # bot help command redifined
 @bot.command(name='help')
 async def help(ctx, page:int=0):
     embed = discord.Embed(color = discord.Color.purple())
-    if page < 0 or page > 5:
+    pages = len(extensions) - 1
+    if page < 0 or page > pages:
         return await ctx.reply('Wups! Invalid page number...', mention_author=False)
       
     if page == 0:
@@ -26,7 +27,8 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w help 2', value = 'All the fun economy commands!', inline=False)
         embed.add_field(name='!w help 3', value = 'All the administrative commands.', inline=False)
         embed.add_field(name='!w help 4', value = 'All the flair commands.', inline=False)
-        embed.add_field(name='!w help 5', value = 'All the miscellaneous commands.', inline=False)
+        embed.add_field(name='!w help 5', value = 'All the birthday commands.', inline=False)
+        embed.add_field(name='!w help 6', value = 'All the miscellaneous commands.', inline=False)
       
     elif page == 1:
         embed.title='Fun Commands'
@@ -80,6 +82,11 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w im (role name)', value='Gives or removes the flair you ask for.', inline=False)
 
     elif page == 5:
+        embed.title='Birthday Commands'
+        embed.add_field(name='!w birthday', value='Register your birthday with me so I can wish you a happy birthday!', inline=False)
+        embed.add_field(name='!w birthdaylist', value='See a list of all birthdays in the server!', inline=False)
+
+    elif page == 6:
         embed.title='Miscellaneous Commands'
         embed.add_field(name='!w ping', value='Returns my response time in milliseconds.', inline=False)
         embed.add_field(name='!w whomuted', value='Returns the name of every member who is currently muted.', inline=False)
@@ -89,7 +96,7 @@ async def help(ctx, page:int=0):
         embed.add_field(name='!w convert (number) (original unit) (new unit)', value='Convert a number of units to another unit! Supported units include F, C, m, ft, kg, lb, mi, km, in, and cm. Supported conversions include F <-> C, ft <-> m, lb <-> kg, mi <-> km, and in <-> cm.', inline=False)
       
     if page > 0:
-        embed.set_footer(text=f'Viewing page {page}/5')
+        embed.set_footer(text=f'Viewing page {page}/{pages}')
     return await ctx.reply(embed=embed, mention_author=False)
 
 # on_ready
@@ -99,11 +106,12 @@ async def on_ready():
   
     for file in files: # creates all lists wom stores
         create_list(file)
+    create_birthday_list()
       
     for extension in extensions: # loads extensions for other commands
         await bot.load_extension(f'exts.{extension}')
 
-    print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\n" + get_login_time('US/Eastern')) # fully logged in with everything loaded in the backend. chose the timezone as pst because that's what blues is based in
+    print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\n" + get_login_time('US/Pacific')) # fully logged in with everything loaded in the backend. chose the timezone as pst because that's what blues is based in
     
 # everything has finally been set up
 # we can now run the bot

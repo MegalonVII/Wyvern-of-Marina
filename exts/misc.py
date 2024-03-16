@@ -21,7 +21,7 @@ class Miscellaneous(commands.Cog):
             try:
                 return await ctx.reply(", ".join([member.name for member in ctx.guild.members if member.is_timed_out()]), mention_author=False)
             except:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! No one is muted currently...", mention_author=False)
     
     @commands.command(name='avatar', aliases=['avi'])
@@ -65,10 +65,10 @@ class Miscellaneous(commands.Cog):
                 return await ctx.reply("Time's up! You didn't provide me with any options...", mention_author=False)
             options_list = options.content.split()
             if len(options_list) < 2:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply('Wups! You can\'t have a poll with less than 2 options...', mention_author=False)
             elif len(options_list) > 10:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply('Wups! You can\'t have a poll with more than 10 options...', mention_author=False)
             await options.delete()
             await prompt.delete()
@@ -112,9 +112,9 @@ class Miscellaneous(commands.Cog):
                 new_unit = unit_mapping.get(new_unit, new_unit)
                 return await ctx.reply(f"{value} {org_unit} is equal to {result:.2f} {new_unit}.", mention_author=False)
             else:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! Invalid conversion...", mention_author=False)
-        
+            
 
 async def setup(bot):
     await bot.add_cog(Miscellaneous(bot))

@@ -16,13 +16,13 @@ class Admin(commands.Cog):
         if await cog_check(ctx):
             try:
                 if len(output) < 1:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply('Wups! You need to give me an output for your new command...', mention_author = False)
                 elif not ctx.author.guild_permissions.manage_messages:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply("Wups! You do not have the required permissions...", mention_author=False)
                 elif name in list(lists["commands"].keys()):
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply('Wups! This command already exists...', mention_author=False)
                 
                 output = ' '.join(output).replace('"', '\"').replace("'", "\'")
@@ -35,20 +35,20 @@ class Admin(commands.Cog):
                 create_list("commands")
                 return await ctx.reply(f"The command {name} has been created!", mention_author=False)
             except:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply('Wups! I don\'t have a name for a command...', mention_author=False)
                     
     @commands.command(name='deletecommand', aliases=['dc'])
     async def deletecommand(self, ctx, name):
         if await cog_check(ctx):
             if not ctx.author.guild_permissions.manage_messages:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply('Wups, you do not have the required permissions...', mention_author=False)
             if not name in list(lists["commands"].keys()):
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply('Wups! This command does not exist...', mention_author=False)
             if len(list(lists["commands"].keys())) == 0:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply('Wups! There are no commands to delete in the first place...', mention_author=False)
     
             commands = pd.read_csv('csv/commands.csv')
@@ -61,13 +61,13 @@ class Admin(commands.Cog):
     async def clear(self, ctx, num:int=None):
         if await cog_check(ctx):
             if not ctx.author.guild_permissions.manage_messages:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply('Wups! You do not have the required permissions...', mention_author=False)
             if num is None or num < 1 or num > 10:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply('Wups! Please enter a number between 1 and 10...', mention_author=False)
             if assert_cooldown("clear") != 0:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('clear')} seconds...", mention_author=False)
     
             await ctx.message.add_reaction('✅')
@@ -77,10 +77,10 @@ class Admin(commands.Cog):
     async def kick(self, ctx, member:discord.Member):  
         if await cog_check(ctx):
             if not ctx.author.guild_permissions.administrator:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! Only administrators are allowed to use this command...", mention_author=False)
             if member.guild_permissions.administrator and not member.bot:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! Administrators can\'t be kicked...", mention_author=False)
             
             await member.kick()
@@ -91,10 +91,10 @@ class Admin(commands.Cog):
     async def ban(self, ctx, member:discord.Member):
         if await cog_check(ctx):
             if not ctx.author.guild_permissions.administrator:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! Only administrators are allowed to use this command...", mention_author=False)
             if member.guild_permissions.administrator and not member.bot:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! Administrators can\'t be banned...", mention_author=False)
             
             await member.ban()
@@ -111,43 +111,43 @@ class Admin(commands.Cog):
             current_time = discord.utils.utcnow()
         
             if not ctx.author.guild_permissions.administrator:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! Only administrators are allowed to use this command...", mention_author=False)
             if member.guild_permissions.administrator:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! Administrators can\'t be muted...", mention_author=False)
             if not valid:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! Invalid time amount...", mention_author=False)
             
             if 's' in timelimit:
                 gettime = int(timelimit.strip('s'))
                 if gettime > 2419200:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
                 newtime = timedelta(seconds=gettime)
             if 'm' in timelimit:
                 gettime = int(timelimit.strip('m'))
                 if gettime > 40320:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
                 newtime = timedelta(minutes=gettime)
             if 'h' in timelimit:
                 gettime = int(timelimit.strip('h'))
                 if gettime > 672:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
                 newtime = timedelta(hours=gettime)
             if 'd' in timelimit:
                 gettime = int(timelimit.strip('d'))
                 if gettime > 28:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
                 newtime = timedelta(days=gettime)
             if 'w' in timelimit:
                 gettime = int(timelimit.strip('w'))
                 if gettime > 4:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
                 newtime = timedelta(weeks=gettime)
             
@@ -158,13 +158,13 @@ class Admin(commands.Cog):
     async def unmute(self, ctx, member:discord.Member):
         if await cog_check(ctx):
             if not ctx.message.author.guild_permissions.administrator:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! Only administrators are allowed to use this command...", mention_author=False)
             if member.guild_permissions.administrator:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! Administrators can\'t be muted in the first place...", mention_author=False)
             if not member.is_timed_out():
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! User is not muted in the first place...", mention_author=False)
     
             await member.edit(timed_out_until=None)

@@ -1,15 +1,18 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import random
 import pandas as pd
 import asyncio
+from pytz import timezone
+import random
 from utils import *
 
 # bot events start here
-# on_message, on_command_error, on_message_delete, on_message_edit, on_member_join, on_member_update, on_member_ban, on_reaction_add, on_member_remove
+# on_message, on_command_error, on_message_delete, on_message_edit, on_member_join, on_member_update, on_member_ban, on_reaction_add, on_member_remove, wish_birthday
 class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.wish_birthday.start()
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -52,7 +55,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if not ctx.message.content.split()[1] in list(lists["commands"].keys()):
-            await ctx.message.add_reaction('🦈')
+            await shark_react(ctx.message)
             return await ctx.reply(f'Wups! try "!w help"... ({error})', mention_author=False)
 
     @commands.Cog.listener()
@@ -130,6 +133,33 @@ class Events(commands.Cog):
         coins = coins[coins['user_id'] != member.id]
         coins.to_csv('csv/coins.csv', index=False)
         create_list("coins")
+
+    @tasks.loop(seconds=1)
+    async def wish_birthday(self):
+        for key in user_info.keys():
+            time_person = datetime.now(timezone(user_info[key]['timezone']))
+            time_person_date = time_person.strftime('%m-%d')
+            time_person_exact = [int(time_person.strftime('%H')), int(time_person.strftime('%M')), int(time_person.strftime('%S'))]
+
+            messages = [
+                "Try not to die of dysentery today!",
+                "Either go get some pussy or study literal vaginas today!",
+                "Am I weird for thinking today won't be strangely wholesome?",
+                "Don't get AFK Corrin'd today!",
+                "I hope you go on a rampage in Hunger Games against a certain minority of people!"
+            ]
+
+            if time_person_date == user_info[key]['birthdate'] and time_person_exact == [0,0,0]:
+                await self.bot.guilds[0].system_channel.send(f'<:luv:765073937645305896> 🎉 Happy Birthday, <@{int(key)}>! {random.choice(messages)} 🎂 <:luv:765073937645305896>')
+
+
+    @wish_birthday.before_loop
+    async def before_wish_birthday(self):
+        await self.bot.wait_until_ready()
+
+    def cog_unload(self):
+        self.wish_birthday.cancel()
+
 
 async def setup(bot):
     await bot.add_cog(Events(bot))

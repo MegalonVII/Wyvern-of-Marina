@@ -20,10 +20,10 @@ class Economy(commands.Cog):
         if await cog_check(ctx):
             if await in_wom_shenanigans(ctx):
                 if assert_cooldown('slots') != 0:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('slots')} seconds...", mention_author=False)
                 if not subtract_coins(ctx.author.id, 10):
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply(f"Wups! You don't have enough {zenny} to play...", mention_author=False)
             
                 emojis = ["🍒", "🍇", "🍊", "🍋", "🍉","7️⃣"]
@@ -52,7 +52,7 @@ class Economy(commands.Cog):
         if await cog_check(ctx):
             if await in_wom_shenanigans(ctx):
                 if assert_cooldown('bet'):
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('bet')} seconds...", mention_author=False)
                 if subtract_coins(ctx.author.id, amount):
                     roll = random.randint(1,6)
@@ -62,7 +62,7 @@ class Economy(commands.Cog):
                         add_coins(ctx.author.id, 2*amount)
                         return await ctx.reply(f"You rolled a {result}! You win!", mention_author=False)
                     return await ctx.reply(f"You rolled a {result}! Sorry, you lost...", mention_author=False)
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply(f"Wups! You can't bet that much {zenny} as you don't have that much...",mention_author=False)
 
     @commands.command(name='steal')
@@ -71,13 +71,13 @@ class Economy(commands.Cog):
             global prev_steal_targets, target_counts
             if await in_wom_shenanigans(ctx):
                 if target.bot or target == ctx.author:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply("Wups! You can't steal from a bot or from yourself...", mention_author=False)
                 if prev_steal_targets.get(ctx.author.id) == target and target_counts.get(ctx.author.id, 0) <= 2:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply("Wups! You can't target this person again so soon. Choose a different target...", mention_author=False)
                 if assert_cooldown('steal') != 0:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('steal')} seconds...", mention_author=False)
             
                 if prev_steal_targets.get(ctx.author.id) != target:
@@ -107,7 +107,7 @@ class Economy(commands.Cog):
         if await cog_check(ctx):
             if await in_wom_shenanigans(ctx):
                 if assert_cooldown("heist") != 0:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('heist')} seconds...", mention_author=False)
                 if random.randint(1, 100) == 1: # successful heist
                     total = 0
@@ -137,7 +137,7 @@ class Economy(commands.Cog):
             if await in_wom_shenanigans(ctx):
                 if dep(ctx.author.id, amt):
                     return await ctx.reply(f"Successfully deposited {amt} {zenny}!", mention_author=False)
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! Insufficient funds...", mention_author=False)
 
     @commands.command(name='withdraw', aliases=['wd'])
@@ -146,7 +146,7 @@ class Economy(commands.Cog):
             if await in_wom_shenanigans(ctx):
                 if wd(ctx.author.id, amt):
                     return await ctx.reply(f"Successfully withdrew {amt} {zenny}!", mention_author=False)
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! Insufficient funds...", mention_author=False)
 
     @commands.command(name='balance', aliases=['bal'])
@@ -157,14 +157,14 @@ class Economy(commands.Cog):
                 if subtract_coins(ctx.author.id, 10):
                     add_coins(member.id, 10)
                 else:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply("Wups! Insufficient funds...", mention_author=False)
             for userID in lists['coins'].keys():
                 if str(member.id) == userID:
                     if not member == ctx.author:
                         return await ctx.reply(f"{member.name} has {lists['coins'][str(member.id)]} {zenny}!", mention_author=False)
                     return await ctx.reply(f"You have {lists['coins'][str(member.id)]} {zenny}!", mention_author=False)
-            await ctx.message.add_reaction('🦈')
+            await shark_react(ctx.message)
             return await ctx.reply("Wups! Get some bread, broke ass...", mention_author=False)
 
     @commands.command(name='bankbalance', aliases=['bankbal'])
@@ -173,7 +173,7 @@ class Economy(commands.Cog):
             for userID in lists['bank'].keys():
                 if str(ctx.author.id) == userID:
                     return await ctx.reply(f"You have {lists['bank'][str(ctx.author.id)]} {zenny} in the bank!", mention_author=False)
-            await ctx.message.add_reaction('🦈')
+            await shark_react(ctx.message)
             return await ctx.reply("Wups! Get some bread, broke ass...", mention_author=False)
 
     @commands.command(name='paypal')
@@ -181,15 +181,15 @@ class Economy(commands.Cog):
         if await cog_check(ctx):
             if await in_wom_shenanigans(ctx):
                 if amount <= 0:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply("Wups! Invalid payment amount...", mention_author=False)
                 if recipient.bot or recipient.id == ctx.author.id:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply("Wups! You can't pay a bot or yourself...", mention_author=False)
                 if subtract_coins(ctx.author.id,amount):
                     add_coins(recipient.id,amount)
                     return await ctx.reply(f"{recipient.name} has received {amount} {zenny} from you!", mention_author=False)
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply(f"Wups! You don't have that much {zenny}...", mention_author=False)
 
     @commands.command(name='marketplace', aliases=['mp'])
@@ -206,20 +206,20 @@ class Economy(commands.Cog):
         if await cog_check(ctx):
             if await in_wom_shenanigans(ctx):
                 if number < 1:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply("Wups! Invalid number requested...", mention_author=False)
                 item = item.lower()
                 for item_name, item_price in zip(self.items, self.prices):
                     if item.lower() == item_name:
                         if not subtract_coins(ctx.author.id, number * item_price):
-                            await ctx.message.add_reaction('🦈')
+                            await shark_react(ctx.message)
                             return await ctx.reply(f"Wups! You don't have enough {zenny}...", mention_author=False)
                         add_item(item, ctx.author.id, number)
                         if number > 1:
                             return await ctx.reply(f"You have successfully purchased {number} {item_name}s!", mention_author=False)
                         else:
                             return await ctx.reply(f"You have successfully purchased {number} {item_name}!", mention_author=False)
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! Invalid item...", mention_author=False)
 
     @commands.command(name='sell')
@@ -227,7 +227,7 @@ class Economy(commands.Cog):
         if await cog_check(ctx):
             if await in_wom_shenanigans(ctx):
                 if number < 1:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply("Wups! Invalid number requested...", mention_author=False)
                 item = item.lower()
                 for name, price in zip(self.items, self.prices):
@@ -239,9 +239,9 @@ class Economy(commands.Cog):
                                 return await ctx.reply(f'Successfully sold {number} {item}! {number*sell} {zenny}!', mention_author=False)
                             else:
                                 return await ctx.reply(f'Successfully sold {number} {item}s! {number*sell} {zenny}!', mention_author=False)
-                        await ctx.message.add_reaction('🦈')
+                        await shark_react(ctx.message)
                         return await ctx.reply(f"Wups! You don't have that many {item}s...", mention_author=False) 
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! Invalid item...", mention_author=False)
   
     @commands.command(name='inventory', aliases=['inv'])
@@ -260,7 +260,7 @@ class Economy(commands.Cog):
             if await in_wom_shenanigans(ctx):
                 item = item.lower()
                 if item not in self.items:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply("Wups! Invalid item...", mention_author=False)
     
                 if item == 'delivery':
@@ -269,7 +269,7 @@ class Economy(commands.Cog):
                         moddery = discord.utils.get(ctx.guild.channels, name='moddery')
                         await moddery.send(f"<@{blues}>, {ctx.author.name} has purchased a delivery. You are now obligated to personally deliver your plushie of me to them! Don't back out of it now...")
                         return await ctx.reply("Blues has been notified, you gambling-addicted bastard...", mention_author=False)
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply(f"Wups! You don't have a {item}...", mention_author=False)
     
                 elif item == 'bomb':
@@ -282,7 +282,7 @@ class Economy(commands.Cog):
                         if stolen_funds(id, stolen):
                             direct_to_bank(ctx.author.id, stolen)
                             return await ctx.reply(f"Stole {stolen} {zenny} from {member.name}'s bank account! That {zenny} has been deposited into your bank account!", mention_author=False)
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply(f"Wups! You don't have a {item}...", mention_author=False)
     
                 elif item == 'ticket':
@@ -299,7 +299,7 @@ class Economy(commands.Cog):
                         role = await ctx.guild.create_role(name=name)
                         await ctx.author.add_roles(role)
                         return await msg.reply("Congrats on your new role!", mention_author=False)
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply(f"Wups! You don't have a {item}...", mention_author=False)
     
                 elif item == 'letter':
@@ -316,7 +316,7 @@ class Economy(commands.Cog):
                         if recipient is None or recipient.bot or recipient == ctx.author:
                             add_item(item, ctx.author.id, 1)
                             await msg.delete()
-                            await ctx.message.add_reaction('🦈')
+                            await shark_react(ctx.message)
                             return await ctx.reply(f"Wups! Invalid member name. I've refunded you your {item}...", mention_author=False)
                           
                         await msg.reply("Great! Now you have 2 minutes to cook up your letter to this person. Your next message in this channel will dictate that!", mention_author=False)
@@ -346,7 +346,7 @@ class Economy(commands.Cog):
                         if subtract_coins(target.id, int(balance // 2)):
                             add_coins(ctx.author.id, int(balance // 2))
                             return await ctx.reply(f"{target.name} got hit by a {item}! You received {balance // 2} {zenny} from them!", mention_author=False)
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply(f"Wups! You don't have a {item}...", mention_author=False)
     
                 elif item == 'banana':

@@ -26,7 +26,7 @@ class Fun(commands.Cog):
                 await ctx.message.delete()
                 return await ctx.channel.send(" ".join(args).replace('"', '\"').replace("'", "\'"), allowed_mentions=discord.AllowedMentions(everyone=False, roles=False))
             except:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! You need something for me to say...", mention_author=False)
                 
     @commands.command(name='customcommands', aliases=['custc'])
@@ -35,7 +35,7 @@ class Fun(commands.Cog):
             try:
                 return await ctx.reply(', '.join(list(lists["commands"].keys())), mention_author=False)
             except:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply('Wups! There are no custom commands...', mention_author=False)
 
     @commands.command(name='snipe')
@@ -53,7 +53,7 @@ class Fun(commands.Cog):
                 embed.set_thumbnail(url=data['author'].avatar.url)
                 return await ctx.reply(embed=embed, mention_author=False)
             except KeyError:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply(f"Wups! There are no recently deleted messages in <#{channel.id}>...", mention_author=False)
 
     @commands.command(name='editsnipe', aliases=['esnipe'])
@@ -67,14 +67,14 @@ class Fun(commands.Cog):
                 embed.set_thumbnail(url=data["author"].avatar.url)
                 return await ctx.reply(embed=embed, mention_author=False)
             except KeyError:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply(f"Wups! There are no recently edited messages in <#{channel.id}>...", mention_author=False)
 
     @commands.command(name='choose')
     async def choose(self, ctx, *args):
         if await cog_check(ctx):
             if (len(args) < 2):
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! You need at least 2 arguments for me to choose from...", mention_author=False)
             return await ctx.reply(f"I choose `{random.choice(args)}`!", mention_author=False)
 
@@ -82,7 +82,7 @@ class Fun(commands.Cog):
     async def pokedex(self, ctx, index: int):
         if await cog_check(ctx):
             if index > 1017 or index < 1:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! Invalid index...", mention_author=False)
               
             async with ctx.typing():
@@ -163,7 +163,7 @@ class Fun(commands.Cog):
     async def howgay(self, ctx, member:discord.Member=None):
         if await cog_check(ctx):
             if assert_cooldown("howgay") != 0:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('howgay')} seconds...", mention_author=False)
         
             member = member or ctx.author
@@ -185,16 +185,16 @@ class Fun(commands.Cog):
         if await cog_check(ctx):
             if await in_wom_shenanigans(ctx):
                 if assert_cooldown("rps") != 0 :
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('rps')} seconds...", mention_author=False)
                 if playerChoice is None:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply("Wups! You need to give me your choice...", mention_author=False)
                 
                 playerChoice = playerChoice.lower()
                 choices = ['rock', 'paper', 'scissors']
                 if playerChoice not in choices:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply("Wups! Invalid choice...", mention_author=False)
                 else:
                     botChoice = random.choice(choices)
@@ -211,10 +211,10 @@ class Fun(commands.Cog):
     async def eightball(self, ctx):
         if await cog_check(ctx):
             if assert_cooldown("8ball") != 0 :
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('8ball')} seconds...", mention_author=False)
             if len(ctx.message.content) < 9:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! You need to give me a question to respond to...", mention_author=False)
             
             responses = ['Hell yeah!', 'It is certain.', 'Without a doubt.', 'You may rely on it.', 'Yes, definitely.', 'It is decidedly so.', 'As I see it, yes.', 'Most likely.', 'Yes.', 'Outlook good.', 'Signs point to yes.', 'You already know the answer.', 'Reply hazy, try again.', 'Better not tell you now.', 'Ask again later.', 'Cannot predict now.', 'Concentrate and ask again.', 'Don\'t count on it.', 'Outlook not so good.', 'My sources say no.', 'Very doubtful.', 'My reply is no.', 'No.', 'Oh god, no.']
@@ -224,7 +224,7 @@ class Fun(commands.Cog):
     async def roulette(self, ctx, member:discord.Member=None):
         if await cog_check(ctx):
             if assert_cooldown("roulette") != 0:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('roulette')} seconds...", mention_author=False)
             
             member = member or ctx.author
@@ -266,10 +266,10 @@ class Fun(commands.Cog):
                 types = ['general', 'film', 'music', 'tv', 'games', 'anime']
                 categories = [9, 11, 12, 14, 15, 31]
                 if assert_cooldown('trivia') != 0:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('trivia')} seconds...", mention_author=False)
                 if not type is None and type.lower() not in types:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply("Wups! Invalid trivia type...", mention_author=False)
                 
                 async with ctx.typing():
@@ -317,7 +317,7 @@ class Fun(commands.Cog):
         if await cog_check(ctx):
             if await in_wom_shenanigans(ctx):
                 if assert_cooldown('quote') != 0:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('quote')} seconds...", mention_author=False)
     
                 async with ctx.typing():
@@ -336,10 +336,10 @@ class Fun(commands.Cog):
         if await cog_check(ctx):
             if await in_wom_shenanigans(ctx):
                 if self.currentFight:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply(f"Wups! There is currently a fight going on...", mention_author=False)
                 if member.bot:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply(f"Wups! You can't fight a bot...", mention_author=False)
                   
                 self.currentFight = True

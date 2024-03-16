@@ -51,6 +51,10 @@ This is also viewable from the `main.py` file in this repo, and also in our Disc
 3. `!w listflairs` *Lists all self-assignable flairs.*
 4. `!w im (role name)` *Gives/removes specified flair from user.*
 
+## Birthday
+1. `!w birthday` *Allows member to register their birthday with the bot following on screen prompts.*
+2. `!w birthdaylist` *Displays a list of all the birthdays of each server member registered with the bot.*
+
 ## Miscellaneous
 1. `!w ping` *Returns bot response time in milliseconds.*
 2. `!w whomuted` *Returns a list of all muted members.*

@@ -16,13 +16,13 @@ class Flair(commands.Cog):
         if await cog_check(ctx):
             try:
                 if not ctx.author.guild_permissions.administrator:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply('Wups! Only administrators can use this command...', mention_author=False)
                 if role.position >= ctx.me.top_role.position:
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply("Wups! I can't add this role as a flair because it is above my highest role...", mention_author=False)
                 if role.name in lists["flairs"].keys():
-                    await ctx.message.add_reaction('🦈')
+                    await shark_react(ctx.message)
                     return await ctx.reply(f"Wups! '{role.name}' is already a flair...", mention_author=False)
                 
                 with open('csv/flairs.csv', 'a', newline='') as csvfile:
@@ -36,7 +36,7 @@ class Flair(commands.Cog):
                 await asyncio.sleep(3)
                 return await ctx.message.delete()
             except:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply('Wups! Something went wrong. Try doing `!w addflair @Role`...', mention_author=False)
 
     @commands.command(name='deleteflair', aliases=['delf'])
@@ -45,10 +45,10 @@ class Flair(commands.Cog):
             if not ctx.author.guild_permissions.administrator:
                 return await ctx.reply('Wups, you do not have the required permissions...', mention_author=False)
             if not role.name in list(lists["flairs"].keys()):
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply('Wups! This role is not a flair...', mention_author=False)
             if len(list(lists["flairs"].keys())) == 0:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply('Wups! There are no flairs to delete in the first place...', mention_author=False)
             
             flairs = pd.read_csv('csv/flairs.csv')
@@ -66,7 +66,7 @@ class Flair(commands.Cog):
                 await ctx.send('\n'.join(list(lists["flairs"].keys())))
                 return await ctx.message.delete()
             except:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply('Wups! There are no self-assignable roles in this server...', mention_author=False)
 
     @commands.command(name='im')
@@ -75,10 +75,10 @@ class Flair(commands.Cog):
             roleName = ' '.join(roleName) # finds the role from the name given
             role = discord.utils.get(ctx.guild.roles, name=roleName)
             if role is None:
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! Invalid role...", mention_author=False)
             if role.name not in list(lists["flairs"].keys()): # checks if it is a flair
-                await ctx.message.add_reaction('🦈')
+                await shark_react(ctx.message)
                 return await ctx.reply("Wups! That is not a self-assignable role...", mention_author=False)
             
             hasRole = False # checks if the user already has the role

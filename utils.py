@@ -8,6 +8,7 @@ from pytz import timezone
 files=["commands", "flairs", "coins", "bank", "delivery", "shell", "bomb", "ticket", "letter", "banana"]
 file_checks={file:False for file in files}
 lists={file:{} for file in files}
+user_info={}
 snipe_data={"content":{}, "author":{}, "id":{}, "attachment":{}}
 editsnipe_data={"content":{}, "author":{}, "id":{}}
 prev_steal_targets={}
@@ -20,7 +21,7 @@ starboard_count=4
 zenny='<:zenny:1104179194780450906>'
 
 # bot helper functions
-# create_list, check_reaction_board, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, assert_cooldown, capitalize_string, cog_check, get_login_time
+# create_list, update_birthday, check_reaction_board, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, assert_cooldown, capitalize_string, shark_react, cog_check, get_login_time
 def create_list(filename):
     global file_checks
     global lists
@@ -38,6 +39,36 @@ def create_list(filename):
             for row in rows:
                 dict = list(row.values())
                 lists[filename][dict[0]]=dict[1]
+
+def update_birthday(user_id: int, birthdate: str, tz: str):
+    fieldnames = ['user_id', 'birthdate', 'timezone']
+    found = False
+    rows = []
+    with open('csv/birthdays.csv', 'r', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if row['user_id'] == str(user_id):
+                row = {'user_id': row['user_id'], 'birthdate': birthdate, 'timezone': tz}
+                found = True
+            rows.append(row)
+    if not found:
+        rows.append({'user_id': str(user_id), 'birthdate': birthdate, 'timezone': tz})
+    with open('csv/birthdays.csv', 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+    create_birthday_list()
+
+def create_birthday_list():
+    with open(f'csv/birthdays.csv', mode='r') as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        rows = list(csv_reader)
+        for row in rows:
+            user_id = int(row['user_id'])
+            birthdate = row['birthdate']
+            timezone = row['timezone']
+            user_info[user_id] = {'birthdate': birthdate, 'timezone': timezone}
 
 async def check_reaction_board(message, reaction_type):
     emoji, count = None, None
@@ -267,11 +298,11 @@ def stolen_funds(userID: int, coins: int) -> bool:
 async def in_wom_shenanigans(ctx):
     wom_shenanigans = discord.utils.get(ctx.guild.channels, name='wom-shenanigans')
     if wom_shenanigans is None:
-        await ctx.message.add_reaction('🦈')
+        await shark_react(ctx.message)
         await ctx.reply("ask for or make a wom-shenanigans channel first, stupid", mention_author=False)
         return False
     if not ctx.message.channel.id == wom_shenanigans.id:
-        await ctx.message.add_reaction('🦈')
+        await shark_react(ctx.message)
         await ctx.reply(f"go to <#{wom_shenanigans.id}>, jackass", mention_author=False)
         return False
     return True
@@ -285,6 +316,9 @@ def assert_cooldown(command):
 
 def capitalize_string(string: str) -> str:
     return ' '.join(word.capitalize() for word in string.split('-'))
+
+async def shark_react(message: discord.Message):
+    return await message.add_reaction('🦈')
 
 async def cog_check(ctx):
     if not ctx.guild:
