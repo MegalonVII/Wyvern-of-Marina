@@ -108,8 +108,11 @@ async def on_ready():
         create_list(file)
     create_birthday_list()
       
-    for extension in extensions: # loads extensions for other commands
-        await bot.load_extension(f'exts.{extension}')
+    try:
+        for extension in extensions: # loads extensions for other commands
+            await bot.load_extension(f'exts.{extension}')
+    except:
+        pass
 
     print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\n" + get_login_time('US/Pacific')) # fully logged in with everything loaded in the backend. chose the timezone as pst because that's what blues is based in
     
