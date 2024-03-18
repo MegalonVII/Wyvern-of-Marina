@@ -83,7 +83,7 @@ async def help(ctx, page:int=0):
             ('!w leave', 'Leaves the voice chat that I am in'),
             ('!w play (YouTube URL or search query)', 'While I\'m in voice call, I will play the song from the YouTube URL or search query you provide me.'),
             ('!w now', 'Displays the current song that I\'m playing'),
-            ('!w queue (optional: page number)', 'Displays the queue of songs. Page value defaults to 1. Each page displays the first 25 songs in the queue'),
+            ('!w queue (optional: page number)', 'Displays the queue of songs. Page value defaults to 1. Each page displays the first 10 songs in the queue'),
             ('!w shuffle', 'Shuffles the current queue. *[DJs/Admin Only]*'),
             ('!w remove (index)', 'Removes the song at the provided index from the queue'),
             ('!w pause', 'Pauses any music that I\'m playing'),
