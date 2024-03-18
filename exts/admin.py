@@ -103,6 +103,12 @@ class Admin(commands.Cog):
     @commands.command(name='mute')
     async def mute(self, ctx, member:discord.Member, timelimit):
         if await cog_check(ctx):
+            try:
+                timelimitList = [timelimit[:-1], timelimit[-1]]
+                timelimitList[0] = int(timelimitList[0])
+            except:
+                await shark_react(ctx.message)
+                return await ctx.reply("Wups! Invalid time amount...", mention_author=False)
             valid = False
             timelimit = timelimit.lower()
             timepossibilities = ['s', 'm', 'h', 'd', 'w']
@@ -120,36 +126,22 @@ class Admin(commands.Cog):
                 await shark_react(ctx.message)
                 return await ctx.reply("Wups! Invalid time amount...", mention_author=False)
             
-            if 's' in timelimit:
-                gettime = int(timelimit.strip('s'))
-                if gettime > 2419200:
-                    await shark_react(ctx.message)
-                    return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
-                newtime = timedelta(seconds=gettime)
-            if 'm' in timelimit:
-                gettime = int(timelimit.strip('m'))
-                if gettime > 40320:
-                    await shark_react(ctx.message)
-                    return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
-                newtime = timedelta(minutes=gettime)
-            if 'h' in timelimit:
-                gettime = int(timelimit.strip('h'))
-                if gettime > 672:
-                    await shark_react(ctx.message)
-                    return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
-                newtime = timedelta(hours=gettime)
-            if 'd' in timelimit:
-                gettime = int(timelimit.strip('d'))
-                if gettime > 28:
-                    await shark_react(ctx.message)
-                    return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
-                newtime = timedelta(days=gettime)
-            if 'w' in timelimit:
-                gettime = int(timelimit.strip('w'))
-                if gettime > 4:
-                    await shark_react(ctx.message)
-                    return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
-                newtime = timedelta(weeks=gettime)
+            time_units = {
+                's': (timedelta, 'seconds', 2419200),
+                'm': (timedelta, 'minutes', 40320),
+                'h': (timedelta, 'hours', 672),
+                'd': (timedelta, 'days', 28),
+                'w': (timedelta, 'weeks', 4)
+            }
+
+            for unit, (timedelta_type, attribute, limit) in time_units.items():
+                if unit in timelimit:
+                    gettime = int(timelimit.strip(unit))
+                    if gettime > limit:
+                        await shark_react(ctx.message)
+                        return await ctx.reply("Wups! Cannot mute member for more than 4 weeks...", mention_author=False)
+                    newtime = timedelta_type(**{attribute: gettime})
+                    break
             
             await member.edit(timed_out_until=current_time+newtime)
             return await ctx.message.delete()

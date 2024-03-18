@@ -55,6 +55,19 @@ This is also viewable from the `main.py` file in this repo, and also in our Disc
 1. `!w birthday` *Allows member to register their birthday with the bot following on screen prompts.*
 2. `!w birthdaylist` *Displays a list of all the birthdays of each server member registered with the bot.*
 
+## Musical
+1. `!w join` *Joins the asker's voice call.*
+2. `!w leave` *Leave the asker's voice call.*
+3. `!w play (YouTube URL or search query)` *Plays the tracks requested from the query in the voice call.*
+4. `!w now` *Displays currently playing track in text channel.*
+5. `!w queue (optional: page number)` *Displays the queue of songs incoming to the voice call.*
+6. `!w shuffle` *Shuffles queue. DJs or Admins only.*
+7. `!w remove (index)` *Removes song at index of queue. DJs, Admins, or song requester only.*
+8. `!w pause` *Pauses current song.*
+9. `!w resume` *Resumes paused song.*
+10. `!w stop` *Clears queue and stops currently playing song.*
+11. `!w skip` *Skips to next song in queue. DJs, Admins, or song requester only.*
+
 ## Miscellaneous
 1. `!w ping` *Returns bot response time in milliseconds.*
 2. `!w whomuted` *Returns a list of all muted members.*

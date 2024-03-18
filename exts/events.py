@@ -27,7 +27,7 @@ class Events(commands.Cog):
                     await message.channel.send('<:WoM:836128658828558336>')
                 if message.content.lower() == "which":
                     if assert_cooldown("which") != 0:
-                        await message.add_reaction('🦈')
+                        await shark_react(message)
                     else:
                         await message.channel.send(random.choice([member.name.lower() for member in message.guild.members if not member.bot]))
         
