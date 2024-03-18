@@ -229,7 +229,7 @@ class VoiceState:
 
 
 # bot helper functions
-# create_list, update_birthday, check_reaction_board, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, assert_cooldown, capitalize_string, shark_react, parse_total_duration ƒcog_check, get_login_time
+# create_list, update_birthday, check_reaction_board, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, assert_cooldown, capitalize_string, shark_react, parse_total_duration, cog_check, get_login_time
 def create_list(filename):
     global file_checks
     global lists
