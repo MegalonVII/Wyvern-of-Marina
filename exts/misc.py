@@ -1,13 +1,28 @@
 import discord
 from discord.ext import commands
 import asyncio
+from googletrans import Translator
 from utils import *
 
 # misc commands start here
-# ping, whomuted, avi, emote, startpoll, convert
+# ping, whomuted, avi, emote, startpoll, convert, translate
 class Miscellaneous(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.translator = Translator()
+        self.emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
+        self.conversions = {
+            ("c", "f"): lambda x: x * 9/5 + 32,
+            ("f", "c"): lambda x: (x - 32) * 5/9,
+            ("m", "ft"): lambda x: x * 3.28084,
+            ("ft", "m"): lambda x: x * 0.3048,
+            ("kg", "lb"): lambda x: x * 2.20462,
+            ("lb", "kg"): lambda x: x * 0.453592,
+            ("mi", "km"): lambda x: x * 1.60934,
+            ("km", "mi"): lambda x: x * 0.621371,
+            ("in", "cm"): lambda x: x * 2.54,
+            ("cm", "in"): lambda x: x * 0.393701
+        }
 
     @commands.command(name='ping')
     async def ping(self, ctx):
@@ -49,8 +64,7 @@ class Miscellaneous(commands.Cog):
             def check(m):
                 return m.author == ctx.author and m.channel == ctx.channel
             def get_emoji(number):
-                emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
-                return emojis[number - 1]
+                return self.emojis[number - 1]
     
             prompt = await ctx.reply('You have 30 seconds to give me the question to ask!', mention_author=False)
             try:
@@ -93,27 +107,28 @@ class Miscellaneous(commands.Cog):
             new_unit = new_unit.lower()
             unit_mapping = {"f": "F", "c": "C"}
 
-            conversions = {
-                ("c", "f"): lambda x: x * 9/5 + 32,
-                ("f", "c"): lambda x: (x - 32) * 5/9,
-                ("m", "ft"): lambda x: x * 3.28084,
-                ("ft", "m"): lambda x: x * 0.3048,
-                ("kg", "lb"): lambda x: x * 2.20462,
-                ("lb", "kg"): lambda x: x * 0.453592,
-                ("mi", "km"): lambda x: x * 1.60934,
-                ("km", "mi"): lambda x: x * 0.621371,
-                ("in", "cm"): lambda x: x * 2.54,
-                ("cm", "in"): lambda x: x * 0.393701
-            }
-
-            if (org_unit, new_unit) in conversions:
-                result = conversions[(org_unit, new_unit)](value)
+            if (org_unit, new_unit) in self.conversions:
+                result = self.conversions[(org_unit, new_unit)](value)
                 org_unit = unit_mapping.get(org_unit, org_unit)
                 new_unit = unit_mapping.get(new_unit, new_unit)
                 return await ctx.reply(f"{value} {org_unit} is equal to {result:.2f} {new_unit}.", mention_author=False)
             else:
                 await shark_react(ctx.message)
                 return await ctx.reply("Wups! Invalid conversion...", mention_author=False)
+            
+    @commands.command(name='translate')
+    async def translate(self, ctx, *, phrase):
+        if await cog_check(ctx):
+            try:
+                detected_language = self.translator.detect(phrase)
+                if detected_language.lang != 'en':
+                    translated_text = self.translator.translate(phrase, src=detected_language.lang, dest='en')
+                    return await ctx.reply(f"Translated: {translated_text.text}\n\n*Beware of some inaccuracies. I cannot be 100% accurate...*", mention_author=False)
+                else:
+                    await shark_react(ctx.message)
+                    return await ctx.reply("Wups! Message is already in English...", mention_author=False)
+            except Exception as e:
+                return await ctx.reply(f"Wups! A translation error occurred... ({e})")
             
 
 async def setup(bot):

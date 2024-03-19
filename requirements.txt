@@ -9,3 +9,4 @@ python-dotenv
 yt_dlp
 colorama
 pynacl
+googletrans==3.1.0-alpha
