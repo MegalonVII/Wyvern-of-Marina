@@ -41,7 +41,8 @@ async def help(ctx, page:int=0):
             ('!w roulette ([Admin Only] @member)', 'Try your luck... 😈'),
             ('!w trivia ([Optional] type)', 'I\'ll give you a multiple-choice trivia question. If you do not provide a type, it will be a random question on either general knowledge or some form of media. If you do, the types you may choose from are "general", "music", "film", "tv", "games", or "anime".'),
             ('!w quote', 'Returns a random quote from a video game!'),
-            ('!w deathbattle (@user)', 'Fight someone... 🤠')
+            ('!w deathbattle (@user)', 'Fight someone... 🤠'),
+            ('!w ship (phrase1) (phrase2)', 'In the mood for some love? 😏')
         ]),
         2: ('Economical Commands', [
             ('!w slots', 'Win some Zenny! 🤑'),
@@ -130,6 +131,8 @@ async def on_ready():
             await bot.load_extension(f'exts.{extension}')
     except:
         pass
+
+    await bot.change_presence(activity=discord.Game(name='Monster Hunter'))
 
     if not discord.opus.is_loaded() and system() == 'Darwin':
         discord.opus.load_opus('/opt/homebrew/Cellar/opus/1.4/lib/libopus.0.dylib') # this if statement is for if i'm working from my mac and testing stuff locally

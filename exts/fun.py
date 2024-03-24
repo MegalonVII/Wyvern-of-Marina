@@ -10,13 +10,14 @@ import pypokedex as dex
 from utils import *
 
 # fun commands start here
-# say, custc, snipe, esnipe, choose, pokedex, who, howgay, rps, 8ball, roulette, trivia, quote, deathbattle
+# say, custc, snipe, esnipe, choose, pokedex, who, howgay, rps, 8ball, roulette, trivia, quote, deathbattle, ship
 class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.actions = ["{} poisons {}'s drink!", "{} places a frag mine beneath {}'s feet!", "{} passes {} a blunt!", "{} burns down {}'s house!"]
         self.deaths = [" {} dies of dysentery!", " {} explodes!", " {} took one hit of the Blunt9000™️ and descends straight to Hell!", " {} got caught in the fire and burns down to a crisp!"]
         self.survivals = [" {} noticed this and gets another drink...", " {} quickly steps aside...", " {} kindly rejects the offer...", " {} quickly got out of the fire and finds shelter elsewhere..."]
+        self.shipNotes = ["Ugh! How did you two even become friends in the first place?", "You two are just better off as friends...", "Don't ruin your friendship over this...", "Take it easy now...", "Something might be sparking...", "I could potentially see it happening.", "Maybe it could work!", "You two should try going out on casual dates!", "Give it a shot!", "It's a match made in Heaven!", "I don't think it's possible to create a better pairing!"]
         self.currentFight = False
 
     @commands.command(name='say')
@@ -372,7 +373,25 @@ class Fun(commands.Cog):
                         turn += 1
                         await asyncio.sleep(3)
                 return None
-                
+            
+    @commands.command(name='ship')
+    async def ship(self, ctx: commands.Context, str1: str, str2: str):
+        half_str1 = str1[:len(str1) // 2 + 1] if len(str1) % 2 == 1 else str1[:len(str1) // 2]
+        half_str2 = str2[len(str2) // 2 + 1:] if len(str2) % 2 == 1 else str2[len(str2) // 2:]
+        merged_string = half_str1 + half_str2
+        embed = discord.Embed()
+        shipPercent = random.randint(0, 100)
+        shipBar = shipPercent // 10
+        bar = [':black_medium_square:',':black_medium_square:',':black_medium_square:',':black_medium_square:',':black_medium_square:',':black_medium_square:',':black_medium_square:',':black_medium_square:',':black_medium_square:',':black_medium_square:']
+        for i in range(0, shipBar):
+            bar[i] = ':red_square:'
+
+        finalStr = f":heartpulse: **MATCHMAKING** :heartpulse:\n:small_red_triangle_down: `{str1}`\n:small_red_triangle: `{str2}`"
+        embed.color = discord.Color.pink()
+        embed.title = f'**{merged_string}**'
+        embed.description = f"**{shipPercent}%** {str(bar).replace(", ", "").replace("'", "")}{f" PERFECT! ❤" if shipPercent == 100 else ""}"
+        embed.set_footer(text=f"*{self.shipNotes[shipBar]}*")
+        return await ctx.reply(finalStr, embed=embed, mention_author=False)
 
 async def setup(bot):
     await bot.add_cog(Fun(bot))

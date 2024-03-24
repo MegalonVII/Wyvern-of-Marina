@@ -19,6 +19,7 @@ This is also viewable from the `main.py` file in this repo, and also in our Disc
 12. `!w trivia ([Optional] type)` *Answer trivia questions given by the bot.*
 13. `!w quote` *Returns a quote from a video game character from an API.*
 14. `!w deathbattle (@user)` *Bot creates an imaginary scenario where 2 users fight to the death.*
+15. `!w ship (phrase1) (phrase2)` *Bot creates an imaginary ship percentage between the two phrases.*
 
 ## Economical
 1. `!w slots` *Simulates a slot machine.*

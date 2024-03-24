@@ -12,7 +12,9 @@ from utils import *
 class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.games = ['Monster Hunter 4 Ultimate', 'Rain World', 'Final Fantasy Tactics', 'Baldur\'s Gate 3', 'Terraria']
         self.wish_birthday.start()
+        self.set_game_presence.start()
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -30,28 +32,26 @@ class Events(commands.Cog):
                         await shark_react(message)
                     else:
                         await message.channel.send(random.choice([member.name.lower() for member in message.guild.members if not member.bot]))
+                if message.content.lower() == "skill issue":
+                    await message.channel.send(file=discord.File("skill issue.gif"))
         
                 # trigger reactions
-                triggers = ['yoshi','3ds','wednesday','yuri','yaoi','crank','kys']
-                trigger_emojis = ['<:full:1028536660918550568>','<:megalon:1078914494132129802>','<:wednesday:798691076092198993>','<:vers:804766992644702238>','🐍','🔧','⚡']
+                triggers = ['yoshi','3ds','wednesday','fat','yuri','yaoi','crank','kys']
+                trigger_emojis = ['<:full:1028536660918550568>','<:megalon:1078914494132129802>','<:wednesday:798691076092198993>','<:bulbous:1028536648922832956>','<:vers:804766992644702238>','🐍','🔧','⚡']
                 for trigger, emoji in zip(triggers, trigger_emojis):
                     if trigger in message.content.lower().split(" "):
-                        await message.add_reaction(emoji)
-          
-            if random.randint(1,4096) == 1:  
-                if random.randint(1,2) == 1:
-                    versal = discord.utils.get(message.guild.members, id = 357279142640746497) # versal asked to not get spammed with this dm because they talk a lot in this server
-                    if versal is None or message.author.id != versal.id:
                         try:
-                            return await message.author.send(f"Hey {message.author.name}. Hope this finds you well.\n\nJust wanted to say that I know that this server might make some jabs at you or do some things that might rub you the wrong way, but that aside I wanted to personally tell you that I value that you\'re here. I think you\'re amazing and you deserve only good things coming to you. Hope you only succeed from here!\nIf you\'re ever feeling down, I hope you can look back at this message just to cheer you up. Also, this message might come back to you again so maybe you\'ll need it again?\n\nOh well. Been nice talking to ya! <3")
+                            await message.add_reaction(emoji)
                         except:
-                            return await message.channel.send(f"I tried sending {message.author.mention} top secret classified government information, but for some reason I couldn\'t...")
-                else:
-                    add_coins(message.author.id,500)
-                    with open("shiny.png", "rb") as f:
-                        file = discord.File(f)
-                        return await message.channel.send(content=f"{message.author.name} stumbled across 500 {zenny} and a wild Wyvern of Marina! ✨", file=file)
+                            pass
+          
+            if random.randint(1,8192) == 1:  
+                add_coins(message.author.id,500)
+                with open("shiny.png", "rb") as f:
+                    file = discord.File(f)
+                    return await message.channel.send(content=f"{message.author.name} stumbled across 500 {zenny} and a wild Wyvern of Marina! ✨", file=file)
 
+                    
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if not ctx.message.content.split()[1] in list(lists["commands"].keys()):
@@ -129,10 +129,12 @@ class Events(commands.Cog):
     
     @commands.Cog.listener()
     async def on_member_remove(self, member):
-        coins = pd.read_csv('csv/coins.csv')
-        coins = coins[coins['user_id'] != member.id]
-        coins.to_csv('csv/coins.csv', index=False)
-        create_list("coins")
+        listsToCheck = ["coins", "bank", "delivery", "shell", "bomb", "ticket", "letter", "banana"]
+        for list in listsToCheck:
+            csv = pd.read_csv(f'csv/{list}.csv')
+            csv = csv[csv['user_id'] != member.id]
+            csv.to_csv(f'csv/{list}.csv', index=False)
+            create_list(list)
 
     @tasks.loop(seconds=1)
     async def wish_birthday(self):
@@ -152,9 +154,17 @@ class Events(commands.Cog):
             if time_person_date == user_info[key]['birthdate'] and time_person_exact == [0,0,0]:
                 await self.bot.guilds[0].system_channel.send(f'<:luv:765073937645305896> 🎉 Happy Birthday, <@{int(key)}>! {random.choice(messages)} 🎂 <:luv:765073937645305896>')
 
+    @tasks.loop(hours=3)
+    async def set_game_presence(self):
+        await self.bot.change_presence(activity=discord.Game(name=random.choice(self.games)))
+
 
     @wish_birthday.before_loop
     async def before_wish_birthday(self):
+        await self.bot.wait_until_ready()
+
+    @set_game_presence.before_loop
+    async def before_game_setting(self):
         await self.bot.wait_until_ready()
 
     def cog_unload(self):
