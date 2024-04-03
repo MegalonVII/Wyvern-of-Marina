@@ -13,8 +13,7 @@ class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.games = ['Monster Hunter 4 Ultimate', 'Rain World', 'Final Fantasy Tactics', 'Baldur\'s Gate 3', 'Terraria']
-        self.wish_birthday.start()
-        self.set_game_presence.start()
+        self.wish_birthday.start(); self.set_game_presence.start() # loops
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -158,13 +157,9 @@ class Events(commands.Cog):
     async def set_game_presence(self):
         await self.bot.change_presence(activity=discord.Game(name=random.choice(self.games)))
 
-
-    @wish_birthday.before_loop
-    async def before_wish_birthday(self):
-        await self.bot.wait_until_ready()
-
     @set_game_presence.before_loop
-    async def before_game_setting(self):
+    @wish_birthday.before_loop
+    async def before_looping(self):
         await self.bot.wait_until_ready()
 
     def cog_unload(self):

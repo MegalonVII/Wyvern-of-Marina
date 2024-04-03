@@ -71,7 +71,7 @@ class Flair(commands.Cog):
 
     @commands.command(name='im')
     async def im(self, ctx, *roleName:str):
-        if await cog_check(ctx):
+        if await cog_check(ctx) and await in_wom_shenanigans(ctx):
             roleName = ' '.join(roleName) # finds the role from the name given
             role = discord.utils.get(ctx.guild.roles, name=roleName)
             if role is None:
