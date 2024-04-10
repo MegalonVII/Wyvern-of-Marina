@@ -2,10 +2,11 @@ import discord
 from discord.ext import commands
 import asyncio
 from googletrans import Translator
+from subprocess import run
 from utils import *
 
 # misc commands start here
-# ping, whomuted, avi, emote, startpoll, convert, translate
+# ping, whomuted, avi, emote, startpoll, convert, translate, grabber
 class Miscellaneous(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -128,8 +129,33 @@ class Miscellaneous(commands.Cog):
                     await shark_react(ctx.message)
                     return await ctx.reply("Wups! Message is already in English...", mention_author=False)
             except Exception as e:
-                return await ctx.reply(f"Wups! A translation error occurred... ({e})")
+                return await ctx.reply(f"Wups! A translation error occurred... ({e})", mention_author=False)
+    
+    @commands.command(name='grabber')
+    async def grabber(self, ctx, platform: str, *query):
+        if await cog_check(ctx) and await in_wom_shenanigans(ctx):
+            if platform.lower() not in ['spotify', 'youtube']:
+                await shark_react(ctx.message)
+                return await reply(ctx, 'Wups! Invalid platform choice! Must be either Spotify or YouTube...')
             
+            async with ctx.typing():
+                msg = await ctx.reply('Hang tight! I\'m downloading your song. You\'ll be pinged with your song once I finish.', mention_author=False)
 
+                query = " ".join(query)
+                if platform == 'spotify':
+                    process = await asyncio.create_subprocess_exec('spotdl', 'download', f'{query}')
+                    await process.wait()
+                elif platform == 'youtube':
+                    process = await asyncio.create_subprocess_exec('yt-dlp', f'ytsearch:"{query}"', '-x', '--audio-format', 'mp3', '--output', '%(title)s.%(ext)s')
+                    await process.wait()
+
+            new_files = [file for file in os.listdir('.') if file.endswith(".mp3")]
+            for file in new_files:
+                file_path = os.path.join('.', file)
+                await ctx.reply(content='Here is your song!', file=discord.File(file_path))
+                os.remove(file_path)
+            return await msg.delete()
+
+            
 async def setup(bot):
     await bot.add_cog(Miscellaneous(bot))

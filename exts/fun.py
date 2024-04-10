@@ -28,16 +28,16 @@ class Fun(commands.Cog):
                 return await ctx.channel.send(" ".join(args).replace('"', '\"').replace("'", "\'"), allowed_mentions=discord.AllowedMentions(everyone=False, roles=False))
             except:
                 await shark_react(ctx.message)
-                return await ctx.reply("Wups! You need something for me to say...", mention_author=False)
+                return await reply(ctx, "Wups! You need something for me to say...")
                 
     @commands.command(name='customcommands', aliases=['custc'])
     async def customcommands(self, ctx):
         if await cog_check(ctx):
             try:
-                return await ctx.reply(', '.join(list(lists["commands"].keys())), mention_author=False)
+                return await reply(ctx, ', '.join(list(lists["commands"].keys())))
             except:
                 await shark_react(ctx.message)
-                return await ctx.reply('Wups! There are no custom commands...', mention_author=False)
+                return await reply(ctx, 'Wups! There are no custom commands...')
 
     @commands.command(name='snipe')
     async def snipe(self, ctx):
@@ -55,7 +55,7 @@ class Fun(commands.Cog):
                 return await ctx.reply(embed=embed, mention_author=False)
             except KeyError:
                 await shark_react(ctx.message)
-                return await ctx.reply(f"Wups! There are no recently deleted messages in <#{channel.id}>...", mention_author=False)
+                return await reply(ctx, f"Wups! There are no recently deleted messages in <#{channel.id}>...")
 
     @commands.command(name='editsnipe', aliases=['esnipe'])
     async def editsnipe(self, ctx):
@@ -69,22 +69,22 @@ class Fun(commands.Cog):
                 return await ctx.reply(embed=embed, mention_author=False)
             except KeyError:
                 await shark_react(ctx.message)
-                return await ctx.reply(f"Wups! There are no recently edited messages in <#{channel.id}>...", mention_author=False)
+                return await reply(ctx, f"Wups! There are no recently edited messages in <#{channel.id}>...")
 
     @commands.command(name='choose')
     async def choose(self, ctx, *args):
         if await cog_check(ctx):
             if (len(args) < 2):
                 await shark_react(ctx.message)
-                return await ctx.reply("Wups! You need at least 2 arguments for me to choose from...", mention_author=False)
-            return await ctx.reply(f"I choose `{random.choice(args)}`!", mention_author=False)
+                return await reply(ctx, "Wups! You need at least 2 arguments for me to choose from...")
+            return await reply(ctx, f"I choose `{random.choice(args)}`!")
 
     @commands.command(name='pokedex')
     async def pokedex(self, ctx, index: int):
         if await cog_check(ctx):
             if index > 1017 or index < 1:
                 await shark_react(ctx.message)
-                return await ctx.reply("Wups! Invalid index...", mention_author=False)
+                return await reply(ctx, "Wups! Invalid index...")
               
             async with ctx.typing():
                 # data collections
@@ -158,14 +158,14 @@ class Fun(commands.Cog):
     @commands.command(name='who')
     async def who(self, ctx):
         if await cog_check(ctx):
-            return await ctx.reply(f"`{ctx.message.content[3:]}`? {random.choice([member.name for member in ctx.message.guild.members if not member.bot])}", mention_author=False)
+            return await reply(ctx, f"`{ctx.message.content[3:]}`? {random.choice([member.name for member in ctx.message.guild.members if not member.bot])}")
         
     @commands.command(name='howgay')
     async def howgay(self, ctx, member:discord.Member=None):
         if await cog_check(ctx):
             if assert_cooldown("howgay") != 0:
                 await shark_react(ctx.message)
-                return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('howgay')} seconds...", mention_author=False)
+                return await reply(ctx, f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('howgay')} seconds...")
         
             member = member or ctx.author
             percent = random.randint(0,100)
@@ -179,85 +179,85 @@ class Fun(commands.Cog):
             elif percent >= 76 and percent <= 100:
                 response = responses[3]
             
-            return await ctx.reply(f"{member.name} is {percent}% gay. {response}",mention_author=False)
+            return reply(ctx, f"{member.name} is {percent}% gay. {response}")
 
     @commands.command(name='rps')
     async def rps(self, ctx, playerChoice: str=None):
         if await cog_check(ctx) and await in_wom_shenanigans(ctx):
             if assert_cooldown("rps") != 0 :
                 await shark_react(ctx.message)
-                return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('rps')} seconds...", mention_author=False)
+                return await reply(ctx, f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('rps')} seconds...")
             if playerChoice is None:
                 await shark_react(ctx.message)
-                return await ctx.reply("Wups! You need to give me your choice...", mention_author=False)
+                return await reply(ctx, "Wups! You need to give me your choice...")
             
             playerChoice = playerChoice.lower()
             choices = ['rock', 'paper', 'scissors']
             if playerChoice not in choices:
                 await shark_react(ctx.message)
-                return await ctx.reply("Wups! Invalid choice...", mention_author=False)
+                return await reply(ctx, "Wups! Invalid choice...")
             else:
                 botChoice = random.choice(choices)
                 if playerChoice == botChoice: # tie
-                    return await ctx.reply(f"I chose `{botChoice}`.\nUgh! Boring! We tied...", mention_author=False)
+                    return await reply(ctx, f"I chose `{botChoice}`.\nUgh! Boring! We tied...")
                 elif (playerChoice == choices[0] and botChoice == choices[1]) or \
                     (playerChoice == choices[1] and botChoice == choices[2]) or \
                     (playerChoice == choices[2] and botChoice == choices[0]): # win
-                        return await ctx.reply(f"I chose `{botChoice}`.\nHah! I win, sucker! Why'd you pick that one, stupid?", mention_author=False)
+                        return await reply(ctx, f"I chose `{botChoice}`.\nHah! I win, sucker! Why'd you pick that one, stupid?")
                 else: # lose
-                    return await ctx.reply(f"I chose `{botChoice}`.\nWell played there. You have bested me...", mention_author=False)
+                    return await reply(ctx, f"I chose `{botChoice}`.\nWell played there. You have bested me...")
 
     @commands.command(name='8ball')
     async def eightball(self, ctx):
         if await cog_check(ctx):
             if assert_cooldown("8ball") != 0 :
                 await shark_react(ctx.message)
-                return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('8ball')} seconds...", mention_author=False)
+                return await reply(ctx, f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('8ball')} seconds...")
             if len(ctx.message.content) < 9:
                 await shark_react(ctx.message)
-                return await ctx.reply("Wups! You need to give me a question to respond to...", mention_author=False)
+                return await reply(ctx, "Wups! You need to give me a question to respond to...")
             
             responses = ['Hell yeah!', 'It is certain.', 'Without a doubt.', 'You may rely on it.', 'Yes, definitely.', 'It is decidedly so.', 'As I see it, yes.', 'Most likely.', 'Yes.', 'Outlook good.', 'Signs point to yes.', 'You already know the answer.', 'Reply hazy, try again.', 'Better not tell you now.', 'Ask again later.', 'Cannot predict now.', 'Concentrate and ask again.', 'Don\'t count on it.', 'Outlook not so good.', 'My sources say no.', 'Very doubtful.', 'My reply is no.', 'No.', 'Oh god, no.']
-            return await ctx.reply(f"🎱 `{ctx.message.content[9:]}` 🎱\n{random.choice(responses)}", mention_author=False)
+            return await reply(ctx, f"🎱 `{ctx.message.content[9:]}` 🎱\n{random.choice(responses)}")
 
     @commands.command(name='roulette')
     async def roulette(self, ctx, member:discord.Member=None):
         if await cog_check(ctx):
             if assert_cooldown("roulette") != 0:
                 await shark_react(ctx.message)
-                return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('roulette')} seconds...", mention_author=False)
+                return await reply(ctx, f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('roulette')} seconds...")
             
             member = member or ctx.author
             if member == ctx.author: # if a member wants to roulette themselves
                 if not member.guild_permissions.administrator:
                     if random.randint(1,6) == 1:
                         await member.edit(timed_out_until=discord.utils.utcnow() + timedelta(hours=1), reason='roulette')
-                        return await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
+                        return await reply(ctx, "🔥🔫 You died! (muted for 1 hour)")
                     add_coins(member.id,1)
-                    return await ctx.reply(f"🚬🔫 Looks like you\'re safe, for now... Here's 1 {zenny} as a pity prize...", mention_author=False)
-                return await ctx.reply("❌🔫 Looks like you\'re safe, you filthy admin...", mention_author=False)
+                    return await reply(ctx, f"🚬🔫 Looks like you\'re safe, for now... Here's 1 {zenny} as a pity prize...")
+                return await reply(ctx, "❌🔫 Looks like you\'re safe, you filthy admin...")
             
             else: # if an admin wants to roulette a member they specify
                 if not ctx.message.author.guild_permissions.administrator:
                     if member == ctx.author:  # roulette themselves if not admin (pinged themself)
                         if random.randint(1,6) == 1:
                             await member.edit(timed_out_until=discord.utils.utcnow() + timedelta(hours=1), reason='roulette')
-                            return await ctx.reply("🔥🔫 You died! (muted for 1 hour)", mention_author=False)
+                            return await reply(ctx, "🔥🔫 You died! (muted for 1 hour)")
                         add_coins(member.id,1)
-                        return await ctx.reply(f"🚬🔫 Looks like you\'re safe, for now... Here's 1 {zenny} as a pity prize...", mention_author=False)
-                    return await ctx.reply("❌🔫 A lowlife like you can\'t possibly fire the gun at someone else...", mention_author=False)
+                        return await reply(ctx, f"🚬🔫 Looks like you\'re safe, for now... Here's 1 {zenny} as a pity prize...")
+                    return await reply(ctx, "❌🔫 A lowlife like you can\'t possibly fire the gun at someone else...")
                 elif member == ctx.author: # admin tries rouletting themself
-                    return await ctx.reply("❌🔫 Admins are valued. Don\'t roulette an admin like yourself...", mention_author=False)
+                    return await reply(ctx, "❌🔫 Admins are valued. Don\'t roulette an admin like yourself...")
                 elif member.is_timed_out() == True: # admin tries rouletting a "dead" server member
-                    return await ctx.reply("❌🔫 Don\'t you think it\'d be overkill to shoot a dead body?", mention_author=False)
+                    return await reply(ctx, "❌🔫 Don\'t you think it\'d be overkill to shoot a dead body?")
                 else:
                     if not member.guild_permissions.administrator: # admin tries rouletting "alive" non admin
                         if random.randint(1,6) == 1:
                             await member.edit(timed_out_until=discord.utils.utcnow() + timedelta(hours=1), reason='roulette')
-                            return await ctx.reply("🔥🔫 This user died! (muted for 1 hour)", mention_author=False)
+                            return await reply(ctx, "🔥🔫 This user died! (muted for 1 hour)")
                         add_coins(member.id,1)
-                        return await ctx.reply(f"🚬🔫 Looks like they\'re safe, for now... I gave them 1 {zenny} as a pity prize...", mention_author=False)
-                    return await ctx.reply("❌🔫 Looks like they\'re safe, that filthy admin...", mention_author=False)
+                        return await reply(ctx, f"🚬🔫 Looks like they\'re safe, for now... I gave them 1 {zenny} as a pity prize...")
+                    return await reply(ctx, "❌🔫 Looks like they\'re safe, that filthy admin...")
 
     @commands.command(name='trivia')
     async def trivia(self, ctx, type:str = None):
@@ -266,10 +266,10 @@ class Fun(commands.Cog):
             categories = [9, 11, 12, 14, 15, 31]
             if assert_cooldown('trivia') != 0:
                 await shark_react(ctx.message)
-                return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('trivia')} seconds...", mention_author=False)
+                return await reply(ctx, f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('trivia')} seconds...")
             if not type is None and type.lower() not in types:
                 await shark_react(ctx.message)
-                return await ctx.reply("Wups! Invalid trivia type...", mention_author=False)
+                return await reply(ctx, "Wups! Invalid trivia type...")
             
             async with ctx.typing():
                 if type is None:
@@ -295,7 +295,7 @@ class Fun(commands.Cog):
             try:
                 answer_message = await self.bot.wait_for('message', timeout=15.0, check=check_answer)
             except asyncio.TimeoutError:
-                return await ctx.reply(f"Time's up! The correct answer was **{correct_answer}**.", mention_author=False)
+                return await reply(ctx, f"Time's up! The correct answer was **{correct_answer}**.")
             else:
                 if answer_message.content.lower() == 'a':
                     selected_answer = options[0]
@@ -317,7 +317,7 @@ class Fun(commands.Cog):
             if await in_wom_shenanigans(ctx):
                 if assert_cooldown('quote') != 0:
                     await shark_react(ctx.message)
-                    return await ctx.reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('quote')} seconds...", mention_author=False)
+                    return await reply(ctx, f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('quote')} seconds...")
     
                 async with ctx.typing():
                     response = requests.get(f'https://ultima.rest/api/quote?id={random.randint(1,560)}')
@@ -336,16 +336,16 @@ class Fun(commands.Cog):
             if await in_wom_shenanigans(ctx):
                 if self.currentFight:
                     await shark_react(ctx.message)
-                    return await ctx.reply(f"Wups! There is currently a fight going on...", mention_author=False)
+                    return await reply(ctx, f"Wups! There is currently a fight going on...")
                 if member.bot:
                     await shark_react(ctx.message)
-                    return await ctx.reply(f"Wups! You can't fight a bot...", mention_author=False)
+                    return await reply(ctx, f"Wups! You can't fight a bot...")
                   
                 self.currentFight = True
                 players = [ctx.author, member] if random.choice([True, False]) else [member, ctx.author]
                 turn = 0
                 am = discord.AllowedMentions.none()
-                msg = await ctx.reply(f"{ctx.author.name} challenges {member.name} to the death!", mention_author=False)
+                msg = await reply(ctx, f"{ctx.author.name} challenges {member.name} to the death!")
                 await asyncio.sleep(3)
                 while True:
                     actor, target = (players[0], players[1]) if turn % 2 == 0 else (players[1], players[0])

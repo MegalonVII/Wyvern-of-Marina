@@ -99,7 +99,8 @@ async def help(ctx, page:int=0):
             ('!w emote (emote from this server)', 'Returns information of the given emote. It MUST be from this server!'),
             ('!w startpoll', 'Start a poll!'),
             ('!w convert (number) (original unit) (new unit)', 'Convert a number of units to another unit! Supported units include F, C, m, ft, kg, lb, mi, km, in, and cm. Supported conversions include F <-> C, ft <-> m, lb <-> kg, mi <-> km, and in <-> cm.'),
-            ('!w translate (phrase)', 'Translates any given phrase to English! Be weary that I might not be 100 percent accurate with my translations.')
+            ('!w translate (phrase)', 'Translates any given phrase to English! Be weary that I might not be 100 percent accurate with my translations.'),
+            ('!w grabber (platform) (query)', 'Yar har, me mateys! Sail the high seas and let me give you music from streaming platforms! 🏴‍☠️')
         ])
     }
 
@@ -131,8 +132,6 @@ async def on_ready():
             await bot.load_extension(f'exts.{extension}')
     except:
         pass
-
-    await bot.change_presence(activity=discord.Game(name='Monster Hunter'))
 
     if not discord.opus.is_loaded() and system() == 'Darwin':
         discord.opus.load_opus('/opt/homebrew/Cellar/opus/1.4/lib/libopus.0.dylib') # this if statement is for if i'm working from my mac and testing stuff locally

@@ -320,6 +320,9 @@ async def add_to_board(message, board_type):
             return await board_msg.edit(embed=embed)
     return await channel.send(embed=embed)
 
+async def reply(ctx, content: str):
+    return await ctx.reply(content, mention_author=False)
+
 def add_coins(userID: int, coins: int):
     fieldnames = ['user_id', 'coins']
     found = False
