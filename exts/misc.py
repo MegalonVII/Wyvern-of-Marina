@@ -24,7 +24,26 @@ class Miscellaneous(commands.Cog):
             ("in", "cm"): lambda x: x * 2.54,
             ("cm", "in"): lambda x: x * 0.393701
         }
-        self.platforms = ['spotify', 'youtube', 'soundcloud']
+        self.platforms = ['spotify', 'youtube', 'soundcloud', 'emulation']
+        self.consoles = {
+            'nes': "[NES Emulator](<https://github.com/TASEmulators/fceux/releases>)\n[NES ROMs](<https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20Entertainment%20System%20%28Headerless%29/>)", 
+            'snes': "[SNES Emulator](<https://bsnes.org/download>)\n[SNES ROMs](<https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System/>)", 
+            'n64': "[N64 Emulator](<https://www.retroarch.com/?page=platforms>)\n[N64 ROMs](<https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%2064%20%28BigEndian%29/>)", 
+            'gamecube': "[GameCube Emulator](<https://dolphin-emu.org/download/>)\n[GameCube ROMs](<https://myrient.erista.me/files/Redump/Nintendo%20-%20GameCube%20-%20NKit%20RVZ%20%5Bzstd-19-128k%5D/>)", 
+            'wii': "[Wii Emulator](<https://dolphin-emu.org/download/>)\n[Wii ROMs](<https://myrient.erista.me/files/Redump/Nintendo%20-%20Wii%20-%20NKit%20RVZ%20%5Bzstd-19-128k%5D/>)", 
+            'wiiu': "[Wii U Emulator](<https://github.com/cemu-project/Cemu/releases>)\n[Wii U ROMs](<https://myrient.erista.me/files/Redump/Nintendo%20-%20Wii%20U%20-%20WUX/>)\n[Wii U Keys](<https://pastebin.com/GWApZVLa>)",
+            'switch': "[Switch Emulator](<https://ryujinx.org/download>)\n[Switch ROMs](<https://www.ziperto.com/nintendo-switch-nsp-list/>)\n[Switch Firmware](<https://prodkeys.net/ryujinx-firmware/>)\n[Switch Keys](<https://prodkeys.net/ryujinx-prod-keys/>)",  
+            'gb': "[Game Boy Emulator](<https://sameboy.github.io/downloads/>)\n[Game Boy ROMs](<https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy/>)", 
+            'gbc': "[Game Boy Color Emulator](<https://sameboy.github.io/downloads/>)\n[Game Boy Color ROMs](<https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Color/>)",
+            'gba': "[Game Boy Advance Emulator](<https://mgba.io/downloads.html>)\n[Game Boy Advance ROMs](<https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/>)", 
+            'ds': "[DS Emulator](<https://melonds.kuribo64.net/downloads.php>)\n[DS ROMs](<https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20DS%20%28Decrypted%29/>)", 
+            '3ds': "[3DS Emulator](<https://github.com/Lime3DS/Lime3DS/releases>)\n[3DS ROMs](<https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%203DS%20%28Decrypted%29/>)", 
+            'ps1': "[PS1 Emulator](<https://github.com/stenzek/duckstation/releases/tag/latest>)\n[PS1 ROMs](<https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation/>)\n[PS1 BIOS](<https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%20-%20BIOS%20Images/>)", 
+            'ps2': "[PS2 Emulator](<https://pcsx2.net/>)\n[PS2 ROMs](<https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%202/>)\n[PS2 BIOS](<https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%202%20-%20BIOS%20Images/>)", 
+            'ps3': "[PS3 Emulator](<https://rpcs3.net/download>)\n[PS3 ROMs](<https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%203/>)\n[PS3 BIOS](<https://www.playstation.com/en-us/support/hardware/ps3/system-software/>)", 
+            'psp': "[PSP Emulator](<https://www.ppsspp.org/download/>)\n[PSP ROMs](<https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%20Portable/>)", 
+            'psvita': "[PS Vita Emulator](<https://vita3k.org/>)\n[PS Vita Roms](<https://myrient.erista.me/files/No-Intro/Sony%20-%20PlayStation%20Vita%20%28PSN%29%20%28Content%29/>)"
+        }
 
     @commands.command(name='ping')
     async def ping(self, ctx):
@@ -135,84 +154,111 @@ class Miscellaneous(commands.Cog):
     @commands.command(name='grabber')
     async def grabber(self, ctx, platform: str, *query):
         if await cog_check(ctx) and await in_wom_shenanigans(ctx):
-            query = " ".join(query)
-            if query[0] == '<' and query[-1] == '>':
-                query = query[1:-1]
-            elif query[0] == '[' and query [-1] == ')':
+            try:
+                query = " ".join(query)
+                if query[0] == '<' and query[-1] == '>':
+                    query = query[1:-1]
+                elif query[0] == '[' and query [-1] == ')':
+                    await shark_react(ctx.message)
+                    return await reply(ctx, "Wups! I couldn't download anything in an embedded link. Try again... ")
+            except IndexError:
                 await shark_react(ctx.message)
-                return await reply(ctx, "Wups! I couldn't download anything in an embedded link. Try again... ")
+                return await reply(ctx, "Wups! I need a search query...")
             
             if platform.lower() not in self.platforms:
                 await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! Invalid platform choice! Must be either Spotify, SoundCloud, or YouTube...')
+                return await reply(ctx, 'Wups! Invalid platform choice! Must be either `Spotify`, `SoundCloud`, `YouTube`, or `Emulation`...')
 
             async with ctx.typing():
-                msg = await ctx.reply('Hang tight! I\'ll try downloading your song. You\'ll be pinged with your song once I finish.', mention_author=False)
+                if platform in self.platforms[0:3]:
+                    msg = await ctx.reply('Hang tight! I\'ll try downloading your song. You\'ll be pinged with your song once I finish.', mention_author=False)
 
-                if platform == 'spotify':
-                    if query.__contains__('/artist/') or query.__contains__('/album/') or query.__contains__('/playlist/'):
-                        await msg.delete()
-                        await shark_react(ctx.message)
-                        return await reply(ctx, "Wups! I don't want to bombard you with pings! Try downloading songs individually...")
-                    
-                    print(f"{Style.BRIGHT}Downloading from {Fore.BLACK}{Back.GREEN}Spotify{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
-                    spotdl = await create_subprocess_exec('spotdl', 'download', query, '--lyrics', 'synced', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    stdout, stderr = await spotdl.communicate()
-                    print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()}\n")
-                    if "LookupError" in stdout.decode():
-                        await msg.delete()
-                        await shark_react(ctx.message)
-                        return await reply(ctx, "Wups! I couldn't find a song on Spotify with that query. Try again... ")
-                    if spotdl.returncode != 0:
-                        await msg.delete()
-                        await shark_react(ctx.message)
-                        return await reply(ctx, "Wups! I couldn't download anything. Try again... ")
-                    
-                elif platform == 'youtube':
-                    print(f"{Style.BRIGHT}Downloading from {Fore.WHITE}{Back.RED}YouTube{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
-                    ytdl = await create_subprocess_exec('yt-dlp', f'ytsearch:"{query}"', '-x', '--audio-format', 'mp3', '--output', '%(title)s.%(ext)s', '--no-playlist', '--embed-metadata', '--embed-thumbnail', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    stdout, stderr = await ytdl.communicate()
-                    print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()}")
-                    if 'Downloading 0 items' in stdout.decode():
-                        await msg.delete()
-                        await shark_react(ctx.message)
-                        return await ctx.reply("Wups! I couldn't download anything. Try again... (Most likely, your search query was invalid.)")
-                    
-                elif platform == 'soundcloud':
-                    if query[0:23] != 'https://soundcloud.com/':
-                        await msg.delete()
-                        await shark_react(ctx.message)
-                        return await ctx.reply("Wups! I couldn't download anything. Try again... (Due to API requirements, you must make sure that you are providing a `https://soundcloud.com/` link as your query.)")
-                    index = query.find("?in=")
-                    if index != -1:
-                        query = query[:index]
-                    if query[-1] == '/':
-                        query = query[:-1]
-                    print(f"{Style.BRIGHT}Downloading from {Fore.WHITE}{Back.LIGHTRED_EX}SoundCloud{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
-                    scdl = await create_subprocess_exec('scdl', '-l', query, '--onlymp3', '--force-metadata', '--no-playlist', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    stdout, stderr = await scdl.communicate()
-                    print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}\n{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()[:-1]}")
-                    if 'Found a playlist' in stderr.decode():
-                        await msg.delete()
-                        await shark_react(ctx.message)
-                        return await reply(ctx, "Wups! I don't want to bombard you with pings! Try downloading songs individually...")
-                    if 'URL is not valid' in stderr.decode():
-                        await msg.delete()
-                        await shark_react(ctx.message)
-                        return await reply(ctx, "Wups! Invalid URL! Try again...")
+                    if platform == 'spotify':
+                        if query.__contains__('/artist/') or query.__contains__('/album/') or query.__contains__('/playlist/'):
+                            await msg.delete()
+                            await shark_react(ctx.message)
+                            return await reply(ctx, "Wups! I don't want to bombard you with pings! Try downloading songs individually...")
+                        
+                        print(f"{Style.BRIGHT}Downloading from {Fore.BLACK}{Back.GREEN}Spotify{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
+                        spotdl = await create_subprocess_exec('spotdl', 'download', query, '--lyrics', 'synced', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        stdout, stderr = await spotdl.communicate()
+                        print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()}\n")
+                        if "LookupError" in stdout.decode():
+                            await msg.delete()
+                            await shark_react(ctx.message)
+                            return await reply(ctx, "Wups! I couldn't find a song on Spotify with that query. Try again... ")
+                        if spotdl.returncode != 0:
+                            await msg.delete()
+                            await shark_react(ctx.message)
+                            return await reply(ctx, "Wups! I couldn't download anything. Try again... ")
+                        
+                    elif platform == 'youtube':
+                        print(f"{Style.BRIGHT}Downloading from {Fore.WHITE}{Back.RED}YouTube{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
+                        ytdl = await create_subprocess_exec('yt-dlp', f'ytsearch:"{query}"', '-x', '--audio-format', 'mp3', '--output', '%(title)s.%(ext)s', '--no-playlist', '--embed-metadata', '--embed-thumbnail', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        stdout, stderr = await ytdl.communicate()
+                        print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()}")
+                        if 'Downloading 0 items' in stdout.decode():
+                            await msg.delete()
+                            await shark_react(ctx.message)
+                            return await ctx.reply("Wups! I couldn't download anything. Try again... (Most likely, your search query was invalid.)")
+                        
+                    elif platform == 'soundcloud':
+                        if query[0:23] != 'https://soundcloud.com/':
+                            await msg.delete()
+                            await shark_react(ctx.message)
+                            return await ctx.reply("Wups! I couldn't download anything. Try again... (Due to API requirements, you must make sure that you are providing a `https://soundcloud.com/` link as your query.)")
+                        index = query.find("?in=")
+                        if index != -1:
+                            query = query[:index]
+                        if query[-1] == '/':
+                            query = query[:-1]
+                        print(f"{Style.BRIGHT}Downloading from {Fore.WHITE}{Back.LIGHTRED_EX}SoundCloud{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
+                        scdl = await create_subprocess_exec('scdl', '-l', query, '--onlymp3', '--force-metadata', '--no-playlist', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        stdout, stderr = await scdl.communicate()
+                        print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}\n{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()[:-1]}")
+                        if 'Found a playlist' in stderr.decode():
+                            await msg.delete()
+                            await shark_react(ctx.message)
+                            return await reply(ctx, "Wups! I don't want to bombard you with pings! Try downloading songs individually...")
+                        if 'URL is not valid' in stderr.decode():
+                            await msg.delete()
+                            await shark_react(ctx.message)
+                            return await reply(ctx, "Wups! Invalid URL! Try again...")
 
-            new_files = [file for file in os.listdir('.') if file.endswith(".mp3")]
-            for file in new_files:
-                file_path = os.path.join('.', file)
-                try:
-                    await ctx.reply(content='Here is your song!', file=discord.File(file_path))
-                except:
-                    os.remove(file_path)
-                    await msg.delete()
-                    await shark_react(ctx.message)
-                    return await reply(ctx, 'Wups! The file was too big for me to send...')
-                os.remove(file_path)
-            return await msg.delete()
+                    new_files = [file for file in os.listdir('.') if file.endswith(".mp3")]
+                    for file in new_files:
+                        file_path = os.path.join('.', file)
+                        try:
+                            await ctx.reply(content='Here is your song!', file=discord.File(file_path))
+                        except:
+                            os.remove(file_path)
+                            await msg.delete()
+                            await shark_react(ctx.message)
+                            return await reply(ctx, 'Wups! The file was too big for me to send...')
+                        os.remove(file_path)
+                    return await msg.delete()
+                else:
+                    if query.lower() not in self.consoles.keys():
+                        consolesTemp = []
+                        for console in self.consoles.keys():
+                            console = f"`{console}`"
+                            consolesTemp.append(console)
+                        await shark_react(ctx.message)
+                        return await reply(ctx, f"Wups! Invalid console choice! Must exactly one from the following list...\n{", ".join(consolesTemp)}")
+                    for key, value in self.consoles.items():
+                        if query.lower() == key:
+                            if key == 'n64':
+                                return await reply(ctx, value + "\n*Go hog wild.\nUse `Mupen64Plus-Next` core on the emulator.*")
+                            elif key == 'switch':
+                                return await reply(ctx, value + "\n*Go hog wild.\nUse an adblocker for the ROM site.\nIf using an emulator, it doesn't matter which file format you download, but Megalon personally prefers NSP files!\nDownload the latest keys needed from the Keys site, open Ryujinx, click `File > Open Ryujinx Folder`, navigate to the `system` folder, drop the key files there.\nFrom the Firmware site, download the latest firmware, open Ryujinx, click `Tools > Install Firmware > Install a firmware from XCI or ZIP`, and then select your firmware ZIP. Make sure you do NOT extract it!*")
+                            elif key == 'wiiu':
+                                return await reply(ctx, value + "\n*Go hog wild.\nOn the Keys site, copy everything in the Pastebin, open Cemu, click `File > Open Cemu Folder`, and replace everything in `keys.txt` with what you copied from the Pastebin.*")
+                            elif key == 'ps1':
+                                return await reply(ctx, value + "\n*Go hog wild.\nOn the Emulator, click `Settings > BIOS`. Under BIOS Directory, choose the folder where you downloaded your BIOS to.*")
+                            elif key == 'psvita':
+                                return await reply(ctx, value + "\n*Go hog wild.\nDo NOT extract the ZIP file of the ROM you downloaded!\nIn the Emulator, click `File > Install .zip, .vpk` and then select the ZIP of your ROM.*")
+                            else:
+                                return await reply(ctx, value + "\n*Go hog wild.*")
 
             
 async def setup(bot):

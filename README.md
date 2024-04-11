@@ -77,4 +77,4 @@ This is also viewable from the `main.py` file in this repo, and also in our Disc
 5. `!w startpoll` *Start a poll within a specified channel.*
 6. `!w convert (number) (original unit) (new unit)` *Converts the number of original units to the same amount in the new unit. Supported units are F, C, m, ft, kg, lb, mi, km, in, and cm. Supported conversions are F <-> C, ft <-> m, lb <-> kg, mi <-> km, and in <-> cm.*
 7. `!w translate (phrase)` *Translates the phrase to English. May not be 100% accurate.*
-8. `!w grabber (platform) (query)` *Gets information about a track from that platform. May not be perfect.*
+8. `!w grabber (platform) (query)` *Gets information about a piece of media from that platform. May not be perfect.*

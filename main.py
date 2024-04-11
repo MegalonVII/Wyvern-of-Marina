@@ -100,7 +100,7 @@ async def help(ctx, page:int=0):
             ('!w startpoll', 'Start a poll!'),
             ('!w convert (number) (original unit) (new unit)', 'Convert a number of units to another unit! Supported units include F, C, m, ft, kg, lb, mi, km, in, and cm. Supported conversions include F <-> C, ft <-> m, lb <-> kg, mi <-> km, and in <-> cm.'),
             ('!w translate (phrase)', 'Translates any given phrase to English! Be weary that I might not be 100 percent accurate with my translations.'),
-            ('!w grabber (platform) (query)', 'Yar har, me mateys! Sail the high seas and let me give you music from streaming platforms! 🏴‍☠️')
+            ('!w grabber (platform) (query)', 'Yar har, me mateys! Sail the high seas and let me give you music from streaming platforms! Or if ye don\'t fancy that, how about some video games? 🏴‍☠️ (Platform must be one of the following: Spotify, YouTube, SoundCloud, Emulation. If platform is SoundCloud, query must be a soundcloud.com link. If platform is Emulation, query must be from the list of approved console acronyms.)')
         ])
     }
 
