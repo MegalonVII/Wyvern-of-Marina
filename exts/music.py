@@ -106,6 +106,7 @@ class Music(commands.Cog):
             ctx.voice_state.voice.stop()
             return await Music.respond(self, ctx, 'Stopped!', '⏹️')
         else:
+            await shark_react(ctx.message)
             return await reply(ctx, 'Wups! I\'m not playing any music right now...')
 
     @commands.command(name='skip')
