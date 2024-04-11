@@ -1,8 +1,7 @@
 import discord
+from asyncio import TimeoutError, subprocess, create_subprocess_exec
 from discord.ext import commands
-import asyncio
 from googletrans import Translator
-from subprocess import run
 from utils import *
 
 # misc commands start here
@@ -24,6 +23,7 @@ class Miscellaneous(commands.Cog):
             ("in", "cm"): lambda x: x * 2.54,
             ("cm", "in"): lambda x: x * 0.393701
         }
+        self.platforms = ['spotify', 'youtube', 'soundcloud']
 
     @commands.command(name='ping')
     async def ping(self, ctx):
@@ -70,13 +70,13 @@ class Miscellaneous(commands.Cog):
             prompt = await ctx.reply('You have 30 seconds to give me the question to ask!', mention_author=False)
             try:
                 question = await self.bot.wait_for('message', check=check, timeout=30)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 return await ctx.reply("Time's up! You didn't provide me with a question...", mention_author=False)
             await question.delete()
             prompt = await prompt.edit(content='You now have 1 minute to give me all the possible poll options! Remember, I cannot start a poll with less than 2 options and more than 10 options. Also, all options will be separated by a space.', allowed_mentions=discord.AllowedMentions.none())
             try:
                 options = await self.bot.wait_for('message', check=check, timeout=60)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 return await ctx.reply("Time's up! You didn't provide me with any options...", mention_author=False)
             options_list = options.content.split()
             if len(options_list) < 2:
@@ -134,25 +134,54 @@ class Miscellaneous(commands.Cog):
     @commands.command(name='grabber')
     async def grabber(self, ctx, platform: str, *query):
         if await cog_check(ctx) and await in_wom_shenanigans(ctx):
-            if platform.lower() not in ['spotify', 'youtube']:
+            query = " ".join(query)
+            if platform.lower() not in self.platforms:
                 await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! Invalid platform choice! Must be either Spotify or YouTube...')
-            
-            async with ctx.typing():
-                msg = await ctx.reply('Hang tight! I\'m downloading your song. You\'ll be pinged with your song once I finish.', mention_author=False)
+                return await reply(ctx, 'Wups! Invalid platform choice! Must be either Spotify, SoundCloud, or YouTube...')
+            if query[0] == '[' and query [-1] == ')':
+                await shark_react(ctx.message)
+                return await reply(ctx, "Wups! I couldn't download anything in an embedded link. Try again... ")
+            if query[0] == '<' and query[-1] == '>':
+                query = query[1:-1]
+            if query[:-5] == '.com/' or query[:-4] == ['.be/', '.com']:
+                await shark_react(ctx.message)
+                return await reply(ctx, "Wups! I can't download the entire database. Try again... ")
 
-                query = " ".join(query)
+            async with ctx.typing():
+                msg = await ctx.reply('Hang tight! I\'ll try downloading your song. You\'ll be pinged with your song once I finish.', mention_author=False)
+
                 if platform == 'spotify':
-                    process = await asyncio.create_subprocess_exec('spotdl', 'download', f'{query}')
-                    await process.wait()
+                    spotdl = await create_subprocess_exec('spotdl', 'download', query)
+                    await spotdl.wait()
+                    if spotdl.returncode != 0:
+                        await msg.delete()
+                        await shark_react(ctx.message)
+                        return await ctx.reply("Wups! I couldn't download anything. Try again... ")
                 elif platform == 'youtube':
-                    process = await asyncio.create_subprocess_exec('yt-dlp', f'ytsearch:"{query}"', '-x', '--audio-format', 'mp3', '--output', '%(title)s.%(ext)s')
-                    await process.wait()
+                    ytdl = await create_subprocess_exec('yt-dlp', f'ytsearch:"{query}"', '-x', '--audio-format', 'mp3', '--output', '%(title)s.%(ext)s', '--no-playlist', '--embed-metadata', '--embed-thumbnail', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    stdout, stderr = await ytdl.communicate()
+                    if 'Downloading 0 items' in stdout.decode():
+                        await msg.delete()
+                        await shark_react(ctx.message)
+                        return await ctx.reply("Wups! I couldn't download anything. Try again... (Most likely, your search query was invalid.)")
+                elif platform == 'soundcloud':
+                    if query[0:23] != 'https://soundcloud.com/':
+                        await msg.delete()
+                        await shark_react(ctx.message)
+                        return await ctx.reply("Wups! I couldn't download anything. Try again... (Due to API requirements, you must make sure that you are providing a `https://soundcloud.com/` link as your query.)")
+                    scdl = await create_subprocess_exec('scdl', '-l', query, '--onlymp3', '--force-metadata')
+                    await scdl.wait()
 
             new_files = [file for file in os.listdir('.') if file.endswith(".mp3")]
             for file in new_files:
                 file_path = os.path.join('.', file)
-                await ctx.reply(content='Here is your song!', file=discord.File(file_path))
+                try:
+                    await ctx.reply(content='Here is your song!', file=discord.File(file_path))
+                except:
+                    os.remove(file_path)
+                    await msg.delete()
+                    await shark_react(ctx.message)
+                    return await reply(ctx, 'Wups! The file was too big for me to send...')
                 os.remove(file_path)
             return await msg.delete()
 

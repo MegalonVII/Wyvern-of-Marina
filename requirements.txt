@@ -11,3 +11,4 @@ colorama
 pynacl
 googletrans==3.1.0-alpha
 spotdl
+scdl
