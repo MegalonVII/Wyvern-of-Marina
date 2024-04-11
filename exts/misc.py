@@ -2,6 +2,7 @@ import discord
 from asyncio import TimeoutError, subprocess, create_subprocess_exec
 from discord.ext import commands
 from googletrans import Translator
+from colorama import Fore, Back, Style
 from utils import *
 
 # misc commands start here
@@ -135,42 +136,70 @@ class Miscellaneous(commands.Cog):
     async def grabber(self, ctx, platform: str, *query):
         if await cog_check(ctx) and await in_wom_shenanigans(ctx):
             query = " ".join(query)
+            if query[0] == '<' and query[-1] == '>':
+                query = query[1:-1]
+            elif query[0] == '[' and query [-1] == ')':
+                await shark_react(ctx.message)
+                return await reply(ctx, "Wups! I couldn't download anything in an embedded link. Try again... ")
+            
             if platform.lower() not in self.platforms:
                 await shark_react(ctx.message)
                 return await reply(ctx, 'Wups! Invalid platform choice! Must be either Spotify, SoundCloud, or YouTube...')
-            if query[0] == '[' and query [-1] == ')':
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! I couldn't download anything in an embedded link. Try again... ")
-            if query[0] == '<' and query[-1] == '>':
-                query = query[1:-1]
-            if query[:-5] == '.com/' or query[:-4] == ['.be/', '.com']:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! I can't download the entire database. Try again... ")
 
             async with ctx.typing():
                 msg = await ctx.reply('Hang tight! I\'ll try downloading your song. You\'ll be pinged with your song once I finish.', mention_author=False)
 
                 if platform == 'spotify':
-                    spotdl = await create_subprocess_exec('spotdl', 'download', query)
-                    await spotdl.wait()
+                    if query.__contains__('/artist/') or query.__contains__('/album/') or query.__contains__('/playlist/'):
+                        await msg.delete()
+                        await shark_react(ctx.message)
+                        return await reply(ctx, "Wups! I don't want to bombard you with pings! Try downloading songs individually...")
+                    
+                    print(f"{Style.BRIGHT}Downloading from {Fore.BLACK}{Back.GREEN}Spotify{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
+                    spotdl = await create_subprocess_exec('spotdl', 'download', query, '--lyrics', 'synced', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    stdout, stderr = await spotdl.communicate()
+                    print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()}\n")
+                    if "LookupError" in stdout.decode():
+                        await msg.delete()
+                        await shark_react(ctx.message)
+                        return await reply(ctx, "Wups! I couldn't find a song on Spotify with that query. Try again... ")
                     if spotdl.returncode != 0:
                         await msg.delete()
                         await shark_react(ctx.message)
-                        return await ctx.reply("Wups! I couldn't download anything. Try again... ")
+                        return await reply(ctx, "Wups! I couldn't download anything. Try again... ")
+                    
                 elif platform == 'youtube':
+                    print(f"{Style.BRIGHT}Downloading from {Fore.WHITE}{Back.RED}YouTube{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
                     ytdl = await create_subprocess_exec('yt-dlp', f'ytsearch:"{query}"', '-x', '--audio-format', 'mp3', '--output', '%(title)s.%(ext)s', '--no-playlist', '--embed-metadata', '--embed-thumbnail', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     stdout, stderr = await ytdl.communicate()
+                    print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()}")
                     if 'Downloading 0 items' in stdout.decode():
                         await msg.delete()
                         await shark_react(ctx.message)
                         return await ctx.reply("Wups! I couldn't download anything. Try again... (Most likely, your search query was invalid.)")
+                    
                 elif platform == 'soundcloud':
                     if query[0:23] != 'https://soundcloud.com/':
                         await msg.delete()
                         await shark_react(ctx.message)
                         return await ctx.reply("Wups! I couldn't download anything. Try again... (Due to API requirements, you must make sure that you are providing a `https://soundcloud.com/` link as your query.)")
-                    scdl = await create_subprocess_exec('scdl', '-l', query, '--onlymp3', '--force-metadata')
-                    await scdl.wait()
+                    index = query.find("?in=")
+                    if index != -1:
+                        query = query[:index]
+                    if query[-1] == '/':
+                        query = query[:-1]
+                    print(f"{Style.BRIGHT}Downloading from {Fore.WHITE}{Back.LIGHTRED_EX}SoundCloud{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
+                    scdl = await create_subprocess_exec('scdl', '-l', query, '--onlymp3', '--force-metadata', '--no-playlist', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    stdout, stderr = await scdl.communicate()
+                    print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}\n{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()[:-1]}")
+                    if 'Found a playlist' in stderr.decode():
+                        await msg.delete()
+                        await shark_react(ctx.message)
+                        return await reply(ctx, "Wups! I don't want to bombard you with pings! Try downloading songs individually...")
+                    if 'URL is not valid' in stderr.decode():
+                        await msg.delete()
+                        await shark_react(ctx.message)
+                        return await reply(ctx, "Wups! Invalid URL! Try again...")
 
             new_files = [file for file in os.listdir('.') if file.endswith(".mp3")]
             for file in new_files:
