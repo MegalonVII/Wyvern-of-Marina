@@ -85,7 +85,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         data = await loop.run_in_executor(None, partial)
 
         if data is None:
-            return await ctx.reply(f"Wups! Couldn\'t find anything that matches `{search}`...", mention_author=False)
+            return await reply(ctx, f"Wups! Couldn\'t find anything that matches `{search}`...")
         if 'entries' not in data:
             process_info = data
         else:
@@ -95,7 +95,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
                     process_info = entry
                     break
             if process_info is None:
-                return await ctx.reply(f"Wups! Couldn\'t find anything that matches `{search}`...", mention_author=False)
+                return await reply(ctx, f"Wups! Couldn\'t find anything that matches `{search}`...")
 
         webpage_url = process_info['webpage_url']
         partial = functools.partial(cls.ytdl.extract_info, webpage_url, download=False)
@@ -112,7 +112,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
             try:
                 info = processed_info['entries'].pop(0)
             except IndexError:
-                return await ctx.reply(f'Wups! Couldn\'t retrieve any matches for `{webpage_url}`...', mention_author=False)
+                return await reply(ctx, f'Wups! Couldn\'t retrieve any matches for `{webpage_url}`...')
 
         return cls(ctx, discord.FFmpegPCMAudio(info['url'], **cls.FFMPEG_OPTIONS), data=info)
 
@@ -229,7 +229,7 @@ class VoiceState:
 
 
 # bot helper functions
-# create_list, update_birthday, check_reaction_board, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, assert_cooldown, capitalize_string, shark_react, parse_total_duration, cog_check, get_login_time
+# create_list, update_birthday, check_reaction_board, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, in_channels, in_threads, assert_cooldown, capitalize_string, shark_react, parse_total_duration, cog_check, get_login_time
 def create_list(filename):
     global file_checks
     global lists
@@ -510,11 +510,35 @@ async def in_wom_shenanigans(ctx):
     wom_shenanigans = discord.utils.get(ctx.guild.channels, name='wom-shenanigans')
     if wom_shenanigans is None:
         await shark_react(ctx.message)
-        await ctx.reply("ask for or make a wom-shenanigans channel first, stupid", mention_author=False)
+        await reply(ctx, "ask for or make a wom-shenanigans channel first, stupid")
         return False
     if not ctx.message.channel.id == wom_shenanigans.id:
         await shark_react(ctx.message)
-        await ctx.reply(f"go to <#{wom_shenanigans.id}>, jackass", mention_author=False)
+        await reply(ctx, f"go to <#{wom_shenanigans.id}>, jackass")
+        return False
+    return True
+
+async def in_channels(ctx, channels: list, giveResponse: bool):
+    channelName = ctx.message.channel.name
+    ids = []
+    for channel in channels:
+        ids.append(f"<#{discord.utils.get(ctx.guild.channels, name=channel).id}>")
+    if channelName not in channels:
+        if giveResponse:
+            await shark_react(ctx.message)
+            await reply(ctx, f"this command can only be used in the following channels: {", ".join(ids)}. go to one of those channels, jackass")
+        return False
+    return True
+
+async def in_threads(ctx, threads: list, giveResponse: bool):
+    threadName = ctx.message.channel.name
+    ids = []
+    for thread in threads:
+        ids.append(f"<#{discord.utils.get(ctx.guild.threads, name=thread).id}>")
+    if threadName not in threads:
+        if giveResponse:
+            await shark_react(ctx.message)
+            await reply(ctx, f"this command can only be used in the following threads: {", ".join(ids)}. go to one of those channels, jackass")
         return False
     return True
 

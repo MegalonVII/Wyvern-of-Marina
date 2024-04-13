@@ -97,7 +97,6 @@ async def help(ctx, page:int=0):
             ('!w whomuted', 'Returns the name of every member who is currently muted.'),
             ('!w avatar ([Optional] @member)', 'I\'ll send you the avatar of the given user. Defaults to yourself.'),
             ('!w emote (emote from this server)', 'Returns information of the given emote. It MUST be from this server!'),
-            ('!w startpoll', 'Start a poll!'),
             ('!w convert (number) (original unit) (new unit)', 'Convert a number of units to another unit! Supported units include F, C, m, ft, kg, lb, mi, km, in, and cm. Supported conversions include F <-> C, ft <-> m, lb <-> kg, mi <-> km, and in <-> cm.'),
             ('!w translate (phrase)', 'Translates any given phrase to English! Be weary that I might not be 100 percent accurate with my translations.'),
             ('!w grabber (platform) (query)', 'Yar har, me mateys! Sail the high seas and let me give you music from streaming platforms! Or if ye don\'t fancy that, how about some video games? 🏴‍☠️ (Platform must be one of the following: Spotify, YouTube, SoundCloud, Emulation. If platform is SoundCloud, query must be a soundcloud.com link. If platform is Emulation, query must be from the list of approved console acronyms.)')
@@ -134,7 +133,7 @@ async def on_ready():
         pass
 
     if not discord.opus.is_loaded() and system() == 'Darwin':
-        discord.opus.load_opus('/opt/homebrew/Cellar/opus/1.4/lib/libopus.0.dylib') # this if statement is for if i'm working from my mac and testing stuff locally
+        discord.opus.load_opus('/opt/homebrew/Cellar/opus/1.5.1/lib/libopus.0.dylib') # this if statement is for if i'm working from my mac and testing stuff locally
 
     return print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\n" + get_login_time('US/Pacific')) # fully logged in with everything loaded in the backend. chose the timezone as pst because that's what blues is based in
     

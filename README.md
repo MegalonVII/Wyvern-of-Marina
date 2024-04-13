@@ -74,7 +74,6 @@ This is also viewable from the `main.py` file in this repo, and also in our Disc
 2. `!w whomuted` *Returns a list of all muted members.*
 3. `!w avatar ([Optional] @member)` *Returns the profile picture of either the user or the specified member.*
 4. `!w emote (emoji from the server)` *Returns information about the emoji in our server.*
-5. `!w startpoll` *Start a poll within a specified channel.*
-6. `!w convert (number) (original unit) (new unit)` *Converts the number of original units to the same amount in the new unit. Supported units are F, C, m, ft, kg, lb, mi, km, in, and cm. Supported conversions are F <-> C, ft <-> m, lb <-> kg, mi <-> km, and in <-> cm.*
-7. `!w translate (phrase)` *Translates the phrase to English. May not be 100% accurate.*
-8. `!w grabber (platform) (query)` *Gets information about a piece of media from that platform. May not be perfect.*
+5. `!w convert (number) (original unit) (new unit)` *Converts the number of original units to the same amount in the new unit. Supported units are F, C, m, ft, kg, lb, mi, km, in, and cm. Supported conversions are F <-> C, ft <-> m, lb <-> kg, mi <-> km, and in <-> cm.*
+6. `!w translate (phrase)` *Translates the phrase to English. May not be 100% accurate.*
+7. `!w grabber (platform) (query)` *Gets information about a piece of media from that platform. May not be perfect.*

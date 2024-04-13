@@ -12,7 +12,30 @@ from utils import *
 class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.games = ['Monster Hunter 4 Ultimate', 'Rain World', 'Final Fantasy Tactics', 'Baldur\'s Gate 3', 'Terraria']
+        self.games = [
+            'Monster Hunter 4 Ultimate', 
+            'Rain World', 
+            'Final Fantasy Tactics', 
+            'Baldur\'s Gate 3', 
+            'Terraria', 
+            'FINAL FANTASY XIV Online', 
+            'Persona 4 Golden', 
+            'Fire Emblem Echoes: Shadows of Valentia', 
+            'Xenogears', 
+            'Chrono Trigger',
+            'Quake',
+            'Dead Space',
+            'NieR: Automata',
+            'Hi-Fi Rush',
+            'Corpse Party'
+        ]
+        self.messages = [
+            "Try not to die of dysentery today!",
+            "Either go get some pussy or study literal vaginas today!",
+            "Am I weird for thinking today won't be strangely wholesome?",
+            "Don't get AFK Corrin'd today!",
+            "I hope you go on a rampage in Hunger Games against a certain minority of people!"
+        ]
         self.wish_birthday.start(); self.set_game_presence.start() # loops
 
     @commands.Cog.listener()
@@ -142,16 +165,8 @@ class Events(commands.Cog):
             time_person_date = time_person.strftime('%m-%d')
             time_person_exact = [int(time_person.strftime('%H')), int(time_person.strftime('%M')), int(time_person.strftime('%S'))]
 
-            messages = [
-                "Try not to die of dysentery today!",
-                "Either go get some pussy or study literal vaginas today!",
-                "Am I weird for thinking today won't be strangely wholesome?",
-                "Don't get AFK Corrin'd today!",
-                "I hope you go on a rampage in Hunger Games against a certain minority of people!"
-            ]
-
             if time_person_date == user_info[key]['birthdate'] and time_person_exact == [0,0,0]:
-                await self.bot.guilds[0].system_channel.send(f'<:luv:765073937645305896> 🎉 Happy Birthday, <@{int(key)}>! {random.choice(messages)} 🎂 <:luv:765073937645305896>')
+                await self.bot.guilds[0].system_channel.send(content=f'<:luv:765073937645305896> 🎉 Happy Birthday, <@{int(key)}>! {random.choice(self.messages)} 🎂 <:luv:765073937645305896>', file=discord.File("mario-birthday.gif"))
 
     @tasks.loop(hours=3)
     async def set_game_presence(self):
