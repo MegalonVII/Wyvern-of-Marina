@@ -17,9 +17,10 @@ This is also viewable from the `main.py` file in this repo, and also in our Disc
 10. `!w 8ball (question)` *Have a magic 8-Ball answer your question.*
 11. `!w roulette ([Admin Only] @member)` *Play a game of Russian Roulette with the bot. Moderation can roulette members for them.*
 12. `!w trivia ([Optional] type)` *Answer trivia questions given by the bot.*
-13. `!w quote` *Returns a quote from a video game character from an API.*
-14. `!w deathbattle (@user)` *Bot creates an imaginary scenario where 2 users fight to the death.*
-15. `!w ship (phrase1) (phrase2)` *Bot creates an imaginary ship percentage between the two phrases.*
+13. `!w emulation (console)` *Gets information about how to set up emulating a certain console. May not be perfect.*
+14. `!w quote` *Returns a quote from a video game character from an API.*
+15. `!w deathbattle (@user)` *Bot creates an imaginary scenario where 2 users fight to the death.*
+16. `!w ship (phrase1) (phrase2)` *Bot creates an imaginary ship percentage between the two phrases.*
 
 ## Economical
 1. `!w slots` *Simulates a slot machine.*
@@ -68,6 +69,7 @@ This is also viewable from the `main.py` file in this repo, and also in our Disc
 9. `!w resume` *Resumes paused song.*
 10. `!w stop` *Clears queue and stops currently playing song.*
 11. `!w skip` *Skips to next song in queue. DJs, Admins, or song requester only.*
+12. `!w grabber (platform) (query)` *Gets information about a song from that platform. May not be perfect.*
 
 ## Miscellaneous
 1. `!w ping` *Returns bot response time in milliseconds.*
@@ -76,4 +78,3 @@ This is also viewable from the `main.py` file in this repo, and also in our Disc
 4. `!w emote (emoji from the server)` *Returns information about the emoji in our server.*
 5. `!w convert (number) (original unit) (new unit)` *Converts the number of original units to the same amount in the new unit. Supported units are F, C, m, ft, kg, lb, mi, km, in, and cm. Supported conversions are F <-> C, ft <-> m, lb <-> kg, mi <-> km, and in <-> cm.*
 6. `!w translate (phrase)` *Translates the phrase to English. May not be 100% accurate.*
-7. `!w grabber (platform) (query)` *Gets information about a piece of media from that platform. May not be perfect.*

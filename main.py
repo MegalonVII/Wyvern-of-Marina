@@ -24,7 +24,7 @@ async def help(ctx, page:int=0):
             ('!w help 3', 'All the administrative commands.'), 
             ('!w help 4', 'All the flair commands.'), 
             ('!w help 5', 'All the birthday commands.'), 
-            ('!w help 6', 'All the musical commands for voice chats!'), 
+            ('!w help 6', 'All the musical commands.'), 
             ('!w help 7', 'All the miscellaneous commands.')
         ]),
         1: ('Fun Commands', [
@@ -40,6 +40,7 @@ async def help(ctx, page:int=0):
             ('!w 8ball (question)', 'I\'ll give you the magic response to your yes or no question!'),
             ('!w roulette ([Admin Only] @member)', 'Try your luck... 😈'),
             ('!w trivia ([Optional] type)', 'I\'ll give you a multiple-choice trivia question. If you do not provide a type, it will be a random question on either general knowledge or some form of media. If you do, the types you may choose from are "general", "music", "film", "tv", "games", or "anime".'),
+            ('!w emulation (console)', 'A wiki for how to set up emulators for a variety of consoles! (NES, SNES, N64, GameCube, Wii, WiiU, Switch, GB, GBC, GBA, DS, 3DS, PS1, PS2, PS3, PSP, PSVita)'),
             ('!w quote', 'Returns a random quote from a video game!'),
             ('!w deathbattle (@user)', 'Fight someone... 🤠'),
             ('!w ship (phrase1) (phrase2)', 'In the mood for some love? 😏')
@@ -83,14 +84,15 @@ async def help(ctx, page:int=0):
             ('!w join', 'Joins the voice chat that you are in'),
             ('!w leave', 'Leaves the voice chat that I am in'),
             ('!w play (YouTube URL or search query)', 'While I\'m in voice call, I will play the song from the YouTube URL or search query you provide me.'),
-            ('!w now', 'Displays the current song that I\'m playing'),
-            ('!w queue (optional: page number)', 'Displays the queue of songs. Page value defaults to 1. Each page displays the first 10 songs in the queue'),
-            ('!w shuffle', 'Shuffles the current queue. *[DJs/Admin Only]*'),
-            ('!w remove (index)', 'Removes the song at the provided index from the queue'),
-            ('!w pause', 'Pauses any music that I\'m playing'),
-            ('!w resume', 'Resumes any paused music'),
-            ('!w stop', 'Stops any playing music entirely'),
-            ('!w skip', 'Skips the current playing song to the next one in the queue. Only the song requester can do this, though DJs and Admins are unaffected')
+            ('!w now', 'Displays the current song that I\'m playing in a voice call'),
+            ('!w queue (optional: page number)', 'Displays the queue of songs to play in voice call. Page value defaults to 1. Each page displays the first 10 songs in the queue'),
+            ('!w shuffle', 'Shuffles the current queue of songs for voice calls. *[DJs/Admin Only]*'),
+            ('!w remove (index)', 'Removes the song at the provided index from the queue of songs for voice calls.'),
+            ('!w pause', 'Pauses any music that I\'m playing in a call.'),
+            ('!w resume', 'Resumes any paused music in a call.'),
+            ('!w stop', 'Stops any playing music in a call entirely.'),
+            ('!w skip', 'In a voice call, skips the current playing song to the next one in the queue. Only the song requester can do this, though DJs and Admins are unaffected.'),
+            ('!w grabber (platform) (song name)', 'Yar har, me mateys! Sail the high seas and let me give you music from streaming platforms! 🏴‍☠️ (Platform must be one of the following: Spotify, YouTube, SoundCloud. If platform is SoundCloud, query must be a soundcloud.com link.)')
         ]),
         7: ('Miscellaneous Commands', [
             ('!w ping', 'Returns my response time in milliseconds.'),
@@ -98,8 +100,7 @@ async def help(ctx, page:int=0):
             ('!w avatar ([Optional] @member)', 'I\'ll send you the avatar of the given user. Defaults to yourself.'),
             ('!w emote (emote from this server)', 'Returns information of the given emote. It MUST be from this server!'),
             ('!w convert (number) (original unit) (new unit)', 'Convert a number of units to another unit! Supported units include F, C, m, ft, kg, lb, mi, km, in, and cm. Supported conversions include F <-> C, ft <-> m, lb <-> kg, mi <-> km, and in <-> cm.'),
-            ('!w translate (phrase)', 'Translates any given phrase to English! Be weary that I might not be 100 percent accurate with my translations.'),
-            ('!w grabber (platform) (query)', 'Yar har, me mateys! Sail the high seas and let me give you music from streaming platforms! Or if ye don\'t fancy that, how about some video games? 🏴‍☠️ (Platform must be one of the following: Spotify, YouTube, SoundCloud, Emulation. If platform is SoundCloud, query must be a soundcloud.com link. If platform is Emulation, query must be from the list of approved console acronyms.)')
+            ('!w translate (phrase)', 'Translates any given phrase to English! Be weary that I might not be 100 percent accurate with my translations.')
         ])
     }
 
