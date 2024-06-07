@@ -44,7 +44,7 @@ class Music(commands.Cog):
         destination = ctx.author.voice.channel if ctx.author.voice else None 
         try:
             ctx.voice_state.voice = await destination.connect()
-            print(f'{Style.BRIGHT}Joined {Style.RESET_ALL}{Fore.BLUE}{ctx.author.voice.channel.name}{Fore.RESET}{Style.BRIGHT} in {Style.RESET_ALL}{Fore.GREEN}{ctx.author.guild.name} ({ctx.author.guild.id}){Fore.RESET}')
+            print(f'{Style.BRIGHT}Joined {Style.RESET_ALL}{Fore.BLUE}{ctx.author.voice.channel.name}{Fore.RESET}')
             return await Music.respond(self, ctx, f'Joined `{ctx.author.voice.channel.name}`!', '✅')
         except:
             await shark_react(ctx.message)
@@ -60,7 +60,7 @@ class Music(commands.Cog):
                 await shark_react(ctx.message)
                 return await reply(ctx, 'Wups! You\'re not in my voice channel...')
         await ctx.voice_state.stop()
-        print(f'{Style.BRIGHT}Left {Style.RESET_ALL}{Fore.BLUE}{ctx.author.voice.channel.name}{Fore.RESET}{Style.BRIGHT} in {Style.RESET_ALL}{Fore.GREEN}{ctx.author.guild.name} ({ctx.author.guild.id}){Fore.RESET}')
+        print(f'{Style.BRIGHT}Left {Style.RESET_ALL}{Fore.BLUE}{ctx.author.voice.channel.name}{Fore.RESET}')
         del self.voice_states[ctx.guild.id]
         return await Music.respond(self, ctx, 'Goodbye!', '👋')
 
