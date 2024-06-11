@@ -3,7 +3,7 @@ from discord.ext import commands
 import math
 from colorama import Fore, Back, Style
 from utils import *
-from asyncio import subprocess, create_subprocess_exec
+from asyncio import subprocess, create_subprocess_exec, create_subprocess_shell
 import nacl
 
 class Music(commands.Cog):
@@ -222,18 +222,15 @@ class Music(commands.Cog):
             except IndexError:
                 await shark_react(ctx.message)
                 return await reply(ctx, "Wups! I need a search query... ")
+            
             if platform.lower() in self.platforms[0:3]:
                 if await in_wom_shenanigans(ctx):
                     async with ctx.typing():
                         msg = await ctx.reply('Hang tight! I\'ll try downloading your song. You\'ll be pinged with your song once I finish.', mention_author=False)
 
                         if platform.lower() == 'spotify': # spotify
-                            if query.__contains__('/artist/') or query.__contains__('/album/') or query.__contains__('/playlist/'):
-                                await msg.delete()
-                                await shark_react(ctx.message)
-                                return await reply(ctx, "Wups! I don't want to bombard you with pings! Try downloading songs individually...")  
                             print(f"{Style.BRIGHT}Downloading from {Fore.BLACK}{Back.GREEN}Spotify{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
-                            spotdl = await create_subprocess_exec('spotdl', 'download', query, '--lyrics', 'synced', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                            spotdl = await create_subprocess_shell(f'spotdl download {query} --lyrics synced', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                             stdout, stderr = await spotdl.communicate()
                             print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()}\n")
                             if "LookupError" in stdout.decode():
@@ -247,7 +244,7 @@ class Music(commands.Cog):
                             
                         elif platform.lower() == 'youtube': # youtube
                             print(f"{Style.BRIGHT}Downloading from {Fore.WHITE}{Back.RED}YouTube{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
-                            ytdl = await create_subprocess_exec('yt-dlp', f'ytsearch:"{query}"', '-x', '--audio-format', 'mp3', '--output', '%(title)s.%(ext)s', '--no-playlist', '--embed-metadata', '--embed-thumbnail', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                            ytdl = await create_subprocess_shell(f'yt-dlp ytsearch:"{query}" -x --audio-format mp3 -o "%(title)s.%(ext)s" --no-playlist --embed-metadata --embed-thumbnail', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                             stdout, stderr = await ytdl.communicate()
                             print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()}")
                             if 'Downloading 0 items' in stdout.decode():
@@ -266,7 +263,7 @@ class Music(commands.Cog):
                             if query[-1] == '/':
                                 query = query[:-1]
                             print(f"{Style.BRIGHT}Downloading from {Fore.WHITE}{Back.LIGHTRED_EX}SoundCloud{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
-                            scdl = await create_subprocess_exec('scdl', '-l', query, '--onlymp3', '--force-metadata', '--no-playlist', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                            scdl = await create_subprocess_shell(f'scdl -l {query} --onlymp3 --force-metadata --no-playlist', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                             stdout, stderr = await scdl.communicate()
                             print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}\n{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()[:-1]}")
                             if 'Found a playlist' in stderr.decode():
