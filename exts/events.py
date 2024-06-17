@@ -157,6 +157,10 @@ class Events(commands.Cog):
             csv = csv[csv['user_id'] != member.id]
             csv.to_csv(f'csv/{list}.csv', index=False)
             create_list(list)
+        csv = pd.read_csv(f'csv/birthdays.csv')
+        csv = csv[csv['user_id'] != member.id]
+        csv.to_csv(f'csv/{list}.csv', index=False)
+        create_birthday_list()
 
     @tasks.loop(seconds=1)
     async def wish_birthday(self):

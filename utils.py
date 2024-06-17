@@ -270,6 +270,9 @@ def update_birthday(user_id: int, birthdate: str, tz: str):
     create_birthday_list()
 
 def create_birthday_list():
+    if not os.path.exists('csv/birthdays.csv'):
+        with open(f'csv/birthdays.csv', 'w'):
+            pass # creates csv file
     with open(f'csv/birthdays.csv', mode='r') as csv_file:
         csv_reader = csv.DictReader(csv_file)
         rows = list(csv_reader)
