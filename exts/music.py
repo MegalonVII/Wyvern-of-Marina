@@ -3,7 +3,7 @@ from discord.ext import commands
 import math
 from colorama import Fore, Back, Style
 from utils import *
-from asyncio import subprocess, create_subprocess_exec, create_subprocess_shell
+from asyncio import subprocess, create_subprocess_shell
 import nacl
 
 class Music(commands.Cog):

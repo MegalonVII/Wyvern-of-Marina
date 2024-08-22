@@ -38,7 +38,7 @@ class YTDLError(Exception):
     pass
 
 class YTDLSource(discord.PCMVolumeTransformer):
-    common_options = {
+    YTDL_OPTIONS = {
         'format': 'bestaudio/best',
         'extractaudio': True,
         'audioformat': 'mp3',
@@ -52,11 +52,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         'no_warnings': True,
         'default_search': 'auto',
         'source_address': '0.0.0.0',
-        'cookies': 'cookies.txt'
     }
-    YTDL_OPTIONS = common_options.copy()
-    if system() == 'Darwin':
-        YTDL_OPTIONS['ffmpeg_location'] = '/opt/homebrew/Cellar/ffmpeg/6.1.1_3/bin/ffmpeg'
 
     FFMPEG_OPTIONS = {
         'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',

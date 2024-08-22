@@ -136,7 +136,7 @@ async def on_ready():
     if not discord.opus.is_loaded() and system() == 'Darwin':
         discord.opus.load_opus('/opt/homebrew/Cellar/opus/1.5.1/lib/libopus.0.dylib') # this if statement is for if i'm working from my mac and testing stuff locally
 
-    return print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\n" + get_login_time('US/Pacific')) # fully logged in with everything loaded in the backend. chose the timezone as pst because that's what blues is based in
+    return print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\n" + get_login_time('Europe/Amsterdam')) # fully logged in with everything loaded in the backend. chose the timezone as cest because that's where airi is based in
     
 # everything has finally been set up
 # we can now run the bot
