@@ -66,8 +66,8 @@ class Events(commands.Cog):
                                 pass
             
                 # shiny
-                if random.randint(1,2) == 1:  
-                    if message.channel.name not in ["venting", "serious-talk"]:
+                if random.randint(1,8192) == 1:  
+                    if not message.channel.name in ['venting', 'serious-talk']:
                         add_coins(message.author.id,500)
                         with open("shiny.png", "rb") as f:
                             file = discord.File(f)
