@@ -26,27 +26,27 @@ class Events(commands.Cog):
             'Quake',
             'Dead Space',
             'NieR: Automata',
-            'Hi-Fi Rush',
-            'Corpse Party'
+            'Hi-Fi Rush'
         ]
         self.messages = [
             "Try not to die of dysentery today!",
-            "Either go get some pussy or study literal vaginas today!",
-            "Am I weird for thinking today won't be strangely wholesome?",
-            "Don't get AFK Corrin'd today!",
-            "I hope you go on a rampage in Hunger Games against a certain minority of people!"
+            "I hope you don't get AFK Corrin'd today!"
         ]
         self.wish_birthday.start(); self.set_game_presence.start() # loops
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.guild:
-            if message.author.bot:
+        if message.guild: # must be in server
+            if message.author.bot: # must be human
                 return
-              
-            if message.content[0:3] == "!w " and message.content.split()[1] in list(lists["commands"].keys()): # custom commands
-                await message.channel.send(lists["commands"][message.content.split()[1]])
-            else:   # any specific word triggers
+            else:
+                 # custom commands
+                if message.content[0:3] == "!w " and message.content.split()[1] in list(lists["commands"].keys()): 
+                    await message.channel.send(lists["commands"][message.content.split()[1]])
+
+                # message phrase triggers
+                if message.content.lower() == "skill issue":
+                    await message.channel.send(file=discord.File("skill issue.gif"))
                 if message.content.lower() == "me":
                     await message.channel.send('<:WoM:836128658828558336>')
                 if message.content.lower() == "which":
@@ -54,24 +54,24 @@ class Events(commands.Cog):
                         await shark_react(message)
                     else:
                         await message.channel.send(random.choice([member.name.lower() for member in message.guild.members if not member.bot]))
-                if message.content.lower() == "skill issue":
-                    await message.channel.send(file=discord.File("skill issue.gif"))
-        
-                # trigger reactions
-                triggers = ['yoshi','3ds','wednesday','fat','yuri','yaoi','crank','kys']
-                trigger_emojis = ['<:full:1028536660918550568>','<:megalon:1078914494132129802>','<:wednesday:798691076092198993>','<:bulbous:1028536648922832956>','<:vers:804766992644702238>','🐍','🔧','⚡']
-                for trigger, emoji in zip(triggers, trigger_emojis):
-                    if trigger in message.content.lower().split(" "):
-                        try:
-                            await message.add_reaction(emoji)
-                        except:
-                            pass
-          
-            if random.randint(1,8192) == 1:  
-                add_coins(message.author.id,500)
-                with open("shiny.png", "rb") as f:
-                    file = discord.File(f)
-                    return await message.channel.send(content=f"{message.author.name} stumbled across 500 {zenny} and a wild Wyvern of Marina! ✨", file=file)
+            
+                    # word trigger reactions
+                    triggers = ['yoshi','3ds','wednesday','fat','yuri','yaoi','crank','kys']
+                    trigger_emojis = ['<:full:1028536660918550568>','<:megalon:1078914494132129802>','<:wednesday:798691076092198993>','<:bulbous:1028536648922832956>','<:vers:804766992644702238>','🐍','🔧','⚡']
+                    for trigger, emoji in zip(triggers, trigger_emojis):
+                        if trigger in message.content.lower().split(" "):
+                            try:
+                                await message.add_reaction(emoji)
+                            except:
+                                pass
+            
+                # shiny
+                if random.randint(1,2) == 1:  
+                    if message.channel.name not in ["venting", "serious-talk"]:
+                        add_coins(message.author.id,500)
+                        with open("shiny.png", "rb") as f:
+                            file = discord.File(f)
+                            return await message.channel.send(content=f"{message.author.name} stumbled across 500 {zenny} and a wild Wyvern of Marina! ✨", file=file)
 
                     
     @commands.Cog.listener()

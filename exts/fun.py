@@ -266,7 +266,7 @@ class Fun(commands.Cog):
             elif percent >= 76 and percent <= 100:
                 response = responses[3]
             
-            return reply(ctx, f"{member.name} is {percent}% gay. {response}")
+            return await reply(ctx, f"{member.name} is {percent}% gay. {response}")
 
     @commands.command(name='rps')
     async def rps(self, ctx, playerChoice: str=None):
