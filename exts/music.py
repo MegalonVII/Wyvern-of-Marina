@@ -223,8 +223,8 @@ class Music(commands.Cog):
                 await shark_react(ctx.message)
                 return await reply(ctx, "Wups! I need a search query... ")
             
-            if platform.lower() in self.platforms[0:3]:
-                if await in_wom_shenanigans(ctx):
+            if await in_channels(ctx, ["wom-shenanigans", "good-tunes"], True):
+                if platform.lower() in self.platforms[0:3]:
                     async with ctx.typing():
                         msg = await ctx.reply('Hang tight! I\'ll try downloading your song. You\'ll be pinged with your song once I finish.', mention_author=False)
 
@@ -287,9 +287,9 @@ class Music(commands.Cog):
                             return await reply(ctx, 'Wups! The file was too big for me to send...')
                         os.remove(file_path)
                     return await msg.delete()    
-            else:
-                await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! Invalid platform choice! Must be either `Spotify`, `YouTube`, or `SoundCloud`...')
+                else:
+                    await shark_react(ctx.message)
+                    return await reply(ctx, 'Wups! Invalid platform choice! Must be either `Spotify`, `YouTube`, or `SoundCloud`...')
 
 async def setup(bot):
     await bot.add_cog(Music(bot))

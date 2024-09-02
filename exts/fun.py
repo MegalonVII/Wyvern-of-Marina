@@ -411,8 +411,7 @@ class Fun(commands.Cog):
             ids = []
             for channel in ["gamig", "gamig-2-coming-soon", "wom-shenanigans"]:
                 ids.append(f"<#{discord.utils.get(ctx.guild.channels, name=channel).id}>")
-            for thread in ["Rip-bozotendo"]:
-                ids.append(f"<#{discord.utils.get(ctx.guild.threads, name=thread).id}>")
+            ids.append(f"<#{discord.utils.get(ctx.guild.threads, name="Rip-bozotendo").id}>")
             await shark_react(ctx.message)
             return await reply(ctx, f"this command can only be used in the following channels: {", ".join(ids)}. go to one of those channels, jackass")
 

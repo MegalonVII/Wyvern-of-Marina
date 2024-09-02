@@ -55,15 +55,15 @@ class Events(commands.Cog):
                     else:
                         await message.channel.send(random.choice([member.name.lower() for member in message.guild.members if not member.bot]))
             
-                    # word trigger reactions
-                    triggers = ['yoshi','3ds','wednesday','fat','yuri','yaoi','crank','kys']
-                    trigger_emojis = ['<:full:1028536660918550568>','<:megalon:1078914494132129802>','<:wednesday:798691076092198993>','<:bulbous:1028536648922832956>','<:vers:804766992644702238>','🐍','🔧','⚡']
-                    for trigger, emoji in zip(triggers, trigger_emojis):
-                        if trigger in message.content.lower().split(" "):
-                            try:
-                                await message.add_reaction(emoji)
-                            except:
-                                pass
+                # word trigger reactions
+                triggers = ['yoshi','3ds','wednesday','fat','yuri','yaoi','crank','kys']
+                trigger_emojis = ['<:full:1028536660918550568>','<:megalon:1078914494132129802>','<:wednesday:798691076092198993>','<:bulbous:1028536648922832956>','<:vers:804766992644702238>','🐍','🔧','⚡']
+                for trigger, emoji in zip(triggers, trigger_emojis):
+                    if trigger in message.content.lower().split(" "):
+                        try:
+                            await message.add_reaction(emoji)
+                        except:
+                            pass
             
                 # shiny
                 if random.randint(1,8192) == 1:  
