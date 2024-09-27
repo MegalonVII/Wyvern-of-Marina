@@ -10,10 +10,10 @@ from utils import *
 class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.items = ['delivery', 'bomb','ticket', 'letter', 'shell', 'banana']
-        self.prices = [100000, 10000, 2500, 1000, 500, 10]
-        self.priceStrs = ['100,000', '10,000', '2,500', '1,000', '500', '10']
-        self.descs = ['Have Blues personally deliver their WoM plushie to you!', 'Siphon half of the Zenny from a random person that they have in the bank!', 'Redeem this ticket for a custom role!', 'Send a letter to anyone in this server!', 'Siphon half of the Zenny from a random person that they have on hand!', 'Grab this illusive, mysterious banana!']
+        self.items = ['bomb','ticket', 'letter', 'shell', 'banana']
+        self.prices = [10000, 2500, 1000, 500, 10]
+        self.priceStrs = ['10,000', '2,500', '1,000', '500', '10']
+        self.descs = ['Siphon half of the Zenny from a random person that they have in the bank!', 'Redeem this ticket for a custom role!', 'Send a letter to anyone in this server!', 'Siphon half of the Zenny from a random person that they have on hand!', 'Grab this illusive, mysterious banana!']
   
     @commands.command(name='slots')
     async def slots(self, ctx):
@@ -251,16 +251,7 @@ class Economy(commands.Cog):
                 await shark_react(ctx.message)
                 return await reply(ctx, "Wups! Invalid item...")
 
-            if item == 'delivery':
-                if subtract_item(item, ctx.author.id, 1):
-                    blues = 232041680017031168
-                    moddery = discord.utils.get(ctx.guild.channels, name='moddery')
-                    await moddery.send(f"<@{blues}>, {ctx.author.name} has purchased a delivery. You are now obligated to personally deliver your plushie of me to them! Don't back out of it now...")
-                    return await reply(ctx, "Blues has been notified, you gambling-addicted bastard...")
-                await shark_react(ctx.message)
-                return await reply(ctx, f"Wups! You don't have a {item}...")
-
-            elif item == 'bomb':
+            if item == 'bomb':
                 if subtract_item(item, ctx.author.id, 1):
                     id = random.choice([key for key in lists['bank'].keys() if not key == str(ctx.author.id)])
                     balance = int(lists['bank'][id])

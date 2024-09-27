@@ -8,12 +8,11 @@ import asyncio
 import functools
 import itertools
 import yt_dlp as youtube_dl
-from platform import system
 from datetime import datetime
 from pytz import timezone
 from colorama import Fore, Style
 
-files=["commands", "flairs", "coins", "bank", "delivery", "shell", "bomb", "ticket", "letter", "banana"]
+files=["commands", "flairs", "coins", "bank", "shell", "bomb", "ticket", "letter", "banana"]
 file_checks={file:False for file in files}
 lists={file:{} for file in files}
 user_info={}
@@ -228,8 +227,6 @@ class VoiceState:
 # bot helper functions
 # create_list, update_birthday, check_reaction_board, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, in_channels, in_threads, assert_cooldown, capitalize_string, shark_react, parse_total_duration, cog_check, get_login_time
 def create_list(filename):
-    global file_checks
-    global lists
     file_checks[filename]=False
     if not os.path.exists(f'csv/{filename}.csv'):
         with open(f'csv/{filename}.csv', 'w'):
