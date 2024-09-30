@@ -7,7 +7,9 @@ import requests
 import json
 import urllib.parse
 import pypokedex as dex
-from utils import *
+
+from utils import lists, snipe_data, editsnipe_data, zenny # utils direct values
+from utils import cog_check, shark_react, reply, capitalize_string, assert_cooldown, in_wom_shenanigans, add_coins, in_channels, in_threads # utils functions
 
 # fun commands start here
 # say, custc, snipe, esnipe, choose, pokedex, who, howgay, rps, 8ball, roulette, trivia, emulation, quote, deathbattle, ship

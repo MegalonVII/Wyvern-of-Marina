@@ -1,14 +1,15 @@
 import discord
-import os
-from platform import system
+from os import getenv
 from discord.ext import commands
 from dotenv import load_dotenv
-from utils import *
 from sys import exit
+
+from utils import files # utils direct values
+from utils import create_list, create_birthday_list, get_login_time, shark_react # utils functions
 
 # token instantiation
 load_dotenv()
-TOKEN=os.getenv('DISCORD_TOKEN')
+TOKEN=getenv('DISCORD_TOKEN')
 
 # bot initialization
 bot=commands.Bot(command_prefix = '!w ', intents=discord.Intents.all())

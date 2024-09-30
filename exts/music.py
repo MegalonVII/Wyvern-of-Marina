@@ -1,10 +1,13 @@
 import discord
 from discord.ext import commands
 import math
+import os
 from colorama import Fore, Back, Style
-from utils import *
 from asyncio import subprocess, create_subprocess_shell
-import nacl
+import nacl # necessary for opus
+
+from utils import VoiceState, YTDLSource, YTDLError, Song # utils classes 
+from utils import reply, shark_react, parse_total_duration, cog_check, in_channels # utils functions
 
 class Music(commands.Cog):
     def __init__(self, bot: commands.Bot):

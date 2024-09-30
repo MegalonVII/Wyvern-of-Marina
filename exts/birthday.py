@@ -1,10 +1,11 @@
 import discord
 from discord.ext import commands
 from asyncio import TimeoutError
-from utils import user_info, cog_check, in_wom_shenanigans, shark_react, update_birthday
 from datetime import datetime
 from pytz import timezone
-from utils import reply
+
+from utils import user_info # utils direct values
+from utils import cog_check, in_wom_shenanigans, shark_react, update_birthday, reply # utils functions
 
 # birthday commands start here
 # birthday, bdl

@@ -2,8 +2,10 @@ import discord
 import csv
 from discord.ext import commands
 import pandas as pd
-import asyncio
-from utils import *
+from asyncio import sleep
+
+from utils import lists, file_checks # utils direct values
+from utils import cog_check, shark_react, reply, create_list, in_wom_shenanigans # utils functions
 
 # flair commands start here
 # addf, delf, lf, im
@@ -33,7 +35,7 @@ class Flair(commands.Cog):
                     writer.writerow({'role_name': role.name, 'role_id': role.id})
                 create_list("flairs")
                 await ctx.message.add_reaction('✅')
-                await asyncio.sleep(3)
+                await sleep(3)
                 return await ctx.message.delete()
             except:
                 await shark_react(ctx.message)
@@ -57,7 +59,7 @@ class Flair(commands.Cog):
             flairs.to_csv('csv/flairs.csv', index=False)
             create_list("flairs")
             await ctx.message.add_reaction('✅')
-            await asyncio.sleep(3)
+            await sleep(3)
             return await ctx.message.delete()
 
     @commands.command(name='listflairs', aliases=['lf'])
@@ -93,7 +95,7 @@ class Flair(commands.Cog):
             else:
                 await ctx.author.add_roles(role)
             await ctx.message.add_reaction('✅')
-            await asyncio.sleep(3)
+            await sleep(3)
             return await ctx.message.delete()
 
 async def setup(bot):

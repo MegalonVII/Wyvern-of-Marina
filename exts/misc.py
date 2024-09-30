@@ -1,9 +1,8 @@
 import discord
-from asyncio import subprocess, create_subprocess_exec
 from discord.ext import commands
 from googletrans import Translator
-from colorama import Fore, Back, Style
-from utils import *
+
+from utils import cog_check, shark_react # utils functions
 
 # misc commands start here
 # ping, whomuted, avi, emote, convert, translate

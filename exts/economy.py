@@ -1,9 +1,11 @@
 import discord
 from discord.ext import commands
 import random
-import asyncio
+from asyncio import sleep, TimeoutError
 from math import ceil
-from utils import *
+
+from utils import zenny, prev_steal_targets, target_counts, lists # utils direct values
+from utils import cog_check, in_wom_shenanigans, assert_cooldown, shark_react, reply, subtract_coins, add_coins, stolen_funds, dep, wd, add_item, subtract_item, direct_to_bank # utils functions
 
 # economy commands
 # slots, bet, steal, heist, dep, wd, bal, bankbal, paypal, mp, buy, sell, inv, use
@@ -29,7 +31,7 @@ class Economy(commands.Cog):
             reels = ["❓","❓","❓"]
             msg = await ctx.reply(f"{reels[0]} | {reels[1]} | {reels[2]}", mention_author=False)
             for i in range(0,3):
-                await asyncio.sleep(1)
+                await sleep(1)
                 reels[i] = random.choice(emojis)
                 await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}", allowed_mentions=discord.AllowedMentions.none())
             if all(reel == "7️⃣" for reel in reels):
@@ -271,7 +273,7 @@ class Economy(commands.Cog):
                     await ctx.reply("You have 60 seconds to name your new custom role! This can be done by simply sending the name of that role in this channel. Be aware, however, that the next message you send will be the role name...", mention_author=False)
                     try:
                         msg = await self.bot.wait_for('message', check=check, timeout=60)
-                    except asyncio.TimeoutError:
+                    except TimeoutError:
                         add_item(item, ctx.author.id, 1)
                         return await reply(ctx, "Time's up! You didn't provide me with a role name, so I've given you your ticket back. Try again later...")
                     name = msg.content
@@ -288,7 +290,7 @@ class Economy(commands.Cog):
                     await ctx.reply('You have 30 seconds to give me the name of a member you want to send a letter to! Your next message in this channel is what I will use to find the member\'s name!')
                     try:
                         msg = await self.bot.wait_for('message', check=check, timeout=30)
-                    except asyncio.TimeoutError:
+                    except TimeoutError:
                         add_item(item, ctx.author.id, 1)
                         return await reply(ctx, f"Time's up! You didn't provide me with anyone's name, so I've given you back your {item}...")
                     recipient = discord.utils.get(ctx.guild.members, name=str(msg.content))
@@ -301,7 +303,7 @@ class Economy(commands.Cog):
                     await msg.reply("Great! Now you have 2 minutes to cook up your letter to this person. Your next message in this channel will dictate that!")
                     try:
                         content = await self.bot.wait_for('message', check=check, timeout=120)
-                    except asyncio.TimeoutError:
+                    except TimeoutError:
                         add_item(item, ctx.author.id, 1)
                         await msg.reply(f"Time's up! You didn't provide me with any content, so I've given you back your {item}...")
                         return await msg.delete()
@@ -331,7 +333,7 @@ class Economy(commands.Cog):
             elif item == 'banana':
                 if subtract_item(item, ctx.author.id, 1):
                     msg = await ctx.reply("You ate a banana! You feel something funny inside your body...")
-                    await asyncio.sleep(3)
+                    await sleep(3)
                     return await msg.edit(content="Turns out that was just your stomach growling. The banana you just ate was a regular old banana...", allowed_mentions=discord.AllowedMentions.none())
 
 async def setup(bot):
