@@ -22,7 +22,7 @@ class Economy(commands.Cog):
         if await cog_check(ctx) and await in_wom_shenanigans(ctx):
             if assert_cooldown('slots') != 0:
                 await shark_react(ctx.message)
-                return await reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('slots')} seconds...")
+                return await reply(ctx, f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('slots')} seconds...")
             if not subtract_coins(ctx.author.id, 10):
                 await shark_react(ctx.message)
                 return await reply(f"Wups! You don't have enough {zenny} to play...")
