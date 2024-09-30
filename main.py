@@ -4,6 +4,7 @@ from platform import system
 from discord.ext import commands
 from dotenv import load_dotenv
 from utils import *
+from sys import exit
 
 # token instantiation
 load_dotenv()
@@ -40,7 +41,7 @@ async def help(ctx, page:int=0):
             ('!w 8ball (question)', 'I\'ll give you the magic response to your yes or no question!'),
             ('!w roulette ([Admin Only] @member)', 'Try your luck... 😈'),
             ('!w trivia ([Optional] type)', 'I\'ll give you a multiple-choice trivia question. If you do not provide a type, it will be a random question on either general knowledge or some form of media. If you do, the types you may choose from are "general", "music", "film", "tv", "games", or "anime".'),
-            ('!w emulation (console)', 'A wiki for how to set up emulators for a variety of consoles!'),
+            ('!w emulation', 'A wiki for how to set up emulators for a variety of consoles!'),
             ('!w quote', 'Returns a random quote from a video game!'),
             ('!w deathbattle (@user)', 'Fight someone... 🤠'),
             ('!w ship (phrase1) (phrase2)', 'In the mood for some love? 😏')
@@ -130,8 +131,9 @@ async def on_ready():
     try:
         for extension in extensions: # loads extensions for other commands
             await bot.load_extension(f'exts.{extension}')
-    except:
-        pass
+    except Exception as e:
+        print(e)
+        exit(1)
 
     return print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\n" + get_login_time('Europe/Amsterdam')) # fully logged in with everything loaded in the backend. chose the timezone as cest because that's where airi is based in
     

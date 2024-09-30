@@ -399,11 +399,14 @@ class Fun(commands.Cog):
                 return await answer_message.reply(f"Sorry, that's incorrect. The correct answer is **{correct_answer}**.", mention_author=False)
             
     @commands.command(name='emulation')
-    async def emulation(self, ctx, console: str = None):
-        if await in_channels(ctx, ["gamig", "gamig-2-coming-soon", "wom-shenanigans"], False) or await in_threads(ctx, ['Rip-bozotendo'], False):
-            if console is None or console.lower() not in self.consoles.keys():
+    async def emulation(self, ctx, console: str = "guide"):
+        if await cog_check(ctx) and (await in_channels(ctx, ["gamig", "gamig-2-coming-soon", "wom-shenanigans"], False) or await in_threads(ctx, ['Rip-bozotendo'], False)):
+            if console == "guide":
+                return await reply(ctx, "# __Emulation Wiki__\n\n## This is a wiki on how to get emulators for various systems set up on a PC!\n\n__**List of Valid Consoles**__ (enter as `!w emulation (console name)`)\n- NES\n- SNES\n- N64\n- GameCube\n- Wii\n- Wii U (enter as \"WiiU\")\n- Switch\n- GameBoy (enter as \"GB\")\n- GameBoy Color (enter as \"GBC\")\n- GameBoy Advance (enter as \"GBA\")\n- DS\n- 3DS\n- PS1\n- PS2\n- PS3\n- PSP\n- PS Vita (enter as \"PSVita\")\n- Master System (enter as \"MasterSystem\")\n- Genesis\n- Saturn\n- Dreamcast")
+            elif console.lower() not in self.consoles.keys():
                 await shark_react(ctx.message)
-                return await reply(ctx, "Wups! You're seeing this message for one of two reasons.\n1. You didn't provide me a console.\n2. You provided me a console that's not on the list.\nHere's a list of all valid consoles to use with this command:\n- NES\n- SNES\n- N64\n- GameCube\n- Wii\n- Wii U (enter as \"WiiU\")\n- Switch\n- GameBoy (enter as \"GB\")\n- GameBoy Color (enter as \"GBC\")\n- GameBoy Advance (enter as \"GBA\")\n- DS\n- 3DS\n- PS1\n- PS2\n- PS3\n- PSP\n- PS Vita (enter as \"PSVita\")\n- Master System (enter as \"MasterSystem\")\n- Genesis\n- Saturn\n- Dreamcast")
+                return await reply(ctx, "Wups! You're either didn't provide me with a console or you entered a console that isn't on the list...")
+
             for key, value in self.consoles.items():
                 if console.lower() == key:
                     return await reply(ctx, f"# {", ".join(value['links'])}\n{value['instructions']}\n\n*Go hog wild.*")
