@@ -5,7 +5,7 @@ from datetime import datetime
 from pytz import timezone
 
 from utils import user_info # utils direct values
-from utils import cog_check, in_wom_shenanigans, shark_react, update_birthday, reply # utils functions
+from utils import cog_check, in_wom_shenanigans, update_birthday, reply, wups # utils functions
 
 # birthday commands start here
 # birthday, bdl
@@ -32,8 +32,7 @@ class Birthday(commands.Cog):
             except:
                 await bday_message.delete()
                 await prompt.delete()
-                await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! Invalid birthday input...')
+                return await wups(ctx, 'Invalid birthday input')
             
             # ask for timezone
             prompt = await prompt.edit(content='Now, you have 1 minute to give me the timezone you are based in. Make sure it is one from [this list](<https://gist.githubusercontent.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568/raw/daacf0e4496ccc60a36e493f0252b7988bceb143/pytz-time-zones.py>)!', allowed_mentions=discord.AllowedMentions.none())
@@ -47,8 +46,7 @@ class Birthday(commands.Cog):
             except:
                 await tz_message.delete()
                 await prompt.delete()
-                await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! Invalid timezone. Refer to [this list](<https://gist.githubusercontent.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568/raw/daacf0e4496ccc60a36e493f0252b7988bceb143/pytz-time-zones.py>)...')
+                return await wups(ctx, 'Invalid timezone. Refer to [this list](<https://gist.githubusercontent.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568/raw/daacf0e4496ccc60a36e493f0252b7988bceb143/pytz-time-zones.py>)')
             await tz_message.delete()
             await prompt.delete()
             update_birthday(ctx.author.id, bday, tz_message.content)

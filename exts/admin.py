@@ -5,7 +5,7 @@ import pandas as pd
 from datetime import timedelta
 
 from utils import lists, file_checks # utils direct values
-from utils import cog_check, shark_react, reply, assert_cooldown, create_list # utils functions
+from utils import cog_check, wups, reply, assert_cooldown, create_list # utils functions
 
 # administrative commands start here
 # cc, dc, clear, kick, ban, mute, unmute, addf, delf
@@ -18,14 +18,11 @@ class Admin(commands.Cog):
         if await cog_check(ctx):
             try:
                 if len(output) < 1:
-                    await shark_react(ctx.message)
-                    return await reply(ctx, 'Wups! You need to give me an output for your new command...')
+                    return await wups(ctx, "You need to give me an output for your new command")
                 elif not ctx.author.guild_permissions.manage_messages:
-                    await shark_react(ctx.message)
-                    return await reply(ctx, "Wups! You do not have the required permissions...")
+                    return await wups(ctx, "You do not have the required permissions")
                 elif name in list(lists["commands"].keys()):
-                    await shark_react(ctx.message)
-                    return await reply(ctx, 'Wups! This command already exists...')
+                    return await wups(ctx, "This command already exists")
                 
                 output = ' '.join(output).replace('"', '\"').replace("'", "\'")
                 with open('csv/commands.csv', 'a', newline='') as csvfile:
@@ -37,21 +34,17 @@ class Admin(commands.Cog):
                 create_list("commands")
                 return await reply(ctx, f"The command {name} has been created!")
             except:
-                await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! I don\'t have a name for a command...')
+                return await wups(ctx, "I don't have a name for a command")
                     
     @commands.command(name='deletecommand', aliases=['dc'])
     async def deletecommand(self, ctx, name):
         if await cog_check(ctx):
             if not ctx.author.guild_permissions.manage_messages:
-                await shark_react(ctx.message)
-                return await reply(ctx, 'Wups, you do not have the required permissions...')
+                return await wups(ctx, "You do not have the required permissions")
             if not name in list(lists["commands"].keys()):
-                await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! This command does not exist...')
+                return await wups(ctx, "This command does not exist")
             if len(list(lists["commands"].keys())) == 0:
-                await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! There are no commands to delete in the first place...')
+                return await wups(ctx, "There are no commands to delete in the first place")
     
             commands = pd.read_csv('csv/commands.csv')
             commands = commands[commands.command_name != name]
@@ -63,14 +56,11 @@ class Admin(commands.Cog):
     async def clear(self, ctx, num:int=None):
         if await cog_check(ctx):
             if not ctx.author.guild_permissions.manage_messages:
-                await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! You do not have the required permissions...')
+                return await wups(ctx, "You do not have the required permissions")
             if num is None or num < 1 or num > 10:
-                await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! Please enter a number between 1 and 10...')
+                return await wups(ctx, "Please enter a number between 1 and 10")
             if assert_cooldown("clear") != 0:
-                await shark_react(ctx.message)
-                return await reply(ctx, f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('clear')} seconds...")
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('clear')} seconds")
     
             await ctx.message.add_reaction('✅')
             return await ctx.message.channel.purge(limit=num+1)
@@ -79,11 +69,9 @@ class Admin(commands.Cog):
     async def kick(self, ctx, member:discord.Member):  
         if await cog_check(ctx):
             if not ctx.author.guild_permissions.administrator:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! Only administrators are allowed to use this command...")
+                return await wups(ctx, "Only administrators are allowed to use this command")
             if member.guild_permissions.administrator and not member.bot:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! Administrators can\'t be kicked...")
+                return await wups(ctx, "Administrators can\'t be kicked")
             
             await member.kick()
             await ctx.message.delete()
@@ -93,11 +81,9 @@ class Admin(commands.Cog):
     async def ban(self, ctx, member:discord.Member):
         if await cog_check(ctx):
             if not ctx.author.guild_permissions.administrator:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! Only administrators are allowed to use this command...")
+                return await wups(ctx, "Only administrators are allowed to use this command")
             if member.guild_permissions.administrator and not member.bot:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! Administrators can\'t be banned...")
+                return await wups(ctx, "Administrators can\'t be banned")
             
             await member.ban()
             return await ctx.message.delete()
@@ -109,8 +95,7 @@ class Admin(commands.Cog):
                 timelimitList = [timelimit[:-1], timelimit[-1]]
                 timelimitList[0] = int(timelimitList[0])
             except:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! Invalid time amount...")
+                return await wups(ctx, "Invalid time amount")
             valid = False
             timelimit = timelimit.lower()
             timepossibilities = ['s', 'm', 'h', 'd', 'w']
@@ -119,14 +104,11 @@ class Admin(commands.Cog):
             current_time = discord.utils.utcnow()
         
             if not ctx.author.guild_permissions.administrator:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! Only administrators are allowed to use this command...")
+                return await wups(ctx, "Only administrators are allowed to use this command")
             if member.guild_permissions.administrator:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! Administrators can\'t be muted...")
+                return await wups(ctx, "Administrators can\'t be muted")
             if not valid:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! Invalid time amount...")
+                return await wups(ctx, "Invalid time amount")
             
             time_units = {
                 's': (timedelta, 'seconds', 2419200),
@@ -140,8 +122,7 @@ class Admin(commands.Cog):
                 if unit in timelimit:
                     gettime = int(timelimit.strip(unit))
                     if gettime > limit:
-                        await shark_react(ctx.message)
-                        return await reply(ctx, "Wups! Cannot mute member for more than 4 weeks...")
+                        return await wups(ctx, "Cannot mute member for more than 4 weeks")
                     newtime = timedelta_type(**{attribute: gettime})
                     break
             
@@ -152,14 +133,11 @@ class Admin(commands.Cog):
     async def unmute(self, ctx, member:discord.Member):
         if await cog_check(ctx):
             if not ctx.message.author.guild_permissions.administrator:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! Only administrators are allowed to use this command...")
+                return await wups(ctx, "Only administrators are allowed to use this command")
             if member.guild_permissions.administrator:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! Administrators can\'t be muted in the first place...")
+                return await wups(ctx, "Administrators can\'t be muted in the first place")
             if not member.is_timed_out():
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! User is not muted in the first place...")
+                return await wups(ctx, "User is not muted in the first place")
     
             await member.edit(timed_out_until=None)
             return await ctx.message.delete()

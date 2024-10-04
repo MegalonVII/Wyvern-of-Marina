@@ -225,7 +225,7 @@ class VoiceState:
 
 
 # bot helper functions
-# create_list, update_birthday, check_reaction_board, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, in_channels, in_threads, assert_cooldown, capitalize_string, shark_react, parse_total_duration, cog_check, get_login_time
+# create_list, update_birthday, check_reaction_board, reply, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, in_channels, in_threads, assert_cooldown, capitalize_string, shark_react, wups, parse_total_duration, cog_check, get_login_time
 def create_list(filename):
     file_checks[filename]=False
     if not os.path.exists(f'csv/{filename}.csv'):
@@ -579,6 +579,11 @@ def parse_total_duration(total_duration: list) -> str:
 
 async def shark_react(message: discord.Message):
     return await message.add_reaction('🦈')
+
+async def wups(ctx, content: str):
+    await shark_react(ctx.message)
+    await reply(ctx, content=f"Wups! {content}...")
+    return None
 
 async def cog_check(ctx):
     if not ctx.guild:

@@ -5,7 +5,7 @@ from asyncio import sleep, TimeoutError
 from math import ceil
 
 from utils import zenny, prev_steal_targets, target_counts, lists # utils direct values
-from utils import cog_check, in_wom_shenanigans, assert_cooldown, shark_react, reply, subtract_coins, add_coins, stolen_funds, dep, wd, add_item, subtract_item, direct_to_bank # utils functions
+from utils import cog_check, in_wom_shenanigans, assert_cooldown, wups, reply, subtract_coins, add_coins, stolen_funds, dep, wd, add_item, subtract_item, direct_to_bank # utils functions
 
 # economy commands
 # slots, bet, steal, heist, dep, wd, bal, bankbal, paypal, mp, buy, sell, inv, use
@@ -21,11 +21,9 @@ class Economy(commands.Cog):
     async def slots(self, ctx):
         if await cog_check(ctx) and await in_wom_shenanigans(ctx):
             if assert_cooldown('slots') != 0:
-                await shark_react(ctx.message)
-                return await reply(ctx, f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('slots')} seconds...")
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('slots')} seconds")
             if not subtract_coins(ctx.author.id, 10):
-                await shark_react(ctx.message)
-                return await reply(f"Wups! You don't have enough {zenny} to play...")
+                return await wups(f"You don't have enough {zenny} to play")
         
             emojis = ["🍒", "🍇", "🍊", "🍋", "🍉","7️⃣"]
             reels = ["❓","❓","❓"]
@@ -52,31 +50,26 @@ class Economy(commands.Cog):
     async def bet(self, ctx, amount:int):
         if await cog_check(ctx) and await in_wom_shenanigans(ctx):
             if assert_cooldown('bet'):
-                await shark_react(ctx.message)
-                return await reply(f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('bet')} seconds...")
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('bet')} seconds")
             if subtract_coins(ctx.author.id, amount):
                 roll = random.randint(1,6)
                 roll2 = random.randint(1,6)
                 result = roll + roll2
                 if result == 7:
                     add_coins(ctx.author.id, 2*amount)
-                    return await reply(f"You rolled a {result}! You win!")
-                return await reply(f"You rolled a {result}! Sorry, you lost...")
-            await shark_react(ctx.message)
-            return await reply(ctx, f"Wups! You can't bet that much {zenny} as you don't have that much...")
+                    return await reply(ctx, f"You rolled a {result}! You win!")
+                return await reply(ctx, f"You rolled a {result}! Sorry, you lost...")
+            return await wups(ctx, f"You can't bet that much {zenny} as you don't have that much")
 
     @commands.command(name='steal')
     async def steal(self, ctx, target: discord.Member):
         if await cog_check(ctx) and await in_wom_shenanigans(ctx):
             if target.bot or target == ctx.author:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! You can't steal from a bot or from yourself...")
+                return await wups(ctx, "You can't steal from a bot or from yourself")
             if prev_steal_targets.get(ctx.author.id) == target and target_counts.get(ctx.author.id, 0) <= 2:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! You can't target this person again so soon. Choose a different target...")
+                return await wups(ctx, "You can't target this person again so soon. Choose a different target")
             if assert_cooldown('steal') != 0:
-                await shark_react(ctx.message)
-                return await reply(ctx, f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('steal')} seconds...")
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('steal')} seconds")
         
             if prev_steal_targets.get(ctx.author.id) != target:
                 target_counts[ctx.author.id] = target_counts.get(ctx.author.id, 0) + 1
@@ -104,8 +97,7 @@ class Economy(commands.Cog):
     async def heist(self, ctx):
         if await cog_check(ctx) and await in_wom_shenanigans(ctx):
             if assert_cooldown("heist") != 0:
-                await shark_react(ctx.message)
-                return await reply(ctx, f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('heist')} seconds...")
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('heist')} seconds")
             if random.randint(1, 100) == 1: # successful heist
                 total = 0
                 for key in lists['bank'].keys():
@@ -133,16 +125,14 @@ class Economy(commands.Cog):
         if await cog_check(ctx) and await in_wom_shenanigans(ctx):
             if dep(ctx.author.id, amt):
                 return await reply(ctx, f"Successfully deposited {amt} {zenny}!")
-            await shark_react(ctx.message)
-            return await reply(ctx, "Wups! Insufficient funds...")
+            return await wups(ctx, "Insufficient funds")
 
     @commands.command(name='withdraw', aliases=['wd'])
     async def withdraw(self, ctx, amt:int):
         if await cog_check(ctx) and await in_wom_shenanigans(ctx):
             if wd(ctx.author.id, amt):
                 return await reply(ctx, f"Successfully withdrew {amt} {zenny}!")
-            await shark_react(ctx.message)
-            return await reply(ctx, "Wups! Insufficient funds...")
+            return await wups(ctx, "Insufficient funds")
 
     @commands.command(name='balance', aliases=['bal'])
     async def balance(self, ctx, member:discord.Member = None):
@@ -152,15 +142,13 @@ class Economy(commands.Cog):
                 if subtract_coins(ctx.author.id, 10):
                     add_coins(member.id, 10)
                 else:
-                    await shark_react(ctx.message)
-                    return await reply(ctx, "Wups! Insufficient funds...")
+                    return await wups(ctx, "Insufficient funds")
             for userID in lists['coins'].keys():
                 if str(member.id) == userID:
                     if not member == ctx.author:
                         return await reply(ctx, f"{member.name} has {lists['coins'][str(member.id)]} {zenny}!")
                     return await reply(ctx, f"You have {lists['coins'][str(member.id)]} {zenny}!")
-            await shark_react(ctx.message)
-            return await reply(ctx, "Wups! Get some bread, broke ass...")
+            return await wups(ctx, "Get some bread, broke ass")
 
     @commands.command(name='bankbalance', aliases=['bankbal'])
     async def bankbalance(self, ctx):
@@ -168,23 +156,19 @@ class Economy(commands.Cog):
             for userID in lists['bank'].keys():
                 if str(ctx.author.id) == userID:
                     return await reply(ctx, f"You have {lists['bank'][str(ctx.author.id)]} {zenny} in the bank!")
-            await shark_react(ctx.message)
-            return await reply(ctx, "Wups! Get some bread, broke ass...")
+            return await wups("Get some bread, broke ass")
 
     @commands.command(name='paypal')
     async def paypal(self, ctx, recipient:discord.Member, amount:int):
         if await cog_check(ctx) and await in_wom_shenanigans(ctx):
             if amount <= 0:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! Invalid payment amount...")
+                return await wups(ctx, "Invalid payment amount")
             if recipient.bot or recipient.id == ctx.author.id:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! You can't pay a bot or yourself...")
+                return await wups(ctx, "You can't pay a bot or yourself")
             if subtract_coins(ctx.author.id,amount):
                 add_coins(recipient.id,amount)
                 return await reply(ctx, f"{recipient.name} has received {amount} {zenny} from you!")
-            await shark_react(ctx.message)
-            return await reply(ctx, f"Wups! You don't have that much {zenny}...")
+            return await wups(ctx, f"You don't have that much {zenny}")
 
     @commands.command(name='marketplace', aliases=['mp'])
     async def marketplace(self, ctx):
@@ -199,28 +183,24 @@ class Economy(commands.Cog):
     async def buy(self, ctx, item:str, number:int = 1):
         if await cog_check(ctx) and await in_wom_shenanigans(ctx):
             if number < 1:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! Invalid number requested...")
+                return await wups(ctx, "Invalid number requested")
             item = item.lower()
             for item_name, item_price in zip(self.items, self.prices):
                 if item.lower() == item_name:
                     if not subtract_coins(ctx.author.id, number * item_price):
-                        await shark_react(ctx.message)
-                        return await reply(ctx, f"Wups! You don't have enough {zenny}...")
+                        return await wups(ctx, f"You don't have enough {zenny}")
                     add_item(item, ctx.author.id, number)
                     if number > 1:
                         return await reply(ctx, f"You have successfully purchased {number} {item_name}s!")
                     else:
                         return await reply(ctx, f"You have successfully purchased {number} {item_name}!")
-            await shark_react(ctx.message)
-            return await reply(ctx, "Wups! Invalid item...")
+            return await wups(ctx, "Invalid item")
 
     @commands.command(name='sell')
     async def sell(self, ctx, item:str, number:int = 1):
         if await cog_check(ctx) and await in_wom_shenanigans(ctx):
             if number < 1:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! Invalid number requested...")
+                return await wups(ctx, "Invalid number requested")
             item = item.lower()
             for name, price in zip(self.items, self.prices):
                 sell = price // 2
@@ -231,10 +211,8 @@ class Economy(commands.Cog):
                             return await reply(ctx, f'Successfully sold {number} {item}! {number*sell} {zenny}!')
                         else:
                             return await reply(ctx, f'Successfully sold {number} {item}s! {number*sell} {zenny}!')
-                    await shark_react(ctx.message)
-                    return await reply(ctx, f"Wups! You don't have that many {item}s...") 
-            await shark_react(ctx.message)
-            return await reply(ctx, "Wups! Invalid item...")
+                    return await wups(ctx, f"You don't have that many {item}s") 
+            return await wups(ctx, "Invalid item")
   
     @commands.command(name='inventory', aliases=['inv'])
     async def inventory(self, ctx):
@@ -250,8 +228,7 @@ class Economy(commands.Cog):
         if await cog_check(ctx) and await in_wom_shenanigans(ctx):
             item = item.lower()
             if item not in self.items:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! Invalid item...")
+                return await wups(ctx, "Invalid item")
 
             if item == 'bomb':
                 if subtract_item(item, ctx.author.id, 1):
@@ -263,8 +240,7 @@ class Economy(commands.Cog):
                     if stolen_funds(id, stolen):
                         direct_to_bank(ctx.author.id, stolen)
                         return await reply(ctx, f"Stole {stolen} {zenny} from {member.name}'s bank account! That {zenny} has been deposited into your bank account!")
-                await shark_react(ctx.message)
-                return await reply(ctx, f"Wups! You don't have a {item}...")
+                return await wups(ctx, f"You don't have a {item}")
 
             elif item == 'ticket':
                 def check(m):
@@ -280,8 +256,7 @@ class Economy(commands.Cog):
                     role = await ctx.guild.create_role(name=name)
                     await ctx.author.add_roles(role)
                     return await msg.reply("Congrats on your new role!")
-                await shark_react(ctx.message)
-                return await reply(ctx, f"Wups! You don't have a {item}...")
+                return await wups(ctx, f"You don't have a {item}")
 
             elif item == 'letter':
                 def check(m):
@@ -297,8 +272,7 @@ class Economy(commands.Cog):
                     if recipient is None or recipient.bot or recipient == ctx.author:
                         add_item(item, ctx.author.id, 1)
                         await msg.delete()
-                        await shark_react(ctx.message)
-                        return await reply(ctx, f"Wups! Invalid member name. I've refunded you your {item}...")
+                        return await wups(ctx, f"Invalid member name. I've refunded you your {item}")
                         
                     await msg.reply("Great! Now you have 2 minutes to cook up your letter to this person. Your next message in this channel will dictate that!")
                     try:
@@ -327,8 +301,7 @@ class Economy(commands.Cog):
                     if subtract_coins(target.id, int(balance // 2)):
                         add_coins(ctx.author.id, int(balance // 2))
                         return await reply(ctx, f"{target.name} got hit by a {item}! You received {balance // 2} {zenny} from them!")
-                await shark_react(ctx.message)
-                return await reply(ctx, f"Wups! You don't have a {item}...")
+                return await wups(ctx, f"You don't have a {item}")
 
             elif item == 'banana':
                 if subtract_item(item, ctx.author.id, 1):

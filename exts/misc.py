@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from googletrans import Translator
 
-from utils import cog_check, shark_react # utils functions
+from utils import cog_check, wups, reply, shark_react # utils functions
 
 # misc commands start here
 # ping, whomuted, avi, emote, convert, translate
@@ -33,10 +33,9 @@ class Miscellaneous(commands.Cog):
     async def whomuted(self, ctx):
         if await cog_check(ctx):
             try:
-                return await ctx.reply(", ".join([member.name for member in ctx.guild.members if member.is_timed_out()]), mention_author=False)
+                return await reply(ctx, ", ".join([member.name for member in ctx.guild.members if member.is_timed_out()]))
             except:
-                await shark_react(ctx.message)
-                return await ctx.reply("Wups! No one is muted currently...", mention_author=False)
+                return await ctx.wups("No one is muted currently", mention_author=False)
     
     @commands.command(name='avatar', aliases=['avi'])
     async def avatar(self, ctx, member:discord.Member=None):
@@ -68,10 +67,9 @@ class Miscellaneous(commands.Cog):
                 result = self.conversions[(org_unit, new_unit)](value)
                 org_unit = unit_mapping.get(org_unit, org_unit)
                 new_unit = unit_mapping.get(new_unit, new_unit)
-                return await ctx.reply(f"{value} {org_unit} is equal to {result:.2f} {new_unit}.", mention_author=False)
+                return await reply(ctx, f"{value} {org_unit} is equal to {result:.2f} {new_unit}.")
             else:
-                await shark_react(ctx.message)
-                return await ctx.reply("Wups! Invalid conversion...", mention_author=False)
+                return await ctx.wups(ctx, "Invalid conversion")
             
     @commands.command(name='translate')
     async def translate(self, ctx, *, phrase):
@@ -82,10 +80,10 @@ class Miscellaneous(commands.Cog):
                     translated_text = self.translator.translate(phrase, src=detected_language.lang, dest='en')
                     return await ctx.reply(f"Translated: {translated_text.text}\n\n*Beware of some inaccuracies. I cannot be 100% accurate...*", mention_author=False)
                 else:
-                    await shark_react(ctx.message)
-                    return await ctx.reply("Wups! Message is already in English...", mention_author=False)
+                    return await ctx.wups("Message is already in English", mention_author=False)
             except Exception as e:
-                return await ctx.reply(f"Wups! A translation error occurred... ({e})", mention_author=False)  
+                await shark_react(ctx.message)
+                return await wups(f"Wups!A translation error occurred... ({e})", mention_author=False)  
 
             
 async def setup(bot):

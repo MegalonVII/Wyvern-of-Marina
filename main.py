@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from sys import exit
 
 from utils import files # utils direct values
-from utils import create_list, create_birthday_list, get_login_time, shark_react # utils functions
+from utils import create_list, create_birthday_list, get_login_time, wups # utils functions
 
 # token instantiation
 load_dotenv()
@@ -108,8 +108,7 @@ async def help(ctx, page:int=0):
 
     embed = discord.Embed(color = discord.Color.purple())
     if page < 0 or page > len(command_info) - 1:
-        await shark_react(ctx.message)
-        return await ctx.reply('Wups! Invalid page number...', mention_author=False)
+        return await wups(ctx, 'Invalid page number')
 
     embed.title = command_info[page][0]
     for name, value in command_info[page][1]:

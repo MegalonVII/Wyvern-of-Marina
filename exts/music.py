@@ -7,7 +7,7 @@ from asyncio import subprocess, create_subprocess_shell
 import nacl # necessary for opus
 
 from utils import VoiceState, YTDLSource, YTDLError, Song # utils classes 
-from utils import reply, shark_react, parse_total_duration, cog_check, in_channels # utils functions
+from utils import reply, wups, parse_total_duration, cog_check, in_channels # utils functions
 
 class Music(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -50,18 +50,15 @@ class Music(commands.Cog):
             print(f'{Style.BRIGHT}Joined {Style.RESET_ALL}{Fore.BLUE}{ctx.author.voice.channel.name}{Fore.RESET}')
             return await Music.respond(self, ctx, f'Joined `{ctx.author.voice.channel.name}`!', '✅')
         except:
-            await shark_react(ctx.message)
-            return await reply(ctx, 'Wups! I couldn\'t connect to your voice channel. Maybe you\'re not in one or I\'m in a different one...')
+            return await wups(ctx, 'I couldn\'t connect to your voice channel. Maybe you\'re not in one or I\'m in a different one')
       
     @commands.command(name='leave')
     async def _leave(self, ctx: commands.Context):
         if not ctx.voice_state.voice:
-            await shark_react(ctx.message)
-            return await reply(ctx, 'Wups! I\'m not connected to any voice channel...')
+            return await wups(ctx, 'I\'m not connected to any voice channel')
         if ctx.voice_client:
             if ctx.voice_client.channel != ctx.author.voice.channel or ctx.author.voice is None:
-                await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! You\'re not in my voice channel...')
+                return await wups(ctx, 'You\'re not in my voice channel')
         await ctx.voice_state.stop()
         print(f'{Style.BRIGHT}Left {Style.RESET_ALL}{Fore.BLUE}{ctx.author.voice.channel.name}{Fore.RESET}')
         del self.voice_states[ctx.guild.id]
@@ -72,47 +69,41 @@ class Music(commands.Cog):
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_playing():
             return await ctx.reply(embed=ctx.voice_state.current.create_embed(), mention_author=False)
         else:
-            await shark_react(ctx.message)
-            return await reply(ctx, 'Wups! I\'m currently not playing anything...')
+            return await wups(ctx, 'I\'m currently not playing anything')
 
     @commands.command(name='pause')
     async def _pause(self, ctx: commands.Context):
         if ctx.voice_client:
             if ctx.voice_client.channel != ctx.author.voice.channel or ctx.author.voice is None:
-                await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! You\'re not in my voice channel...')
+                return await wups(ctx, 'You\'re not in my voice channel')
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_playing():
             ctx.voice_state.voice.pause()
             return await Music.respond(self, ctx, 'Paused!', '⏸️')
         else:
-            await shark_react(ctx.message)
-            return await reply(ctx, 'Wups! Nothing to pause...')
+            return await wups(ctx, 'Nothing to pause')
 
     @commands.command(name='resume')
     async def _resume(self, ctx: commands.Context):
         if ctx.voice_client:
             if ctx.voice_client.channel != ctx.author.voice.channel or ctx.author.voice is None:
-                await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! You\'re not in my voice channel...')
+                return await wups(ctx, 'You\'re not in my voice channel')
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_paused():
             ctx.voice_state.voice.resume()
             return await Music.respond(self, ctx, 'Resumed!', '▶️')
         else:
-            await shark_react(ctx.message)
-            return await reply(ctx, 'Wups! Nothing to resume...')
+            return await wups(ctx, 'Nothing to resume')
 
     @commands.command(name='stop')
     async def _stop(self, ctx: commands.Context):
         if ctx.voice_client:
             if ctx.author.voice and ctx.voice_client.channel != ctx.author.voice.channel or ctx.author.voice is None:
-                return await reply(ctx, 'Wups! You\'re not in my voice channel...')
+                return await wups(ctx, 'You\'re not in my voice channel')
         if ctx.voice_state.is_playing:
             ctx.voice_state.songs.clear()
             ctx.voice_state.voice.stop()
             return await Music.respond(self, ctx, 'Stopped!', '⏹️')
         else:
-            await shark_react(ctx.message)
-            return await reply(ctx, 'Wups! I\'m not playing any music right now...')
+            return await wups(ctx, 'I\'m not playing any music right now')
 
     @commands.command(name='skip')
     async def _skip(self, ctx: commands.Context):
@@ -120,31 +111,25 @@ class Music(commands.Cog):
         djRole = discord.utils.get(ctx.guild.roles, name="DJ")
         if ctx.voice_client:
             if ctx.voice_client.channel != voter.voice.channel or voter.voice is None:
-                await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! You\'re not in my voice channel...')
+                return await wups(ctx, 'You\'re not in my voice channel')
         if not ctx.voice_state.is_playing:
-            await shark_react(ctx.message)
-            return await reply(ctx, 'Wups! I\'m not playing any music right now...')
+            return await wups(ctx, 'I\'m not playing any music right now')
         if voter == ctx.voice_state.current.requester or djRole in voter.roles or voter.guild_permissions.administrator:
             ctx.voice_state.skip()
             return await Music.respond(self, ctx, 'Skipped!', '⏭️')
         else:
-            await shark_react(ctx.message)
-            return await reply(ctx, 'Wups! You didn\'t request this song to be played (DJs and adminstrators are unaffected)...')
+            return await wups(ctx, 'You didn\'t request this song to be played (DJs and adminstrators are unaffected)')
 
     @commands.command(name='queue')
     async def _queue(self, ctx: commands.Context, *, page: int = 1):
         if page < 1:
-            await shark_react(ctx.message)
-            return await reply(ctx, 'Wups! Invalid page number. Must be greater than or equal to `1`...')
+            return await wups(ctx, 'Invalid page number. Must be greater than or equal to `1`')
         if len(ctx.voice_state.songs) == 0:
-            await shark_react(ctx.message)
-            return await reply(ctx, 'Wups! Queue is empty...')
+            return await wups(ctx, 'Queue is empty')
         items_per_page = 10
         pages = math.ceil(len(ctx.voice_state.songs) / items_per_page)
         if page > pages:
-            await shark_react(ctx.message)
-            return await reply(ctx, f'Wups! Invalid page number. Must be less than or equal to `{pages}`...')
+            return await wups(ctx, f'Invalid page number. Must be less than or equal to `{pages}`')
         
         start = (page - 1) * items_per_page
         end = start + items_per_page
@@ -162,51 +147,42 @@ class Music(commands.Cog):
 
         if ctx.voice_client:
             if ctx.voice_client.channel != author.voice.channel or author.voice is None:
-                await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! You\'re not in my voice channel...')
+                return await wups(ctx, 'You\'re not in my voice channel')
         if author.guild_permissions.administrator or djRole in author.roles:
             if len(ctx.voice_state.songs) == 0:
-                await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! Queue is empty...')
+                return await wups(ctx, 'Queue is empty')
             else:
                 ctx.voice_state.songs.shuffle()
                 return await Music.respond(self, ctx, 'Queue shuffled!', '🔀')
         else:
-            await shark_react(ctx.message)
-            return await reply(ctx, 'Wups! You don\'t have the permissions to use this. Must be either a DJ or administrator...')
+            return await wups(ctx, 'You don\'t have the permissions to use this. Must be either a DJ or administrator')
 
     @commands.command(name='remove')
     async def _remove(self, ctx: commands.Context, index: int):
         queue = ctx.voice_state.songs
         if ctx.voice_client:
             if ctx.voice_client.channel != ctx.author.voice.channel or ctx.author.voice is None:
-                await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! You\'re not in my voice channel...')
+                return await wups(ctx, 'You\'re not in my voice channel')
         if len(queue) == 0:
-            await shark_react(ctx.message)
-            return await reply(ctx, 'Wups! Queue is empty...')
+            return await wups(ctx, 'Queue is empty')
         elif index < 0 or index == 0 or index > len(queue):
-            await shark_react(ctx.message)
-            return await reply(ctx, 'Wups! Index out of bounds...')
+            return await wups(ctx, 'Index out of bounds')
         ctx.voice_state.songs.remove(index - 1)
         return await Music.respond(self, ctx, 'Song removed from queue!', '✅')
 
     @commands.command(name='play')
     async def _play(self, ctx: commands.Context, *, search: str):
         if not ctx.voice_state.voice:
-            await shark_react(ctx.message)
-            return await reply(ctx, 'Wups! I\'m not connected to a voice channel...')
+            return await wups(ctx, 'I\'m not connected to a voice channel')
         if ctx.voice_client:
             if ctx.voice_client.channel != ctx.author.voice.channel:
-                await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! I\'m already in a voice channel...')
+                return await wups(ctx, 'I\'m already in a voice channel')
             
         async with ctx.typing():
             try:
                 source = await YTDLSource.create_source(ctx, search)
             except YTDLError as e:
-                await shark_react(ctx.message)
-                return await reply(ctx, f'Wups! An error occurred while processing this request... ({str(e)})')
+                return await wups(ctx, f'An error occurred while processing this request (`{str(e)}`)')
             else:
                 song = Song(source)
                 await ctx.voice_state.songs.put(song)
@@ -220,11 +196,9 @@ class Music(commands.Cog):
                 if query[0] == '<' and query[-1] == '>':
                     query = query[1:-1]
                 elif query [0] == '[' and query[-1] == ')':
-                    await shark_react(ctx.message)
-                    return await reply(ctx, "Wups! I couldn't download anything in an embedded link. Try again... ")
+                    return await wups(ctx, "I couldn't download anything in an embedded link. Try again ")
             except IndexError:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! I need a search query... ")
+                return await wups(ctx, "I need a search query ")
             
             if await in_channels(ctx, ["wom-shenanigans", "good-tunes"], True):
                 if platform.lower() in self.platforms[0:3]:
@@ -238,12 +212,10 @@ class Music(commands.Cog):
                             print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()}\n")
                             if "LookupError" in stdout.decode():
                                 await msg.delete()
-                                await shark_react(ctx.message)
-                                return await reply(ctx, "Wups! I couldn't find a song on Spotify with that query. Try again... ")
+                                return await wups(ctx, "I couldn't find a song on Spotify with that query. Try again ")
                             if spotdl.returncode != 0:
                                 await msg.delete()
-                                await shark_react(ctx.message)
-                                return await reply(ctx, "Wups! I couldn't download anything. Try again... ")
+                                return await wups(ctx, "I couldn't download anything. Try again ")
                             
                         elif platform.lower() == 'youtube': # youtube
                             print(f"{Style.BRIGHT}Downloading from {Fore.WHITE}{Back.RED}YouTube{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
@@ -252,14 +224,12 @@ class Music(commands.Cog):
                             print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()}")
                             if 'Downloading 0 items' in stdout.decode():
                                 await msg.delete()
-                                await shark_react(ctx.message)
-                                return await ctx.reply("Wups! I couldn't download anything. Try again... (Most likely, your search query was invalid.)")
+                                return await wups("I couldn't download anything. Try again (Most likely, your search query was invalid.)")
                             
                         elif platform.lower() == 'soundcloud': # soundcloud
                             if query[0:23] != 'https://soundcloud.com/':
                                 await msg.delete()
-                                await shark_react(ctx.message)
-                                return await ctx.reply("Wups! I couldn't download anything. Try again... (Due to API requirements, you must make sure that you are providing a `https://soundcloud.com/` link as your query.)")
+                                return await ctx.wups("I couldn't download anything. Try again (Due to API requirements, you must make sure that you are providing a `https://soundcloud.com/` link as your query.)")
                             index = query.find("?in=")
                             if index != -1:
                                 query = query[:index]
@@ -271,12 +241,10 @@ class Music(commands.Cog):
                             print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}\n{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()[:-1]}")
                             if 'Found a playlist' in stderr.decode():
                                 await msg.delete()
-                                await shark_react(ctx.message)
-                                return await reply(ctx, "Wups! I don't want to bombard you with pings! Try downloading songs individually...")
+                                return await wups(ctx, "I don't want to bombard you with pings! Try downloading songs individually")
                             if 'URL is not valid' in stderr.decode():
                                 await msg.delete()
-                                await shark_react(ctx.message)
-                                return await reply(ctx, "Wups! Invalid URL! Try again...")
+                                return await wups(ctx, "Invalid URL! Try again")
                             
                     new_files = [file for file in os.listdir('.') if file.endswith(".mp3")]
                     for file in new_files:
@@ -286,13 +254,11 @@ class Music(commands.Cog):
                         except:
                             os.remove(file_path)
                             await msg.delete()
-                            await shark_react(ctx.message)
-                            return await reply(ctx, 'Wups! The file was too big for me to send...')
+                            return await wups(ctx, 'The file was too big for me to send')
                         os.remove(file_path)
                     return await msg.delete()    
                 else:
-                    await shark_react(ctx.message)
-                    return await reply(ctx, 'Wups! Invalid platform choice! Must be either `Spotify`, `YouTube`, or `SoundCloud`...')
+                    return await wups(ctx, 'Invalid platform choice! Must be either `Spotify`, `YouTube`, or `SoundCloud`')
 
 async def setup(bot):
     await bot.add_cog(Music(bot))

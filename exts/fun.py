@@ -9,7 +9,7 @@ import urllib.parse
 import pypokedex as dex
 
 from utils import lists, snipe_data, editsnipe_data, zenny # utils direct values
-from utils import cog_check, shark_react, reply, capitalize_string, assert_cooldown, in_wom_shenanigans, add_coins, in_channels, in_threads # utils functions
+from utils import cog_check, shark_react, reply, wups, capitalize_string, assert_cooldown, in_wom_shenanigans, add_coins, in_channels, in_threads # utils functions
 
 # fun commands start here
 # say, custc, snipe, esnipe, choose, pokedex, who, howgay, rps, 8ball, roulette, trivia, emulation, quote, deathbattle, ship
@@ -112,8 +112,7 @@ class Fun(commands.Cog):
                 await ctx.message.delete()
                 return await ctx.channel.send(" ".join(args).replace('"', '\"').replace("'", "\'"), allowed_mentions=discord.AllowedMentions(everyone=False, roles=False))
             except:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! You need something for me to say...")
+                return await wups(ctx, "You need something for me to say")
                 
     @commands.command(name='customcommands', aliases=['custc'])
     async def customcommands(self, ctx):
@@ -121,8 +120,7 @@ class Fun(commands.Cog):
             try:
                 return await reply(ctx, ', '.join(list(lists["commands"].keys())))
             except:
-                await shark_react(ctx.message)
-                return await reply(ctx, 'Wups! There are no custom commands...')
+                return await wups(ctx, 'There are no custom commands')
 
     @commands.command(name='snipe')
     async def snipe(self, ctx):
@@ -139,8 +137,7 @@ class Fun(commands.Cog):
                 embed.set_thumbnail(url=data['author'].avatar.url)
                 return await ctx.reply(embed=embed, mention_author=False)
             except KeyError:
-                await shark_react(ctx.message)
-                return await reply(ctx, f"Wups! There are no recently deleted messages in <#{channel.id}>...")
+                return await wups(ctx, f"There are no recently deleted messages in <#{channel.id}>")
 
     @commands.command(name='editsnipe', aliases=['esnipe'])
     async def editsnipe(self, ctx):
@@ -153,23 +150,20 @@ class Fun(commands.Cog):
                 embed.set_thumbnail(url=data["author"].avatar.url)
                 return await ctx.reply(embed=embed, mention_author=False)
             except KeyError:
-                await shark_react(ctx.message)
-                return await reply(ctx, f"Wups! There are no recently edited messages in <#{channel.id}>...")
+                return await wups(ctx, f"There are no recently edited messages in <#{channel.id}>")
 
     @commands.command(name='choose')
     async def choose(self, ctx, *args):
         if await cog_check(ctx):
             if (len(args) < 2):
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! You need at least 2 arguments for me to choose from...")
+                return await wups(ctx, "You need at least 2 arguments for me to choose from")
             return await reply(ctx, f"I choose `{random.choice(args)}`!")
 
     @commands.command(name='pokedex')
     async def pokedex(self, ctx, index: int):
         if await cog_check(ctx):
             if index > 1017 or index < 1:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! Invalid index...")
+                return await wups(ctx, "Invalid index")
               
             async with ctx.typing():
                 # data collections
@@ -249,8 +243,7 @@ class Fun(commands.Cog):
     async def howgay(self, ctx, member:discord.Member=None):
         if await cog_check(ctx):
             if assert_cooldown("howgay") != 0:
-                await shark_react(ctx.message)
-                return await reply(ctx, f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('howgay')} seconds...")
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('howgay')} seconds")
         
             member = member or ctx.author
             percent = random.randint(0,100)
@@ -270,17 +263,14 @@ class Fun(commands.Cog):
     async def rps(self, ctx, playerChoice: str=None):
         if await cog_check(ctx) and await in_wom_shenanigans(ctx):
             if assert_cooldown("rps") != 0 :
-                await shark_react(ctx.message)
-                return await reply(ctx, f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('rps')} seconds...")
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('rps')} seconds")
             if playerChoice is None:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! You need to give me your choice...")
+                return await wups(ctx, "You need to give me your choice")
             
             playerChoice = playerChoice.lower()
             choices = ['rock', 'paper', 'scissors']
             if playerChoice not in choices:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! Invalid choice...")
+                return await wups(ctx, "Invalid choice")
             else:
                 botChoice = random.choice(choices)
                 if playerChoice == botChoice: # tie
@@ -296,11 +286,9 @@ class Fun(commands.Cog):
     async def eightball(self, ctx):
         if await cog_check(ctx):
             if assert_cooldown("8ball") != 0 :
-                await shark_react(ctx.message)
-                return await reply(ctx, f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('8ball')} seconds...")
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('8ball')} seconds")
             if len(ctx.message.content) < 9:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! You need to give me a question to respond to...")
+                return await wups(ctx, "You need to give me a question to respond to")
             
             responses = ['Hell yeah!', 'It is certain.', 'Without a doubt.', 'You may rely on it.', 'Yes, definitely.', 'It is decidedly so.', 'As I see it, yes.', 'Most likely.', 'Yes.', 'Outlook good.', 'Signs point to yes.', 'You already know the answer.', 'Reply hazy, try again.', 'Better not tell you now.', 'Ask again later.', 'Cannot predict now.', 'Concentrate and ask again.', 'Don\'t count on it.', 'Outlook not so good.', 'My sources say no.', 'Very doubtful.', 'My reply is no.', 'No.', 'Oh god, no.']
             return await reply(ctx, f"🎱 `{ctx.message.content[9:]}` 🎱\n{random.choice(responses)}")
@@ -309,8 +297,7 @@ class Fun(commands.Cog):
     async def roulette(self, ctx, member:discord.Member=None):
         if await cog_check(ctx):
             if assert_cooldown("roulette") != 0:
-                await shark_react(ctx.message)
-                return await reply(ctx, f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('roulette')} seconds...")
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('roulette')} seconds")
             
             member = member or ctx.author
             if member == ctx.author: # if a member wants to roulette themselves
@@ -350,11 +337,9 @@ class Fun(commands.Cog):
             types = ['general', 'film', 'music', 'tv', 'games', 'anime']
             categories = [9, 11, 12, 14, 15, 31]
             if assert_cooldown('trivia') != 0:
-                await shark_react(ctx.message)
-                return await reply(ctx, f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('trivia')} seconds...")
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('trivia')} seconds")
             if not type is None and type.lower() not in types:
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! Invalid trivia type...")
+                return await wups(ctx, "Invalid trivia type")
             
             async with ctx.typing():
                 if type is None:
@@ -402,8 +387,7 @@ class Fun(commands.Cog):
             if console == "guide":
                 return await reply(ctx, "# __Emulation Wiki__\n\n## This is a wiki on how to get emulators for various systems set up on a PC!\n\n__**List of Valid Consoles**__ (enter as `!w emulation (console name)`)\n- NES\n- SNES\n- N64\n- GameCube\n- Wii\n- Wii U (enter as \"WiiU\")\n- GameBoy (enter as \"GB\")\n- GameBoy Color (enter as \"GBC\")\n- GameBoy Advance (enter as \"GBA\")\n- DS\n- 3DS\n- PS1\n- PS2\n- PS3\n- PSP\n- PS Vita (enter as \"PSVita\")\n- Master System (enter as \"MasterSystem\")\n- Genesis\n- Saturn\n- Dreamcast")
             elif console.lower() not in self.consoles.keys():
-                await shark_react(ctx.message)
-                return await reply(ctx, "Wups! You entered a console that isn't on the list of valid consoles. Please refer to the list by entering `!w emulation`...")
+                return await wups(ctx, "You entered a console that isn't on the list of valid consoles. Please refer to the list by entering `!w emulation`")
 
             for key, value in self.consoles.items():
                 if console.lower() == key:
@@ -421,8 +405,7 @@ class Fun(commands.Cog):
         if await cog_check(ctx):
             if await in_wom_shenanigans(ctx):
                 if assert_cooldown('quote') != 0:
-                    await shark_react(ctx.message)
-                    return await reply(ctx, f"Wups! Slow down there, bub! Command on cooldown for another {assert_cooldown('quote')} seconds...")
+                    return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('quote')} seconds")
     
                 async with ctx.typing():
                     response = requests.get(f'https://ultima.rest/api/quote?id={random.randint(1,560)}')
@@ -440,11 +423,9 @@ class Fun(commands.Cog):
         if await cog_check(ctx):
             if await in_wom_shenanigans(ctx):
                 if self.currentFight:
-                    await shark_react(ctx.message)
-                    return await reply(ctx, f"Wups! There is currently a fight going on...")
+                    return await wups(ctx, f"There is currently a fight going on")
                 if member.bot:
-                    await shark_react(ctx.message)
-                    return await reply(ctx, f"Wups! You can't fight a bot...")
+                    return await wups(ctx, f"You can't fight a bot")
                   
                 self.currentFight = True
                 players = [ctx.author, member] if random.choice([True, False]) else [member, ctx.author]

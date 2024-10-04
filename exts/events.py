@@ -74,13 +74,12 @@ class Events(commands.Cog):
                         with open("shiny.png", "rb") as f:
                             file = discord.File(f)
                             return await message.channel.send(content=f"{message.author.name} stumbled across 500 {zenny} and a wild Wyvern of Marina! ✨", file=file)
-
                     
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if not ctx.message.content.split()[1] in list(lists["commands"].keys()):
-            await shark_react(ctx.message)
-            return await reply(ctx, f'Wups! try "!w help"... ({error})')
+            await shark_react(ctx.message)    
+            return await reply(ctx, f'Wups! Try "!w help"... ({error})')
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
