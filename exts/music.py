@@ -224,12 +224,12 @@ class Music(commands.Cog):
                             print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()}")
                             if 'Downloading 0 items' in stdout.decode():
                                 await msg.delete()
-                                return await wups("I couldn't download anything. Try again (Most likely, your search query was invalid.)")
+                                return await wups(ctx, "I couldn't download anything. Try again (Most likely, your search query was invalid.)")
                             
                         elif platform.lower() == 'soundcloud': # soundcloud
                             if query[0:23] != 'https://soundcloud.com/':
                                 await msg.delete()
-                                return await ctx.wups("I couldn't download anything. Try again (Due to API requirements, you must make sure that you are providing a `https://soundcloud.com/` link as your query.)")
+                                return await ctx.wups(ctx, "I couldn't download anything. Try again (Due to API requirements, you must make sure that you are providing a `https://soundcloud.com/` link as your query.)")
                             index = query.find("?in=")
                             if index != -1:
                                 query = query[:index]
