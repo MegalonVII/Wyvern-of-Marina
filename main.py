@@ -122,7 +122,7 @@ async def help(ctx, page:int=0):
 # on_ready
 @bot.event
 async def on_ready():
-    print("Logging in...")
+    print("\nLogging in...")
   
     for file in files: # creates all lists wom stores
         create_list(file)
@@ -136,7 +136,7 @@ async def on_ready():
         exit(1)
 
     return print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\n" + get_login_time('Europe/Amsterdam')) # fully logged in with everything loaded in the backend. chose the timezone as cest because that's where airi is based in
-    
+
 # everything has finally been set up
 # we can now run the bot
 bot.run(TOKEN)
