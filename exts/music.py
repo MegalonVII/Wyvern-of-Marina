@@ -207,7 +207,7 @@ class Music(commands.Cog):
 
                         if platform.lower() == 'spotify': # spotify
                             print(f"{Style.BRIGHT}Downloading from {Fore.BLACK}{Back.GREEN}Spotify{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
-                            spotdl = await create_subprocess_shell(f'spotdl download \"{query}\" --lyrics synced', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                            spotdl = await create_subprocess_shell(f'spotdl download "{query}" --format mp3 --output "{{artist}} - {{title}}.{{output-ext}}" --lyrics synced', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                             stdout, stderr = await spotdl.communicate()
                             print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()}\n")
                             if "LookupError" in stdout.decode():
