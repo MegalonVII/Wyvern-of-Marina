@@ -1,15 +1,14 @@
 import discord
 from discord.ext import commands
-from googletrans import Translator
+from asyncio import subprocess, create_subprocess_shell
 
-from utils import cog_check, wups, reply, shark_react # utils functions
+from utils import cog_check, wups, reply # utils functions
 
 # misc commands start here
 # ping, whomuted, avi, emote, convert, translate
 class Miscellaneous(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.translator = Translator()
         self.conversions = {
             ("c", "f"): lambda x: x * 9/5 + 32,
             ("f", "c"): lambda x: (x - 32) * 5/9,
@@ -69,21 +68,17 @@ class Miscellaneous(commands.Cog):
                 new_unit = unit_mapping.get(new_unit, new_unit)
                 return await reply(ctx, f"{value} {org_unit} is equal to {result:.2f} {new_unit}.")
             else:
-                return await ctx.wups(ctx, "Invalid conversion")
+                return await wups(ctx, "Invalid conversion")
             
     @commands.command(name='translate')
     async def translate(self, ctx, *, phrase):
         if await cog_check(ctx):
-            try:
-                detected_language = self.translator.detect(phrase)
-                if detected_language.lang != 'en':
-                    translated_text = self.translator.translate(phrase, src=detected_language.lang, dest='en')
-                    return await ctx.reply(f"Translated: {translated_text.text}\n\n*Beware of some inaccuracies. I cannot be 100% accurate...*", mention_author=False)
-                else:
-                    return await ctx.wups("Message is already in English", mention_author=False)
-            except Exception as e:
-                await shark_react(ctx.message)
-                return await wups(f"Wups!A translation error occurred... ({e})", mention_author=False)  
+            async with ctx.typing():
+                process = await create_subprocess_shell(f'trans -b :en "{phrase}"', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                stdout, stderr = await process.communicate()
+                if stderr:
+                    return await wups(ctx, f"A translation error occurred... ({stderr.decode().strip()})")
+                return await reply(ctx, f"Translated: {stdout.decode().strip()}\n\n*Beware of some inaccuracies. I cannot be 100% accurate...*")
 
             
 async def setup(bot):
