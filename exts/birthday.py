@@ -35,9 +35,9 @@ class Birthday(commands.Cog):
                 return await wups(ctx, 'Invalid birthday input')
             
             # ask for timezone
-            prompt = await prompt.edit(content='Now, you have 1 minute to give me the timezone you are based in. Make sure it is one from [this list](<https://gist.githubusercontent.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568/raw/daacf0e4496ccc60a36e493f0252b7988bceb143/pytz-time-zones.py>)!', allowed_mentions=discord.AllowedMentions.none())
+            prompt = await prompt.edit(content='Now, you have 5 minutes to give me the timezone you are based in. Make sure it is one from [this list](<https://gist.githubusercontent.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568/raw/daacf0e4496ccc60a36e493f0252b7988bceb143/pytz-time-zones.py>)!', allowed_mentions=discord.AllowedMentions.none())
             try:
-                tz_message = await self.bot.wait_for('message', check=check, timeout=60)
+                tz_message = await self.bot.wait_for('message', check=check, timeout=300)
             except TimeoutError:
                 await prompt.delete()
                 return await reply(ctx, "Time's up! You didn't provide me with your timezone in time...")

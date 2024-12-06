@@ -26,10 +26,11 @@ starboard_emoji='<:spuperman:670852114070634527>'
 shame_emoji='🪳'
 starboard_count=4
 zenny='<:zenny:1104179194780450906>'
+
 youtube_dl.utils.bug_reports_message = lambda: ''
 
 # music functionality
-# all sorts of classes
+# all sorts of classes for playing songs in vc. you may mostly ignore these since vc implementation is mostly complete.
 class VoiceError(Exception):
     pass
 
@@ -225,7 +226,7 @@ class VoiceState:
 
 
 # bot helper functions
-# create_list, update_birthday, check_reaction_board, reply, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, in_channels, in_threads, assert_cooldown, capitalize_string, shark_react, wups, parse_total_duration, cog_check, get_login_time
+# create_list, update_birthday, check_reaction_board, reply, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, in_channels, in_threads, assert_cooldown, capitalize_string, parse_total_duration, shark_react, wups, cog_check, get_login_time
 def create_list(filename):
     file_checks[filename]=False
     if not os.path.exists(f'csv/{filename}.csv'):

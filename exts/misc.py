@@ -77,7 +77,7 @@ class Miscellaneous(commands.Cog):
                 process = await create_subprocess_shell(f'trans -b :en "{phrase}"', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 stdout, stderr = await process.communicate()
                 if stderr:
-                    return await wups(ctx, f"A translation error occurred... ({stderr.decode().strip()})")
+                    return await wups(ctx, f"A translation error occurred. ({stderr.decode().strip()})")
                 return await reply(ctx, f"Translated: {stdout.decode().strip()}\n\n*Beware of some inaccuracies. I cannot be 100% accurate...*")
 
             
