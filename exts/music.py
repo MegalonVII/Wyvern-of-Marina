@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import math
 import os
+import re
 from colorama import Fore, Back, Style
 from asyncio import subprocess, create_subprocess_shell
 import nacl # necessary for opus
@@ -196,7 +197,9 @@ class Music(commands.Cog):
                 if query[0] == '<' and query[-1] == '>':
                     query = query[1:-1]
                 elif query [0] == '[' and query[-1] == ')':
-                    return await wups(ctx, "I couldn't download anything in an embedded link. Try again ")
+                    return await wups(ctx, "I couldn't download anything in an embedded link. Try again")
+
+                query = re.sub(r'[?&]si=[a-zA-Z0-9_-]+', '', query)
             except IndexError:
                 return await wups(ctx, "I need a search query ")
             
