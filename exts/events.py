@@ -28,7 +28,8 @@ class Events(commands.Cog):
             'Quake',
             'Dead Space',
             'NieR: Automata',
-            'Hi-Fi Rush'
+            'Hi-Fi Rush',
+            'Shin Megami Tensei: Nocturne'
         ]
         self.messages = [
             "Try not to die of dysentery today!",
