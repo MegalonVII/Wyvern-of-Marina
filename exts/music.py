@@ -232,7 +232,7 @@ class Music(commands.Cog):
                         elif platform.lower() == 'soundcloud': # soundcloud
                             if query[0:23] != 'https://soundcloud.com/':
                                 await msg.delete()
-                                return await ctx.wups(ctx, "I couldn't download anything. Try again (Due to API requirements, you must make sure that you are providing a `https://soundcloud.com/` link as your query.)")
+                                return await wups(ctx, "I couldn't download anything. Try again (Due to API requirements, you must make sure that you are providing a `https://soundcloud.com/` link as your query.)")
                             index = query.find("?in=")
                             if index != -1:
                                 query = query[:index]
@@ -262,6 +262,7 @@ class Music(commands.Cog):
                     return await msg.delete()    
                 else:
                     return await wups(ctx, 'Invalid platform choice! Must be either `Spotify`, `YouTube`, or `SoundCloud`')
+
 
 async def setup(bot):
     await bot.add_cog(Music(bot))

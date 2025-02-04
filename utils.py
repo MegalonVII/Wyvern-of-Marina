@@ -583,8 +583,7 @@ async def shark_react(message: discord.Message):
 
 async def wups(ctx, content: str):
     await shark_react(ctx.message)
-    await reply(ctx, content=f"Wups! {content}...")
-    return None
+    return await reply(ctx, content=f"Wups! {content}...")
 
 async def cog_check(ctx):
     if not ctx.guild:
