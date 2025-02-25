@@ -131,7 +131,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
         if after.is_timed_out() == True and before.is_timed_out() == False:
-            return await before.guild.system_channel.send(f"That fucking bozo {after.mention} got timed out! Point and laugh at this user! <:you:765067257008881715>")
+            return await before.guild.system_channel.send(f"{after.mention} got timed out... for whatever reason... <:villainy:915009093662556170>")
           
         if after.is_timed_out() == False and before.is_timed_out() == True:
             return await before.guild.system_channel.send(f"Welcome back, {after.mention}. Don\'t do that again, idiot. <:do_not:1077435360537223238>")
