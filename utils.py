@@ -302,15 +302,14 @@ async def add_to_board(message, board_type):
     embed.add_field(name='Message', value=f'{str(message.content)}', inline=True)
 
     id = message.author.id
+    karma = int(lists["karma"][str(id)])
     if board_name == "hot-seat":
-        if random.randint(1,3) == 1:
+        if karma < 6:
             add_item("karma", id, 1)
     else:
-        if int(lists["karma"][str(id)]) > 2:
+        if karma > 2:
             if subtract_item("karma", id, 1):
                 pass
-        else:
-            pass
 
     if message.attachments:
         embed.set_image(url=message.attachments[0].url)
