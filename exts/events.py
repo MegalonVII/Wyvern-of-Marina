@@ -7,7 +7,7 @@ from pytz import timezone
 from datetime import datetime
 
 from utils import lists, zenny, starboard_emoji, shame_emoji, user_info, snipe_data, editsnipe_data # utils direct values
-from utils import assert_cooldown, shark_react, add_coins, reply, direct_to_bank, check_reaction_board, add_to_board, create_list, create_birthday_list # utils functions
+from utils import assert_cooldown, shark_react, add_coins, reply, direct_to_bank, check_reaction_board, add_to_board, create_list, create_birthday_list, add_item # utils functions
 
 # bot events start here
 # on_message, on_command_error, on_message_delete, on_message_edit, on_member_join, on_member_update, on_member_ban, on_reaction_add, on_member_remove, wish_birthday
@@ -120,6 +120,7 @@ class Events(commands.Cog):
                 pass
             add_coins(member.id,100)
             direct_to_bank(member.id, 0)
+            add_item("karma", member.id, 2)
             return await member.guild.system_channel.send(f"Welcome, {member.mention}, to **The Marina**! This is your one-way ticket to Hell. There\'s no going back from here...\nFor a grasp of the rules, however (yes, we have those), we do ask that you check <#822341695411847249>.\n*Remember to take breaks, nya?*")
         else:
             try:

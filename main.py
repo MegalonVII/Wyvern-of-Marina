@@ -4,8 +4,8 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from sys import exit
 
-from utils import files # utils direct values
-from utils import create_list, create_birthday_list, get_login_time, wups # utils functions
+from utils import files, lists # utils direct values
+from utils import create_list, create_birthday_list, get_login_time, wups, add_item # utils functions
 
 # token instantiation
 load_dotenv()
@@ -134,6 +134,11 @@ async def on_ready():
     except Exception as e:
         print(e)
         exit(1)
+
+    for member in bot.guilds[0].members: # mandates user has karma for roulette
+        if not member.bot:
+            if not str(member.id) in lists["karma"].keys():
+                add_item("karma", member.id, 2)
 
     return print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\n" + get_login_time('Europe/Amsterdam')) # fully logged in with everything loaded in the backend. chose the timezone as cest because that's where airi is based in
 

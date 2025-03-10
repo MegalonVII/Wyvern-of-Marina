@@ -277,13 +277,13 @@ class Fun(commands.Cog):
                 return await wups(ctx, "Invalid choice")
             else:
                 botChoice = random.choice(choices)
-                if playerChoice == botChoice: # tie
+                if playerChoice == botChoice: # both tie
                     return await reply(ctx, f"I chose `{botChoice}`.\nUgh! Boring! We tied...")
                 elif (playerChoice == choices[0] and botChoice == choices[1]) or \
                     (playerChoice == choices[1] and botChoice == choices[2]) or \
-                    (playerChoice == choices[2] and botChoice == choices[0]): # win
+                    (playerChoice == choices[2] and botChoice == choices[0]): # bot wins
                         return await reply(ctx, f"I chose `{botChoice}`.\nHah! I win, sucker! Why'd you pick that one, stupid?")
-                else: # lose
+                else: # bot loses
                     return await reply(ctx, f"I chose `{botChoice}`.\nWell played there. You have bested me...")
 
     @commands.command(name='8ball')
@@ -304,9 +304,10 @@ class Fun(commands.Cog):
                 return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('roulette')} seconds")
             
             member = member or ctx.author
+            chance = int(lists["karma"][str(member.id)])
             if member == ctx.author: # if a member wants to roulette themselves
                 if not member.guild_permissions.administrator:
-                    if random.randint(1,6) == 1:
+                    if random.randint(1,chance) == 1:
                         await member.edit(timed_out_until=discord.utils.utcnow() + timedelta(hours=1), reason='roulette')
                         return await reply(ctx, "🔥🔫 You died! (muted for 1 hour)")
                     add_coins(member.id,1)
@@ -316,7 +317,7 @@ class Fun(commands.Cog):
             else: # if an admin wants to roulette a member they specify
                 if not ctx.message.author.guild_permissions.administrator:
                     if member == ctx.author:  # roulette themselves if not admin (pinged themself)
-                        if random.randint(1,6) == 1:
+                        if random.randint(1,chance) == 1:
                             await member.edit(timed_out_until=discord.utils.utcnow() + timedelta(hours=1), reason='roulette')
                             return await reply(ctx, "🔥🔫 You died! (muted for 1 hour)")
                         add_coins(member.id,1)
@@ -328,7 +329,7 @@ class Fun(commands.Cog):
                     return await reply(ctx, "❌🔫 Don\'t you think it\'d be overkill to shoot a dead body?")
                 else:
                     if not member.guild_permissions.administrator: # admin tries rouletting "alive" non admin
-                        if random.randint(1,6) == 1:
+                        if random.randint(1,chance) == 1:
                             await member.edit(timed_out_until=discord.utils.utcnow() + timedelta(hours=1), reason='roulette')
                             return await reply(ctx, "🔥🔫 This user died! (muted for 1 hour)")
                         add_coins(member.id,1)
@@ -464,9 +465,11 @@ class Fun(commands.Cog):
             half_str2 = str2[len(str2) // 2 + 1:] if len(str2) % 2 == 1 else str2[len(str2) // 2:]
             merged_string = half_str1 + half_str2
             embed = discord.Embed()
+            bar = []
+            for i in range(0, 10):
+                bar[i] = ':black_medium_square:'
             shipPercent = random.randint(0, 100)
             shipBar = shipPercent // 10
-            bar = [':black_medium_square:',':black_medium_square:',':black_medium_square:',':black_medium_square:',':black_medium_square:',':black_medium_square:',':black_medium_square:',':black_medium_square:',':black_medium_square:',':black_medium_square:']
             for i in range(0, shipBar):
                 bar[i] = ':red_square:'
 

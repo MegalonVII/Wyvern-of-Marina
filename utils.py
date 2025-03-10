@@ -12,7 +12,7 @@ from datetime import datetime
 from pytz import timezone
 from colorama import Fore, Style
 
-files=["commands", "flairs", "coins", "bank", "shell", "bomb", "ticket", "letter", "banana"]
+files=["commands", "flairs", "coins", "bank", "shell", "bomb", "ticket", "letter", "banana", "karma"]
 file_checks={file:False for file in files}
 lists={file:{} for file in files}
 user_info={}
@@ -300,6 +300,18 @@ async def add_to_board(message, board_type):
     embed.set_thumbnail(url=message.author.avatar.url)
     embed.add_field(name='Channel', value=f'<#{message.channel.id}>', inline=True)
     embed.add_field(name='Message', value=f'{str(message.content)}', inline=True)
+
+    id = message.author.id
+    if board_name == "hot-seat":
+        if random.randint(1,3) == 1:
+            add_item("karma", id, 1)
+    else:
+        if int(lists["karma"][str(id)]) > 2:
+            if subtract_item("karma", id, 1):
+                pass
+        else:
+            pass
+
     if message.attachments:
         embed.set_image(url=message.attachments[0].url)
     for reaction in message.reactions:
