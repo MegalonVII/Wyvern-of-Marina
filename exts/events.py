@@ -154,7 +154,7 @@ class Events(commands.Cog):
     
     @commands.Cog.listener()
     async def on_member_remove(self, member):
-        listsToCheck = ["coins", "bank", "shell", "bomb", "ticket", "letter", "banana"]
+        listsToCheck = lists[2:]
         for list in listsToCheck:
             csv = pd.read_csv(f'csv/{list}.csv')
             csv = csv[csv['user_id'] != member.id]
