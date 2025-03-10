@@ -465,9 +465,7 @@ class Fun(commands.Cog):
             half_str2 = str2[len(str2) // 2 + 1:] if len(str2) % 2 == 1 else str2[len(str2) // 2:]
             merged_string = half_str1 + half_str2
             embed = discord.Embed()
-            bar = []
-            for i in range(0, 10):
-                bar[i] = ':black_medium_square:'
+            bar = [':black_medium_square:' for _ in range(10)]
             shipPercent = random.randint(0, 100)
             shipBar = shipPercent // 10
             for i in range(0, shipBar):
