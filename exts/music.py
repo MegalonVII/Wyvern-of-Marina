@@ -215,10 +215,10 @@ class Music(commands.Cog):
                             print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()}\n")
                             if "LookupError" in stdout.decode():
                                 await msg.delete()
-                                return await wups(ctx, "I couldn't find a song on Spotify with that query. Try again ")
+                                return await wups(ctx, "I couldn't find a song on Spotify with that query. Try again")
                             if spotdl.returncode != 0:
                                 await msg.delete()
-                                return await wups(ctx, "I couldn't download anything. Try again ")
+                                return await wups(ctx, "I couldn't download anything. Try again")
                             
                         elif platform.lower() == 'youtube': # youtube
                             print(f"{Style.BRIGHT}Downloading from {Fore.WHITE}{Back.RED}YouTube{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
