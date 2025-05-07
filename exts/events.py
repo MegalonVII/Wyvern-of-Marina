@@ -5,6 +5,7 @@ import pandas as pd
 import asyncio
 from pytz import timezone
 from datetime import datetime
+from re import escape, search
 
 from utils import lists, zenny, starboard_emoji, shame_emoji, user_info, snipe_data, editsnipe_data # utils direct values
 from utils import assert_cooldown, shark_react, add_coins, reply, direct_to_bank, check_reaction_board, add_to_board, create_list, create_birthday_list, add_item # utils functions
@@ -45,7 +46,7 @@ class Events(commands.Cog):
             else:
                  # custom commands
                 if message.content[0:3] == "!w " and message.content.split()[1] in list(lists["commands"].keys()): 
-                    await message.channel.send(lists["commands"][message.content.split()[1]])
+                    await message.reply(lists["commands"][message.content.split()[1]], mention_author=False)
 
                 # message phrase triggers
                 if message.content.lower() == "skill issue":
@@ -58,11 +59,13 @@ class Events(commands.Cog):
                     else:
                         await message.channel.send(random.choice([member.name.lower() for member in message.guild.members if not member.bot]))
             
-                # word trigger reactions
-                triggers = ['yoshi','3ds','wednesday','fat','yuri','yaoi','crank','kys']
-                trigger_emojis = ['<:full:1028536660918550568>','<:megalon:1078914494132129802>','<:wednesday:798691076092198993>','<:bulbous:1028536648922832956>','<:vers:804766992644702238>','🐍','🔧','⚡']
+                # phrase trigger reactions
+                triggers = ['yoshi','3ds','steam deck','wednesday','fat','yuri','yaoi','crank','kys']
+                trigger_emojis = ['<:full:1028536660918550568>','<:megalon:1078914494132129802>','<:megalon:1078914494132129802>','<:wednesday:798691076092198993>','<:bulbous:1028536648922832956>','<:vers:804766992644702238>','🐍','🔧','⚡']
+
                 for trigger, emoji in zip(triggers, trigger_emojis):
-                    if trigger in message.content.lower().split(" "):
+                    pattern = r'\b' + escape(trigger) + r'\b'
+                    if search(pattern, message.content.lower()):
                         try:
                             await message.add_reaction(emoji)
                         except:
@@ -71,7 +74,7 @@ class Events(commands.Cog):
                 # shiny
                 if random.randint(1,8192) == 1:  
                     if not message.channel.name in ['venting', 'serious-talk']:
-                        add_coins(message.author.id,500)
+                        direct_to_bank(message.author.id,500)
                         with open("shiny.png", "rb") as f:
                             file = discord.File(f)
                             return await message.channel.send(content=f"{message.author.name} stumbled across 500 {zenny} and a wild Wyvern of Marina! ✨", file=file)
