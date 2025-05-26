@@ -1,11 +1,12 @@
 import discord
 from discord.ext import commands, tasks
-import random
 import pandas as pd
 import asyncio
 from pytz import timezone
 from datetime import datetime
-from re import escape, search
+from re import escape, search, compile
+from re import IGNORECASE
+from random import randint, choice
 
 from utils import lists, zenny, starboard_emoji, shame_emoji, user_info, snipe_data, editsnipe_data # utils direct values
 from utils import assert_cooldown, shark_react, add_coins, reply, direct_to_bank, check_reaction_board, add_to_board, create_list, create_birthday_list, add_item # utils functions
@@ -16,25 +17,52 @@ class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.games = [
-            'Monster Hunter 4 Ultimate', 
-            'Rain World', 
-            'Final Fantasy Tactics', 
-            'Baldur\'s Gate 3', 
-            'Terraria', 
-            'FINAL FANTASY XIV Online', 
-            'Persona 4 Golden', 
-            'Fire Emblem Echoes: Shadows of Valentia', 
-            'Xenogears', 
-            'Chrono Trigger',
-            'Quake',
-            'Dead Space',
-            'NieR: Automata',
-            'Hi-Fi Rush',
-            'Shin Megami Tensei: Nocturne'
+            "Monster Hunter 4 Ultimate", 
+            "Rain World", 
+            "FINAL FANTASY TACTICS",
+            "FINAL FANTASY VII", 
+            "Baldur's Gate 3", 
+            "Terraria", 
+            "FINAL FANTASY XIV Online", 
+            "Persona 4 Golden", 
+            "Fire Emblem Echoes: Shadows of Valentia", 
+            "Xenogears", 
+            "Chrono Trigger",
+            "Quake",
+            "Dead Space",
+            "NieR: Automata",
+            "Hi-Fi Rush",
+            "Shin Megami Tensei: Nocturne",
+            "DOOM",
+            "Katawa Shoujo",
+            "Overwatch 2"
         ]
         self.messages = [
             "Try not to die of dysentery today!",
-            "I hope you don't get AFK Corrin'd today!"
+            "I hope you don't get AFK Corrin'd today!",
+            "Hopefully something happens on this not-so-chuddy day!"
+        ]
+        self.reply_choices = [
+            "yes",
+            "no",
+            "maybe",
+            "absolutely",
+            "not really",
+            "definitely",
+            "nah",
+            "probably",
+            "doubt it",
+            "100%",
+            "never",
+            "ask again later",
+            "without a doubt",
+            "highly unlikely",
+            "yep",
+            "nope",
+            "could be",
+            "certainly not",
+            "think so",
+            "who knows?"
         ]
         self.wish_birthday.start(); self.set_game_presence.start() # loops
 
@@ -57,7 +85,7 @@ class Events(commands.Cog):
                     if assert_cooldown("which") != 0:
                         await shark_react(message)
                     else:
-                        await message.channel.send(random.choice([member.name.lower() for member in message.guild.members if not member.bot]))
+                        await message.channel.send(choice([member.name.lower() for member in message.guild.members if not member.bot]))
             
                 # phrase trigger reactions
                 triggers = ['yoshi','3ds','steam deck','wednesday','fat','yuri','yaoi','crank','kys']
@@ -72,12 +100,24 @@ class Events(commands.Cog):
                             pass
             
                 # shiny
-                if random.randint(1,8192) == 1:  
+                if randint(1,8192) == 1:  
                     if not message.channel.name in ['venting', 'serious-talk']:
                         direct_to_bank(message.author.id,500)
                         with open("shiny.png", "rb") as f:
                             file = discord.File(f)
                             return await message.channel.send(content=f"{message.author.name} stumbled across 500 {zenny} and a wild Wyvern of Marina! ✨", file=file)
+                        
+                # is this true
+                wom = next((member for member in message.guild.members if member.bot and member.name == "Wyvern of Marina"), None)
+                if wom and wom.nick and wom.nick.lower() == "wrok":
+                    the_thing=compile(rf"<@!?{wom.id}>\s+is this true[\s\?\!\.\,]*$", IGNORECASE)
+                    if the_thing.fullmatch(message.content.strip()):
+                        if assert_cooldown("itt") != 0:
+                            await shark_react(message)
+                        else:
+                            async with message.channel.typing():
+                                await asyncio.sleep(1)
+                                await message.reply(choice(self.reply_choices), mention_author=False)
                     
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -176,11 +216,11 @@ class Events(commands.Cog):
             time_person_exact = [int(time_person.strftime('%H')), int(time_person.strftime('%M')), int(time_person.strftime('%S'))]
 
             if time_person_date == user_info[key]['birthdate'] and time_person_exact == [0,0,0]:
-                await self.bot.guilds[0].system_channel.send(content=f'<:luv:765073937645305896> 🎉 Happy Birthday, <@{int(key)}>! {random.choice(self.messages)} 🎂 <:luv:765073937645305896>', file=discord.File("mario-birthday.gif"))
+                await self.bot.guilds[0].system_channel.send(content=f'<:luv:765073937645305896> 🎉 Happy Birthday, <@{int(key)}>! {choice(self.messages)} 🎂 <:luv:765073937645305896>', file=discord.File("mario-birthday.gif"))
 
     @tasks.loop(hours=3)
     async def set_game_presence(self):
-        await self.bot.change_presence(activity=discord.Game(name=random.choice(self.games)))
+        await self.bot.change_presence(activity=discord.Game(name=choice(self.games)))
 
     @set_game_presence.before_loop
     @wish_birthday.before_loop
