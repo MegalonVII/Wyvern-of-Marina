@@ -863,7 +863,7 @@ class Events(commands.Cog):
                             async with message.channel.typing():
                                 await asyncio.sleep(1)
                                 await message.reply(choice(self.reply_choices), mention_author=False)
-                the_thing2=compile(rf"<@!?{wom.id}>\s+react please[\s\?\!\.\,]*$", IGNORECASE)
+                the_thing2=compile(rf"<@!?{wom.id}>\s+.+", IGNORECASE)
                 if the_thing2.fullmatch(message.content.strip()):
                     if assert_cooldown("react") != 0:
                         await shark_react(message)
