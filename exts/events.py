@@ -816,7 +816,12 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        # variable decs for ping triggers
         wom = next((member for member in message.guild.members if member.bot and member.name == "Wyvern of Marina" or member.name == "Neel of Marina"), None)
+        the_thing = compile(rf"<@!?{wom.id}>\s+is this true[\s\?\!\.\,]*$", IGNORECASE)
+        the_thing2 = compile(rf"<@!?{wom.id}>\s+.+", IGNORECASE)
+        content = message.content.strip()
+
         if message.guild: # must be in server
             if message.author.bot: # must be human
                 return
@@ -854,17 +859,14 @@ class Events(commands.Cog):
                             return await message.channel.send(content=f"{message.author.name} stumbled across 500 {zenny} and a wild Wyvern of Marina! ✨", file=file)
                         
                 # is this true + react
-                if wom.nick and wom.nick.lower() == "wrok":
-                    the_thing=compile(rf"<@!?{wom.id}>\s+is this true[\s\?\!\.\,]*$", IGNORECASE)
-                    if the_thing.fullmatch(message.content.strip()):
-                        if assert_cooldown("itt") != 0:
-                            await shark_react(message)
-                        else:
-                            async with message.channel.typing():
-                                await asyncio.sleep(1)
-                                await message.reply(choice(self.reply_choices), mention_author=False)
-                the_thing2=compile(rf"<@!?{wom.id}>\s+.+", IGNORECASE)
-                if the_thing2.fullmatch(message.content.strip()):
+                if wom.nick and wom.nick.lower() == "wrok" and the_thing.fullmatch(content):
+                    if assert_cooldown("itt") != 0:
+                        await shark_react(message)
+                    else:
+                        async with message.channel.typing():
+                            await asyncio.sleep(1)
+                            await message.reply(choice(self.reply_choices), mention_author=False)
+                elif the_thing2.fullmatch(content):
                     if assert_cooldown("react") != 0:
                         await shark_react(message)
                     else:
