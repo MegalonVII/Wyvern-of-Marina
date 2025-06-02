@@ -16,6 +16,28 @@ from utils import assert_cooldown, shark_react, add_coins, reply, direct_to_bank
 class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.triggers = [
+            'yoshi',
+            '3ds',
+            'steam deck',
+            'wednesday',
+            'fat',
+            'yuri',
+            'yaoi',
+            'crank',
+            'kys'
+        ]
+        self.trigger_emojis = [
+            '<:full:1028536660918550568>',
+            '<:megalon:1078914494132129802>',
+            '<:megalon:1078914494132129802>',
+            '<:wednesday:798691076092198993>',
+            '<:bulbous:1028536648922832956>',
+            '<:vers:804766992644702238>',
+            '🐍',
+            '🔧',
+            '⚡'
+        ]
         self.games = [
             "Monster Hunter 4 Ultimate", 
             "Rain World", 
@@ -64,10 +86,43 @@ class Events(commands.Cog):
             "think so",
             "who knows?"
         ]
+        self.reactions = [
+            "well shit, that happened.",
+            "okay, not what i expected.",
+            "alright then.",
+            "kinda weird, but okay.",
+            "i'm not mad, just confused.",
+            "what the hell, man.",
+            "you really went for it, huh.",
+            "could've just... not done that.",
+            "respectfully, what the fuck.",
+            "i mean, sure. why not.",
+            "you do you, i guess.",
+            "honestly? not the worst thing i've seen.",
+            "i have no idea how to respond to that.",
+            "i'll pretend i didn't see that.",
+            "yeah, that's a thing now.",
+            "mildly concerning, but go off.",
+            "sure, let's call that a win.",
+            "i see what you did there. i don't like it, but i see it.",
+            "that's one way to react.",
+            "somehow, i expected worse.",
+            "well. that's something.",
+            "this feels like a cry for help.",
+            "i'm just gonna quietly react now.",
+            "mood, honestly.",
+            "alright, moving on.",
+            "can't tell if i love it or hate it.",
+            "not sure if i should laugh or worry.",
+            "that one caught me off guard.",
+            "low-key kinda valid.",
+            "fine. i reacted. you happy now?"
+        ]
         self.wish_birthday.start(); self.set_game_presence.start() # loops
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        wom = next((member for member in message.guild.members if member.bot and member.name == "Wyvern of Marina" or member.name == "Neel of Marina"), None)
         if message.guild: # must be in server
             if message.author.bot: # must be human
                 return
@@ -88,10 +143,7 @@ class Events(commands.Cog):
                         await message.channel.send(choice([member.name.lower() for member in message.guild.members if not member.bot]))
             
                 # phrase trigger reactions
-                triggers = ['yoshi','3ds','steam deck','wednesday','fat','yuri','yaoi','crank','kys']
-                trigger_emojis = ['<:full:1028536660918550568>','<:megalon:1078914494132129802>','<:megalon:1078914494132129802>','<:wednesday:798691076092198993>','<:bulbous:1028536648922832956>','<:vers:804766992644702238>','🐍','🔧','⚡']
-
-                for trigger, emoji in zip(triggers, trigger_emojis):
+                for trigger, emoji in zip(self.triggers, self.trigger_emojis):
                     pattern = r'\b' + escape(trigger) + r'\b'
                     if search(pattern, message.content.lower()):
                         try:
@@ -107,9 +159,8 @@ class Events(commands.Cog):
                             file = discord.File(f)
                             return await message.channel.send(content=f"{message.author.name} stumbled across 500 {zenny} and a wild Wyvern of Marina! ✨", file=file)
                         
-                # is this true
-                wom = next((member for member in message.guild.members if member.bot and member.name == "Wyvern of Marina"), None)
-                if wom and wom.nick and wom.nick.lower() == "wrok":
+                # is this true + react
+                if wom.nick and wom.nick.lower() == "wrok":
                     the_thing=compile(rf"<@!?{wom.id}>\s+is this true[\s\?\!\.\,]*$", IGNORECASE)
                     if the_thing.fullmatch(message.content.strip()):
                         if assert_cooldown("itt") != 0:
@@ -118,6 +169,14 @@ class Events(commands.Cog):
                             async with message.channel.typing():
                                 await asyncio.sleep(1)
                                 await message.reply(choice(self.reply_choices), mention_author=False)
+                the_thing2=compile(rf"<@!?{wom.id}>\s+react please[\s\?\!\.\,]*$", IGNORECASE)
+                if the_thing2.fullmatch(message.content.strip()):
+                    if assert_cooldown("react") != 0:
+                        await shark_react(message)
+                    else:
+                        async with message.channel.typing():
+                            await asyncio.sleep(3)
+                            await message.reply(choice(self.reactions), mention_author=False)
                     
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
