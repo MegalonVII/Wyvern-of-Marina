@@ -9,7 +9,7 @@ from re import IGNORECASE
 from random import randint, choice
 
 from utils import lists, zenny, starboard_emoji, shame_emoji, user_info, snipe_data, editsnipe_data # utils direct values
-from utils import assert_cooldown, shark_react, add_coins, reply, direct_to_bank, check_reaction_board, add_to_board, create_list, create_birthday_list, add_item # utils functions
+from utils import assert_cooldown, shark_react, wups, add_coins, reply, direct_to_bank, check_reaction_board, add_to_board, create_list, create_birthday_list, add_item # utils functions
 
 # bot events start here
 # on_message, on_command_error, on_message_delete, on_message_edit, on_member_join, on_member_update, on_member_ban, on_reaction_add, on_member_remove, wish_birthday
@@ -859,13 +859,17 @@ class Events(commands.Cog):
                             return await message.channel.send(content=f"{message.author.name} stumbled across 500 {zenny} and a wild Wyvern of Marina! ✨", file=file)
                         
                 # is this true + react
-                if wom.nick and wom.nick.lower() == "wrok" and the_thing.fullmatch(content):
-                    if assert_cooldown("itt") != 0:
-                        await shark_react(message)
+                if the_thing.fullmatch(content):
+                    if wom.nick and wom.nick.lower() == "wrok":
+                        if assert_cooldown("itt") != 0:
+                            await shark_react(message)
+                        else:
+                            async with message.channel.typing():
+                                await asyncio.sleep(1)
+                                await message.reply(choice(self.reply_choices), mention_author=False)
                     else:
-                        async with message.channel.typing():
-                            await asyncio.sleep(1)
-                            await message.reply(choice(self.reply_choices), mention_author=False)
+                        await shark_react(message)
+                        await message.reply("Wups! I need to be nicknamed \"Wrok\" for this to work...", mention_author=False)
                 elif the_thing2.fullmatch(content):
                     if assert_cooldown("react") != 0:
                         await shark_react(message)
