@@ -72,7 +72,7 @@ class Flair(commands.Cog):
             if role is None:
                 return await wups(ctx, "Invalid role")
             if role.name not in list(lists["flairs"].keys()): # checks if it is a flair
-                return await (ctx, "Wups! That is not a self-assignable role")
+                return await wups(ctx, "That is not a self-assignable role")
             
             hasRole = False # checks if the user already has the role
             for userRole in ctx.author.roles:
