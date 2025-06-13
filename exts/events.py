@@ -24,6 +24,7 @@ class Events(commands.Cog):
             'fat',
             'yuri',
             'yaoi',
+            'ffxiv',
             'crank',
             'kys'
         ]
@@ -34,7 +35,8 @@ class Events(commands.Cog):
             '<:wednesday:798691076092198993>',
             '<:bulbous:1028536648922832956>',
             '<:vers:804766992644702238>',
-            '🐍',
+            '<:packrat:1094890437099143198>',
+            '<:vinesound1:808037201525866496>',
             '🔧',
             '⚡'
         ]
