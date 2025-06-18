@@ -25,6 +25,7 @@ class Events(commands.Cog):
             'yuri',
             'yaoi',
             'ffxiv',
+            'chud',
             'crank',
             'kys'
         ]
@@ -37,6 +38,7 @@ class Events(commands.Cog):
             '<:vers:804766992644702238>',
             '<:packrat:1094890437099143198>',
             '<:vinesound1:808037201525866496>',
+            '<:nothingeverhappens:1384701769061236837>',
             '🔧',
             '⚡'
         ]
