@@ -145,4 +145,3 @@ async def on_ready():
 # everything has finally been set up
 # we can now run the bot
 bot.run(TOKEN)
-# PLEASE IGNORE THIS COMMENT, I AM TESTING A NEW THING!!!
