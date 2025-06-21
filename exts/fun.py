@@ -104,8 +104,16 @@ class Fun(commands.Cog):
             'dreamcast': { # retroarch
                 "links": ["[RetroArch](<https://www.retroarch.com/?page=platforms>)", "[ROMs](<https://myrient.erista.me/files/Redump/Sega%20-%20Dreamcast/>)"],
                 "instructions": "1. Download the emulator for your platform. Do NOT download from Steam!\n2. Download your ROM of choice from the vault. Extract the ROM from the archive to a location of your choice.\n3. In RetroArch, navigate to `Main Menu > Online Updater > Core Downloader`. On a computer, the arrow keys are navigator, the Z key is to back out, and the X key is to advance.\n4. Scroll down to `Sega - Dreamcast/Naomi (Flycast)` and select it.\n5. Back out to the `Main Menu`, select `Load Content`. Select the appropriate drive where you stored your ROM. (i.e. the C:// drive).\n6. Navigate to the location of your ROM. Select your ROM.\n\\- If you need to, press `F1` (or `fn + F1`) on your keyboard to open the quick menu. Scroll down to `Controls` and reconfigure `Port 1 Controls` as you need.\n\\- From now on, whenever you open RetroArch quick access to your ROM will be located in the `History` section at the start. In that section, just select the ROM from the list and then hit `Play`.\n\\- To add more ROMs to your history, simply repeat steps 2, 5, and 6."
+            },
+            'xbox': { # xemu
+                "links": ["[Xemu](<https://xemu.app/docs/download/>)", "[ROMs](<https://myrient.erista.me/files/Redump/Microsoft%20-%20Xbox/>)", "[BIOS](<https://github.com/K3V1991/Xbox-Emulator-Files/releases>)"],
+                "instructions": "1. Download the emulator for your platform.\n2. Download your ROM of choice from the vault. Extract the ROM from the archive to a location of your choice. Make sure to download as `.xiso.iso`!\n3. Download the BIOS files from the latest release of the repository.\n4. When you open Xemu, you should see a button popup to open the Settings. Click on it.\n5. Locate and assign the required files by clicking on each file icon: for `MCPX Boot ROM`, select `mcpx_1.0.bin` from the `mcpx` folder; for `Flash ROM (BIOS)`, select `Complex_4627.bin` from the `bios` folder; and for `Hard Disk`, select `xbox_hdd.qcow2` from the `hdd` folder in your downloaded BIOS folder.\n6. Plug in a controller of choice. In the input settings, select your controller. Xemu will automatically map it.\n7. Configure display settings as you'd like, but set the backend to Vulkan!\n8. Click out of the settings window, then close out of Xemu.\n9. Reopen Xemu. Click on `Machine > Load Disc`. Navigate to your ROM of choice and select it.\n10. Close out of Xemu and reopen it. Your game will boot up!\n\\- From now on, whenever you open Xemu you will automatically boot into the last game you played.\n\\- To change out your game, click on `Machine > Eject Disc`, close out of Xemu, then repeat steps 2, 9, and 10."
             }
-            # add xbox, so this command can finally be finished
+            # add xbox360 so this can finally be finished
+            # 'xbox360': {
+            #    "links": [],
+            #    "instructions": ""
+            # }
         }
         self.currentFight = False
 
@@ -390,7 +398,7 @@ class Fun(commands.Cog):
     async def emulation(self, ctx, console: str = "guide"):
         if await cog_check(ctx) and (await in_channels(ctx, ["gamig", "gamig-2-coming-soon", "wom-shenanigans"], False) or await in_threads(ctx, ['Rip-bozotendo'], False)):
             if console == "guide":
-                return await reply(ctx, "# __Emulation Wiki__\n\n## This is a wiki on how to get emulators for various systems set up on a PC!\n\n__**List of Valid Consoles**__ (enter as `!w emulation (console name)`)\n- NES\n- SNES\n- N64\n- GameCube\n- Wii\n- Wii U (enter as \"WiiU\")\n- GameBoy (enter as \"GB\")\n- GameBoy Color (enter as \"GBC\")\n- GameBoy Advance (enter as \"GBA\")\n- DS\n- 3DS\n- Switch\n- PS1\n- PS2\n- PS3\n- PSP\n- PS Vita (enter as \"PSVita\")\n- Master System (enter as \"MasterSystem\")\n- Genesis\n- Saturn\n- Dreamcast")
+                return await reply(ctx, "# __Emulation Wiki__\n\n## This is a wiki on how to get emulators for various systems set up on a PC!\n\n__**List of Valid Consoles**__ (enter as `!w emulation (console name)`)\n- NES\n- SNES\n- N64\n- GameCube\n- Wii\n- Wii U (enter as \"WiiU\")\n- GameBoy (enter as \"GB\")\n- GameBoy Color (enter as \"GBC\")\n- GameBoy Advance (enter as \"GBA\")\n- DS\n- 3DS\n- Switch\n- PS1\n- PS2\n- PS3\n- PSP\n- PS Vita (enter as \"PSVita\")\n- Master System (enter as \"MasterSystem\")\n- Genesis\n- Saturn\n- Dreamcast\n- Xbox")
             elif console.lower() not in self.consoles.keys():
                 return await wups(ctx, "You entered a console that isn't on the list of valid consoles. Please refer to the list by entering `!w emulation`")
 
