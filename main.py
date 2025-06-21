@@ -140,7 +140,7 @@ async def on_ready():
             if not str(member.id) in lists["karma"].keys():
                 add_item("karma", member.id, 2)
 
-    return print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\n" + get_login_time('Europe/Amsterdam')) # fully logged in with everything loaded in the backend. chose the timezone as cest because that's where airi is based in
+    return print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\n" + get_login_time('America/Los_Angeles')) # fully logged in with everything loaded in the backend. chose the timezone as cest because that's where i am based in
 
 # everything has finally been set up
 # we can now run the bot
