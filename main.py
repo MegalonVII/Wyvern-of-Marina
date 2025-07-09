@@ -16,106 +16,111 @@ bot=commands.Bot(command_prefix = '!w ', intents=discord.Intents.all())
 bot.remove_command('help')
 extensions=['fun', 'economy', 'admin', 'flair', 'misc', 'birthday', 'music', 'events']
 
-# bot help command redifined
+# bot help command
 @bot.command(name='help')
-async def help(ctx, page:int=0):
+async def help(ctx, page: str = "home"):
+    page = page.lower()
+
     command_info = {
-        0: ('Need help?', [
-            ('!w help 1', 'All the fun commands for everyone to enjoy!'), 
-            ('!w help 2', 'All the fun economy commands!'), 
-            ('!w help 3', 'All the administrative commands.'), 
-            ('!w help 4', 'All the flair commands.'), 
-            ('!w help 5', 'All the birthday commands.'), 
-            ('!w help 6', 'All the musical commands.'), 
-            ('!w help 7', 'All the miscellaneous commands.')
+        "home": ('Need help?', [
+            ('!w help fun', 'All the fun commands for everyone to enjoy!'), 
+            ('!w help economy', 'All the fun economy commands!'), 
+            ('!w help admin', 'All the administrative commands.'), 
+            ('!w help flair', 'All the flair commands.'), 
+            ('!w help birthday', 'All the birthday commands.'), 
+            ('!w help music', 'All the musical commands.'), 
+            ('!w help misc', 'All the miscellaneous commands.')
         ]),
-        1: ('Fun Commands', [
+        "fun": ('Fun Commands', [
             ('!w say', 'Type something after the command for me to repeat it.'),
             ('!w customcommands', 'Displays a list of the server\'s custom commands.'),
-            ('!w snipe', 'Snipes the last deleted message in that channel. Only the first media attachment will be sniped from the message. Keep in mind, you only have 60 seconds to snipe the deleted message!'),
+            ('!w snipe', 'Snipes the last deleted message in that channel...'),
             ('!w editsnipe', 'Acts just like !w snipe, only for messages that were edited instead of deleted.'),
-            ('!w choose (any number of options, separated by a space)', 'Chooses a random option from all the options that you give me.'),
-            ('!w pokedex (number between 1 and 1017)', 'Returns information about said Pokémon at the given index!'),
-            ('!w who (remainder of question)', 'I\'ll tell you the name of a random member who fits this description.'),
-            ('!w howgay ([Optional] @member)', 'I\'ll tell you either how gay you are or how gay the user you mention is.'),
+            ('!w choose (any number of options, separated by a space)', 'Chooses a random option...'),
+            ('!w pokedex (number between 1 and 1017)', 'Returns information about said Pokémon...'),
+            ('!w who (remainder of question)', 'I\'ll tell you the name of a random member...'),
+            ('!w howgay ([Optional] @member)', 'I\'ll tell you either how gay you are...'),
             ('!w rps (your choice)', 'Play a simple game of Rock-Paper-Scissors with me!'),
-            ('!w 8ball (question)', 'I\'ll give you the magic response to your yes or no question!'),
+            ('!w 8ball (question)', 'I\'ll give you the magic response...'),
             ('!w roulette ([Admin Only] @member)', 'Try your luck... 😈'),
-            ('!w trivia ([Optional] type)', 'I\'ll give you a multiple-choice trivia question. If you do not provide a type, it will be a random question on either general knowledge or some form of media. If you do, the types you may choose from are "general", "music", "film", "tv", "games", or "anime".'),
-            ('!w emulation', 'A wiki for how to set up emulators for a variety of consoles!'),
+            ('!w trivia ([Optional] type)', 'I\'ll give you a multiple-choice trivia question...'),
+            ('!w emulation', 'A wiki for how to set up emulators...'),
             ('!w quote', 'Returns a random quote from a video game!'),
             ('!w deathbattle (@user)', 'Fight someone... 🤠'),
             ('!w ship (phrase1) (phrase2)', 'In the mood for some love? 😏')
         ]),
-        2: ('Economical Commands', [
+        "economy": ('Economical Commands', [
             ('!w slots', 'Win some Zenny! 🤑'),
-            ('!w bet (amount)', 'Bet your Zenny for double that bet if you roll 2 dice and they both result to 7.'),
+            ('!w bet (amount)', 'Bet your Zenny for double...'),
             ('!w steal (@member)', 'Do a little bit of thievery... 😈'),
             ('!w heist', 'Indulge in a life of crime... 🤠'),
             ('!w deposit (amount)', 'Deposit your Zenny to the bank!'),
             ('!w withdraw (amount)', 'Withdraw the Zenny in your bank account!'),
-            ('!w balance ([Optional] @member)', 'I\'ll tell you how much Zenny you or the person you mention have. It will cost you to peer into someone else\'s balance!'),
+            ('!w balance ([Optional] @member)', 'I\'ll tell you how much Zenny you or the person you mention have...'),
             ('!w bankbalance', 'I\'ll tell you how much Zenny you have in the bank.'),
             ('!w paypal (@member) (amount)', 'Pay your pal some Zenny!'),
             ('!w marketplace', 'I\'ll show you all the items that you can buy with Zenny!'),
-            ('!w buy (item name) ([Optional] number requested)', 'If you have enough Zenny, you may buy an item from the Marketplace! Number value defaults to 1.'),
-            ('!w sell (item name) ([Optional] number requested)', 'Sell an item in your inventory for half the price. Number value defaults to 1.'),
+            ('!w buy (item name) ([Optional] number requested)', 'If you have enough Zenny...'),
+            ('!w sell (item name) ([Optional] number requested)', 'Sell an item in your inventory...'),
             ('!w inventory', 'I\'ll tell you the items that you have!'),
-            ('!w use (item name)', 'If you purchased the item you give me, you may use it!')
+            ('!w use (item name)', 'If you purchased the item... you may use it!')
         ]),
-        3: ('Administrative Commands', [
-            ('!w createcommand (name) (output)', 'Create your own commands that make me send custom text or links.'),
+        "admin": ('Administrative Commands', [
+            ('!w createcommand (name) (output)', 'Create your own commands...'),
             ('!w deletecommand (name)', 'Delete commands that have already been created.'),
-            ('!w clear (number of messages)', 'Deletes the last number you specify of messages from the specific chat. To avoid rate limits, please enter a number between 1 and 10.'),
-            ('!w kick (@member)', 'Kicks the mentioned member from the server.'),
-            ('!w ban (@member)', 'Bans the mentioned member from the server.'),
-            ('!w mute (@member) (time amount)(s, m, h, d, or w)', 'Mutes the mentioned member for the given time amount. \"s\" for seconds, \"m\" for minutes, \"h\" for hours, \"d\" for days, and \"w\" for weeks. No space in between the time amount and the letter!'),
+            ('!w clear (number of messages)', 'Deletes the last number you specify of messages...'),
+            ('!w kick (@member)', 'Kicks the mentioned member...'),
+            ('!w ban (@member)', 'Bans the mentioned member...'),
+            ('!w mute (@member) (time amount)(s, m, h, d, or w)', 'Mutes the mentioned member...'),
             ('!w unmute (@member)', 'Unmutes the mentioned member.')
-        ]), 
-        4: ('Flair Commands', [
+        ]),
+        "flair": ('Flair Commands', [
             ('!w addflair (@role) [Admin Only]', 'Adds this role as a flair to this server.'),
-            ('!w deleteflair (@role) [Admin Only]', 'Removes this role as a flair from this server.'),
+            ('!w deleteflair (@role) [Admin Only]', 'Removes this role as a flair...'),
             ('!w listflairs', 'Lists all the flairs for this server.'),
             ('!w im (role name)', 'Gives or removes the flair you ask for.')
         ]),
-        5: ('Birthday Commands', [
-            ('!w birthday', 'Register your birthday with me so I can wish you a happy birthday!'),
+        "birthday": ('Birthday Commands', [
+            ('!w birthday', 'Register your birthday...'),
             ('!w birthdaylist', 'See a list of all birthdays in the server!')
         ]),
-        6: ('Musical Commands', [
-            ('!w join', 'Joins the voice chat that you are in'),
-            ('!w leave', 'Leaves the voice chat that I am in'),
-            ('!w play (YouTube URL or search query)', 'While I\'m in voice call, I will play the song from the YouTube URL or search query you provide me.'),
-            ('!w now', 'Displays the current song that I\'m playing in a voice call'),
-            ('!w queue (optional: page number)', 'Displays the queue of songs to play in voice call. Page value defaults to 1. Each page displays the first 10 songs in the queue'),
-            ('!w shuffle', 'Shuffles the current queue of songs for voice calls. *[DJs/Admin Only]*'),
-            ('!w remove (index)', 'Removes the song at the provided index from the queue of songs for voice calls.'),
-            ('!w pause', 'Pauses any music that I\'m playing in a call.'),
-            ('!w resume', 'Resumes any paused music in a call.'),
-            ('!w stop', 'Stops any playing music in a call entirely.'),
-            ('!w skip', 'In a voice call, skips the current playing song to the next one in the queue. Only the song requester can do this, though DJs and Admins are unaffected.'),
-            ('!w grabber (platform) (song name)', 'Yar har, me mateys! Sail the high seas and let me give you music from streaming platforms! 🏴‍☠️ (Platform must be one of the following: Spotify, YouTube, SoundCloud. If platform is SoundCloud, query must be a soundcloud.com link.)')
+        "music": ('Musical Commands', [
+            ('!w join', 'Joins the voice chat...'),
+            ('!w leave', 'Leaves the voice chat...'),
+            ('!w play (YouTube URL or search query)', 'While I\'m in voice call, I will play the song...'),
+            ('!w now', 'Displays the current song...'),
+            ('!w queue (optional: page number)', 'Displays the queue of songs...'),
+            ('!w shuffle', 'Shuffles the current queue...'),
+            ('!w remove (index)', 'Removes the song at the provided index...'),
+            ('!w pause', 'Pauses any music...'),
+            ('!w resume', 'Resumes any paused music...'),
+            ('!w stop', 'Stops any playing music...'),
+            ('!w skip', 'Skips the current playing song...'),
+            ('!w grabber (platform) (song name)', 'Yar har, me mateys!...')
         ]),
-        7: ('Miscellaneous Commands', [
-            ('!w ping', 'Returns my response time in milliseconds.'),
-            ('!w whomuted', 'Returns the name of every member who is currently muted.'),
-            ('!w avatar ([Optional] @member)', 'I\'ll send you the avatar of the given user. Defaults to yourself.'),
-            ('!w emote (emote from this server)', 'Returns information of the given emote. It MUST be from this server!'),
-            ('!w convert (number) (original unit) (new unit)', 'Convert a number of units to another unit! Supported units include F, C, m, ft, kg, lb, mi, km, in, and cm. Supported conversions include F <-> C, ft <-> m, lb <-> kg, mi <-> km, and in <-> cm.'),
-            ('!w translate (phrase)', 'Translates any given phrase to English! Be weary that I might not be 100 percent accurate with my translations.')
+        "misc": ('Miscellaneous Commands', [
+            ('!w ping', 'Returns my response time...'),
+            ('!w whomuted', 'Returns the name of every member...'),
+            ('!w avatar ([Optional] @member)', 'I\'ll send you the avatar...'),
+            ('!w emote (emote from this server)', 'Returns information of the given emote...'),
+            ('!w convert (number) (original unit) (new unit)', 'Convert a number of units...'),
+            ('!w translate (phrase)', 'Translates any given phrase...')
         ])
     }
 
-    embed = discord.Embed(color = discord.Color.purple())
-    if page < 0 or page > len(command_info) - 1:
-        return await wups(ctx, 'Invalid page number')
+    if page not in command_info:
+        options = ", ".join(f"`{key}`" for key in list(command_info.keys())[1:])
+        return await wups(ctx, f'Invalid page name. Try one of: {options}')
 
+    embed = discord.Embed(color=discord.Color.purple())
     embed.title = command_info[page][0]
+
     for name, value in command_info[page][1]:
         embed.add_field(name=name, value=value, inline=False)
 
-    if page > 0:
-        embed.set_footer(text=f'Viewing page {page}/{len(command_info) - 1}')
+    if page != "home":
+        embed.set_footer(text=f'Viewing page: {page}')
+    
     embed.set_thumbnail(url=bot.user.avatar.url)
     return await ctx.reply(embed=embed, mention_author=False)
 
