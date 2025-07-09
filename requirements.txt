@@ -1,4 +1,4 @@
-discord
+git+https://github.com/Rapptz/discord.py.git@master#egg=discord.py
 pandas
 pypokedex
 pytz
