@@ -5,7 +5,7 @@ pytz
 requests
 urllib3
 python-dotenv
-yt_dlp
+yt_dlp==2025.04.30
 colorama
 pynacl
 spotdl

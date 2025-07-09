@@ -883,8 +883,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if not ctx.message.content.split()[1] in list(lists["commands"].keys()):
-            await shark_react(ctx.message)    
-            return await reply(ctx, f'Wups! Try "!w help"... ({error})')
+            return await wups(ctx, f'Try "!w help" ({error})')
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
