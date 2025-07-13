@@ -301,15 +301,18 @@ async def add_to_board(message, board_type):
     embed.add_field(name='Channel', value=f'<#{message.channel.id}>', inline=True)
     embed.add_field(name='Message', value=f'{str(message.content)}', inline=True)
 
-    id = message.author.id
-    karma = int(lists["karma"][str(id)])
-    if board_name == "hot-seat":
-        if karma < 6:
-            add_item("karma", id, 1)
-    else:
-        if karma > 2:
-            if subtract_item("karma", id, 1):
-                pass
+    try:
+        id = message.author.id
+        karma = int(lists["karma"][str(id)])
+        if board_name == "hot-seat":
+            if karma < 6:
+                add_item("karma", id, 1)
+        else:
+            if karma > 2:
+                if subtract_item("karma", id, 1):
+                    pass
+    except:
+        pass # probably a bot
 
     if message.attachments:
         embed.set_image(url=message.attachments[0].url)
