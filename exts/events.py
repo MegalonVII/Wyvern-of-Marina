@@ -27,12 +27,13 @@ class Events(commands.Cog):
             'ffxiv',
             'chud',
             'crank',
-            'kys'
+            'kys',
+            'persona'
         ]
         self.trigger_emojis = [
             '<:full:1028536660918550568>',
             '<:megalon:1078914494132129802>',
-            '<:megalon:1078914494132129802>',
+            '<:megalon2:1395668583643615295>',
             '<:wednesday:798691076092198993>',
             '<:bulbous:1028536648922832956>',
             '<:vers:804766992644702238>',
@@ -40,7 +41,8 @@ class Events(commands.Cog):
             '<:vinesound1:808037201525866496>',
             '<:nothingeverhappens:1384703408509947934>',
             '🔧',
-            '⚡'
+            '⚡',
+            '🚿'
         ]
         self.games = [
             "Monster Hunter 4 Ultimate", 
