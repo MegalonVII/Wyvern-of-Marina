@@ -606,3 +606,8 @@ async def cog_check(ctx):
 
 def get_login_time(tz: str) -> str:
     return f"Time: {datetime.now(timezone(tz)).strftime('%m/%d/%Y, %I:%M:%S %p')}\nTimezone: {tz}\n"
+
+def load_info(info: str):
+    file_path = os.path.join(os.path.dirname(__file__), "docs", f"{info}.txt")
+    with open(file_path, "r", encoding="utf-8") as file:
+        return [line.strip() for line in file if line.strip()]
