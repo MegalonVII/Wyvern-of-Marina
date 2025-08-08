@@ -836,7 +836,7 @@ class Events(commands.Cog):
 
                 # message phrase triggers
                 if message.content.lower() == "skill issue":
-                    await message.channel.send(file=discord.File("skill issue.gif"))
+                    await message.channel.send(file=discord.File("docs/skill issue.gif"))
                 if message.content.lower() == "me":
                     await message.channel.send('<:WoM:836128658828558336>')
                 if message.content.lower() == "which":
@@ -858,7 +858,7 @@ class Events(commands.Cog):
                 if randint(1,8192) == 1:  
                     if not message.channel.name in ['venting', 'serious-talk']:
                         direct_to_bank(message.author.id,500)
-                        with open("shiny.png", "rb") as f:
+                        with open("docs/shiny.png", "rb") as f:
                             file = discord.File(f)
                             return await message.channel.send(content=f"{message.author.name} stumbled across 500 {zenny} and a wild Wyvern of Marina! ✨", file=file)
                         
@@ -978,7 +978,7 @@ class Events(commands.Cog):
             time_person_exact = [int(time_person.strftime('%H')), int(time_person.strftime('%M')), int(time_person.strftime('%S'))]
 
             if time_person_date == user_info[key]['birthdate'] and time_person_exact == [0,0,0]:
-                await self.bot.guilds[0].system_channel.send(content=f'<:luv:765073937645305896> 🎉 Happy Birthday, <@{int(key)}>! {choice(self.messages)} 🎂 <:luv:765073937645305896>', file=discord.File("mario-birthday.gif"))
+                await self.bot.guilds[0].system_channel.send(content=f'<:luv:765073937645305896> 🎉 Happy Birthday, <@{int(key)}>! {choice(self.messages)} 🎂 <:luv:765073937645305896>', file=discord.File("docs/mario-birthday.gif"))
 
     @tasks.loop(hours=3)
     async def set_game_presence(self):
