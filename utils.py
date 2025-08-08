@@ -226,7 +226,7 @@ class VoiceState:
 
 
 # bot helper functions
-# create_list, update_birthday, check_reaction_board, reply, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, in_channels, in_threads, assert_cooldown, capitalize_string, parse_total_duration, shark_react, wups, cog_check, get_login_time
+# create_list, update_birthday, check_reaction_board, reply, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, in_channels, in_threads, assert_cooldown, capitalize_string, parse_total_duration, shark_react, wups, cog_check, get_login_time, load_info
 def create_list(filename):
     file_checks[filename]=False
     if not os.path.exists(f'csv/{filename}.csv'):

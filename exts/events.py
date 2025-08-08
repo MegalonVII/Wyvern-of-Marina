@@ -43,7 +43,7 @@ class Events(commands.Cog):
 
                 # message phrase triggers
                 if message.content.lower() == "skill issue":
-                    await message.channel.send(file=discord.File("docs/skill issue.gif"))
+                    await message.channel.send(file=discord.File("docs/skill-issue.gif"))
                 if message.content.lower() == "me":
                     await message.channel.send('<:WoM:836128658828558336>')
                 if message.content.lower() == "which":
