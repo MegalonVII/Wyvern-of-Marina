@@ -453,9 +453,9 @@ class Fun(commands.Cog):
                     await asyncio.sleep(2)
                     determinant = random.randint(1, 5)
                     if determinant == 1:
-                        response = action + self.deaths[choiceNum]
+                        response = action + f" {self.deaths[choiceNum]}"
                     else:
-                        response = action + self.survivals[choiceNum]
+                        response = action + f" {self.survivals[choiceNum]}"
                     await msg.edit(content=response.format(actor.name, target.name, target.name), allowed_mentions=am)
                     if determinant == 1:
                         self.currentFight = False
