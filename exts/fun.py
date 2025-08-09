@@ -9,17 +9,16 @@ import urllib.parse
 import pypokedex as dex
 
 from utils import lists, snipe_data, editsnipe_data, zenny # utils direct values
-from utils import cog_check, shark_react, reply, wups, capitalize_string, assert_cooldown, in_wom_shenanigans, add_coins, in_channels, in_threads # utils functions
+from utils import cog_check, shark_react, reply, wups, capitalize_string, assert_cooldown, in_wom_shenanigans, add_coins, in_channels, in_threads, load_info # utils functions
 
 # fun commands start here
 # say, custc, snipe, esnipe, choose, pokedex, who, howgay, rps, 8ball, roulette, trivia, emulation, quote, deathbattle, ship
 class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.actions = ["{} poisons {}'s drink!", "{} places a frag mine beneath {}'s feet!", "{} passes {} a blunt!", "{} burns down {}'s house!"]
-        self.deaths = [" {} dies of dysentery!", " {} explodes!", " {} took one hit of the Blunt9000™️ and descends straight to Hell!", " {} got caught in the fire and burns down to a crisp!"]
-        self.survivals = [" {} noticed this and gets another drink...", " {} quickly steps aside...", " {} kindly rejects the offer...", " {} quickly got out of the fire and finds shelter elsewhere..."]
-        self.shipNotes = ["Ugh! How did you two even become friends in the first place?", "You two are just better off as friends...", "Don't ruin your friendship over this...", "Take it easy now...", "Something might be sparking...", "I could potentially see it happening.", "Maybe it could work!", "You two should try going out on casual dates!", "Give it a shot!", "It's a match made in Heaven!", "I don't think it's possible to create a better pairing!"]
+        self.info = ["actions", "deaths", "survivals", "shipNotes"]
+        for item in self.info:
+            setattr(self, item, load_info(item))
         self.consoles = {
             'nes': { # retroarch
                 "links": ["[RetroArch](<https://www.retroarch.com/?page=platforms>)", "[ROMs](<https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20Entertainment%20System%20%28Headered%29/>)"],

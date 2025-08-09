@@ -1,0 +1,4 @@
+{} poisons {}'s drink!
+{} places a frag mine beneath {}'s feet!
+{} passes {} a blunt!
+{} burns down {}'s house!
