@@ -5,17 +5,17 @@ from asyncio import sleep, TimeoutError
 from math import ceil
 
 from utils import zenny, prev_steal_targets, target_counts, lists # utils direct values
-from utils import cog_check, in_wom_shenanigans, assert_cooldown, wups, reply, subtract_coins, add_coins, stolen_funds, dep, wd, add_item, subtract_item, direct_to_bank # utils functions
+from utils import cog_check, in_wom_shenanigans, assert_cooldown, wups, reply, subtract_coins, add_coins, stolen_funds, dep, wd, add_item, subtract_item, direct_to_bank, load_info # utils functions
 
 # economy commands
 # slots, bet, steal, heist, dep, wd, bal, bankbal, paypal, mp, buy, sell, inv, use
 class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.items = ['bomb','ticket', 'letter', 'shell', 'banana']
-        self.prices = [10000, 2500, 1000, 500, 10]
-        self.priceStrs = ['10,000', '2,500', '1,000', '500', '10']
-        self.descs = ['Siphon half of the Zenny from a random person that they have in the bank!', 'Redeem this ticket for a custom role!', 'Send a letter to anyone in this server!', 'Siphon half of the Zenny from a random person that they have on hand!', 'Grab this illusive, mysterious banana!']
+        self.info = ['items', 'priceStrs', 'descs']
+        for item in self.info:
+            setattr(self, item, load_info(item))
+        self.prices = [int(s.replace(',', '')) for s in self.priceStrs]
   
     @commands.command(name='slots')
     async def slots(self, ctx):
