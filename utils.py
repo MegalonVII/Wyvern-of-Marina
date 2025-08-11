@@ -611,3 +611,25 @@ def load_info(info: str):
     file_path = os.path.join(os.path.dirname(__file__), "docs", f"{info}.txt")
     with open(file_path, "r", encoding="utf-8") as file:
         return [line.strip() for line in file if line.strip()]
+
+def load_emulation():
+    file_path = os.path.join(os.path.dirname(__file__), "docs", "consoles.txt")
+    with open(file_path, "r", encoding="utf-8") as file:
+        emuDict = {
+            line.strip(): {
+                "links": [],
+                "instructions": ""
+            }
+            for line in file if line.strip()
+        }
+    file_path = os.path.join(os.path.dirname(__file__), "docs", "links.txt")
+    with open(file_path, "r", encoding="utf-8") as file:
+        for key in emuDict.keys():
+            line = file.readline().strip()
+            emuDict[key]["links"] = [part.strip() for part in line.split(",")]
+    file_path = os.path.join(os.path.dirname(__file__), "docs", "instructions.txt")
+    with open(file_path, "r", encoding="utf-8") as file:
+        for key in emuDict.keys():
+            emuDict[key]["instructions"] = file.readline().strip().replace("\\n", "\n")
+
+    return emuDict
