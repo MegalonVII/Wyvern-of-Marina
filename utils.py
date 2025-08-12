@@ -295,41 +295,43 @@ async def add_to_board(message, board_type):
     board_text = "⭐" if board_type == "starboard" else "🍅"
 
     channel = discord.utils.get(message.guild.channels, name=board_name)
+    already_on_board = False
+    async for msg in channel.history():
+        if msg.embeds and msg.embeds[0].description == f'[Original Message]({message.jump_url})':
+            already_on_board = True
+            break
+
     embed = discord.Embed(color=discord.Color.gold(), description=f'[Original Message]({message.jump_url})')
     embed.set_author(name=message.author.name, icon_url=message.author.avatar.url)
     embed.set_thumbnail(url=message.author.avatar.url)
     embed.add_field(name='Channel', value=f'<#{message.channel.id}>', inline=True)
     embed.add_field(name='Message', value=f'{str(message.content)}', inline=True)
 
-    try:
-        id = message.author.id
-        karma = int(lists["karma"][str(id)])
-        if board_name == "hot-seat":
-            if karma < 6:
-                add_item("karma", id, 1)
-        else:
-            if karma > 2:
-                if subtract_item("karma", id, 1):
-                    pass
-    except:
-        pass # probably a bot
+    if not already_on_board:
+        try:
+            id = message.author.id
+            karma = int(lists["karma"][str(id)])
+            if board_name == "hot-seat":
+                if karma < 6:
+                    add_item("karma", id, 1)
+            else:
+                if karma > 2:
+                    if subtract_item("karma", id, 1):
+                        pass
+        except:
+            pass # probably a bot
 
     if message.attachments:
         embed.set_image(url=message.attachments[0].url)
+
     for reaction in message.reactions:
         if str(reaction.emoji) == board_emoji:
             board_reaction = reaction
             embed.set_footer(text=f'{board_reaction.count} {board_text}')
             break
-    async for board_msg in channel.history():
-        if board_msg.embeds and board_msg.embeds[0].description == f'[Original Message]({message.jump_url})':
-            embed = board_msg.embeds[0]
-            for reaction in message.reactions:
-                if str(reaction.emoji) == board_emoji:
-                    board_reaction = reaction
-                    embed.set_footer(text=f'{board_reaction.count} {board_text}')
-                    break
-            return await board_msg.edit(embed=embed)
+
+    if already_on_board:
+        return await board_msg.edit(embed=embed)
     return await channel.send(embed=embed)
 
 async def reply(ctx, content: str):
