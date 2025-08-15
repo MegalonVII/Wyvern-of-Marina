@@ -296,9 +296,12 @@ async def add_to_board(message, board_type):
 
     channel = discord.utils.get(message.guild.channels, name=board_name)
     already_on_board = False
+    board_msg = None
+
     async for msg in channel.history():
         if msg.embeds and msg.embeds[0].description == f'[Original Message]({message.jump_url})':
             already_on_board = True
+            board_msg = msg
             break
 
     embed = discord.Embed(color=discord.Color.gold(), description=f'[Original Message]({message.jump_url})')
@@ -330,9 +333,10 @@ async def add_to_board(message, board_type):
             embed.set_footer(text=f'{board_reaction.count} {board_text}')
             break
 
-    if already_on_board:
+    if already_on_board and board_msg is not None:
         return await board_msg.edit(embed=embed)
-    return await channel.send(embed=embed)
+    else:
+        return await channel.send(embed=embed)
 
 async def reply(ctx, content: str):
     return await ctx.reply(content, mention_author=False)

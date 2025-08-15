@@ -28,9 +28,13 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         # variable decs for ping triggers
-        wom = next((member for member in message.guild.members if member.bot and member.name == "Wyvern of Marina" or member.name == "Neel of Marina"), None)
-        the_thing = compile(rf"<@!?{wom.id}>\s+is this true[\s\?\!\.\,]*$", IGNORECASE)
-        the_thing2 = compile(rf"<@!?{wom.id}>\s+.+", IGNORECASE)
+        wom = next((member for member in message.guild.members if member.bot and member.name == "Wyvern of Marina"), None)
+        try:
+            the_thing = compile(rf"<@!?{wom.id}>\s+is this true[\s\?\!\.\,]*$", IGNORECASE)
+            the_thing2 = compile(rf"<@!?{wom.id}>\s+.+", IGNORECASE)
+            # this is just so your test bots don't give on you on_message ignorances in console
+        except:
+            pass
         content = message.content.strip()
 
         if message.guild: # must be in server
@@ -70,25 +74,28 @@ class Events(commands.Cog):
                             return await message.channel.send(content=f"{message.author.name} stumbled across 500 {zenny} and a wild Wyvern of Marina! ✨", file=file)
                         
                 # is this true + react
-                if the_thing.fullmatch(content):
-                    if wom.nick and wom.nick.lower() == "wrok":
-                        if assert_cooldown("itt") != 0:
+                try:
+                    if the_thing.fullmatch(content):
+                        if wom.nick and wom.nick.lower() == "wrok":
+                            if assert_cooldown("itt") != 0:
+                                await shark_react(message)
+                            else:
+                                async with message.channel.typing():
+                                    await asyncio.sleep(1)
+                                    await message.reply(choice(self.reply_choices), mention_author=False)
+                        else:
+                            await shark_react(message)
+                            await message.reply("Wups! I need to be nicknamed \"Wrok\" for this to work...", mention_author=False)
+                    elif the_thing2.fullmatch(content):
+                        if assert_cooldown("react") != 0:
                             await shark_react(message)
                         else:
                             async with message.channel.typing():
-                                await asyncio.sleep(1)
-                                await message.reply(choice(self.reply_choices), mention_author=False)
-                    else:
-                        await shark_react(message)
-                        await message.reply("Wups! I need to be nicknamed \"Wrok\" for this to work...", mention_author=False)
-                elif the_thing2.fullmatch(content):
-                    if assert_cooldown("react") != 0:
-                        await shark_react(message)
-                    else:
-                        async with message.channel.typing():
-                            await asyncio.sleep(3)
-                            await message.reply(choice(self.reactions), mention_author=False)
-                    
+                                await asyncio.sleep(3)
+                                await message.reply(choice(self.reactions), mention_author=False)
+                except:
+                    pass # probably a test bot
+
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if not ctx.message.content.split()[1] in list(lists["commands"].keys()):
