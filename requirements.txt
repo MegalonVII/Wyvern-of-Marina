@@ -8,6 +8,6 @@ python-dotenv
 yt_dlp==2025.04.30
 colorama
 pynacl
-spotdl
+spotdl==4.3.0
 scdl
 audioop-lts
