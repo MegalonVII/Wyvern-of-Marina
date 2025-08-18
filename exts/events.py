@@ -103,31 +103,36 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
-        if not message.content[0:3] == '!w ' or message.author.bot:
-            global snipe_data
-            channel = message.channel.id
-            if message.author.bot:
-                return
-              
-            snipe_data[channel]={"content":str(message.content), "author":message.author, "id":message.id, "attachment":message.attachments[0] if message.attachments else None}
-          
-            await asyncio.sleep(60)
-            if message.id == snipe_data[channel]["id"]:
-                del snipe_data[channel]
+        if message.author.bot or (message.content and message.content.startswith('!w ')):
+            return
+
+        channel = message.channel.id
+        snipe_data[channel] = {
+            "content": str(message.content) if message.content else "",
+            "author": message.author,
+            "id": message.id,
+            "attachment": message.attachments[0] if message.attachments else None
+        }
+
+        await asyncio.sleep(60)
+        if snipe_data.get(channel) and snipe_data[channel]["id"] == message.id:
+            del snipe_data[channel]
 
     @commands.Cog.listener()
     async def on_message_edit(self, message_before, message_after):
-        if not message_after.author.bot:
-            global editsnipe_data
-            channel = message_after.channel.id
-            if message_before.author.bot:
-                return
-              
-            editsnipe_data[channel]={"content":str(message_before.content), "author":message_before.author, "id":message_before.id}
-          
-            await asyncio.sleep(60)
-            if message_before.id == editsnipe_data[channel]["id"]:
-                del editsnipe_data[channel]
+        if message_after.author.bot:
+            return
+
+        channel = message_after.channel.id
+        editsnipe_data[channel] = {
+            "content": str(message_before.content) if message_before.content else "(blank message)",
+            "author": message_after.author,
+            "id": message_after.id
+        }
+
+        await asyncio.sleep(60)
+        if editsnipe_data.get(channel) and editsnipe_data[channel]["id"] == message_after.id:
+            del editsnipe_data[channel]
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
