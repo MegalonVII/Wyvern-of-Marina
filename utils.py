@@ -199,9 +199,15 @@ class VoiceState:
             self.next.clear()
             try:
                 self.current = await self.songs.get()
-            except:
-                self.bot.loop.create_task(self.stop())
+            except asyncio.CancelledError:
+                if self.voice and not self.voice.is_connected():
+                    await self.stop()
                 return
+            except Exception as e:
+                print(f"Unexpected error in audio_player_task: {e}")
+                await self.stop()
+                return
+
             self.current.source.volume = self._volume
             self.voice.play(self.current.source, after=self.play_next_song)
             print(f'{Style.BRIGHT}Playing {Fore.MAGENTA}{self.current.source.__str__()[2:-2]}{Fore.RESET} in {Style.RESET_ALL}{Fore.BLUE}{self.voice.channel.name}{Fore.RESET}')
