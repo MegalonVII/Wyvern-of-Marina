@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from sys import exit
 
 from utils import files, lists # utils direct values
-from utils import create_list, create_birthday_list, get_login_time, wups, add_item # utils functions
+from utils import create_list, create_birthday_list, get_login_time, wups, add_item, add_coins, direct_to_bank # utils functions
 
 # token instantiation
 load_dotenv()
@@ -140,10 +140,16 @@ async def on_ready():
         print(e)
         exit(1)
 
-    for member in bot.guilds[0].members: # mandates user has karma for roulette
+    for member in bot.guilds[0].members: # mandates user has karma for roulette, along with other information
         if not member.bot:
-            if not str(member.id) in lists["karma"].keys():
-                add_item("karma", member.id, 2)
+            id_str = str(member.id)
+            id = member.id
+            if not id_str in lists["karma"].keys():
+                add_item("karma", id, 2)
+            if not id_str in lists["coins"].keys():
+                add_coins(id, 100)
+            if not id_str in lists["bank"].keys():
+                direct_to_bank(id, 0)
 
     return print(f"\nLogged in as: {bot.user.name}\nID: {bot.user.id}\n" + get_login_time('America/Los_Angeles')) # fully logged in with everything loaded in the backend. chose the timezone as cest because that's where i am based in
 

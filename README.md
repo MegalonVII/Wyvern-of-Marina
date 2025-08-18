@@ -1,8 +1,10 @@
 # Wyvern of Marina
-Proprietary Discord bot for the server called "The Marina" written in Discord.py. While the code may be open-source, **it is NOT intended for distribution or reproduction!** The open-source nature is for people in the server to see the inner workings of the bot and join in on the coding if they so choose. 
+All-in-one Discord bot for the server called "The Marina" written in Discord.py. While the code may be open-source, **it is NOT intended for distribution or reproduction!** The source-available nature is for people in the server to see the inner workings of the bot and join in on the coding if they so choose and if I let them.
+
+*Do note that some bot functionality is kept closed source, namely any `.csv` files that the bot creates and maintains. This is for a variety of reasons, including but not limited to personal information of users within the server. In the best interest of user privacy, these files are kept closed.* 
 
 # Commands
-This is also viewable from the `main.py` file in this repo, and also in our Discord server via `!w help`.
+These are also viewable from the `main.py` file in this repo, and also in our Discord server via `!w help`.
 
 ## Fun
 1. `!w say (output)` *Repeats the output given.*
