@@ -125,7 +125,7 @@ class Events(commands.Cog):
 
         channel = message_after.channel.id
         editsnipe_data[channel] = {
-            "content": str(message_before.content) if message_before.content else "(blank message)",
+            "content": str(message_before.content) if message_before.content else "",
             "author": message_after.author,
             "id": message_after.id
         }
