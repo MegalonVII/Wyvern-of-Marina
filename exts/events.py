@@ -191,13 +191,31 @@ class Events(commands.Cog):
 
     @tasks.loop(seconds=1)
     async def wish_birthday(self):
+        marina = self.bot.guilds[0]
+        role = discord.utils.get(marina.roles, name="B-day")
+
         for key in user_info.keys():
             time_person = datetime.now(timezone(user_info[key]['timezone']))
             time_person_date = time_person.strftime('%m-%d')
             time_person_exact = [int(time_person.strftime('%H')), int(time_person.strftime('%M')), int(time_person.strftime('%S'))]
 
             if time_person_date == user_info[key]['birthdate'] and time_person_exact == [0,0,0]:
-                await self.bot.guilds[0].system_channel.send(content=f'<:luv:765073937645305896> 🎉 Happy Birthday, <@{int(key)}>! {choice(self.messages)} 🎂 <:luv:765073937645305896>', file=discord.File("img/mario-birthday.gif"))
+                member = marina.get_member(int(key))
+                if member:
+                    await marina.system_channel.send(
+                        content=f'<:luv:765073937645305896> 🎉 Happy Birthday, <@{member.id}>! {choice(self.messages)} 🎂 <:luv:765073937645305896>',
+                        file=discord.File("img/mario-birthday.gif")
+                    )
+
+                    if role and role not in member.roles:
+                        await member.add_roles(role, reason=f"it is {member.name}'s birthday")
+
+                        async def remove_role_later(m, r):
+                            await asyncio.sleep(86400)  # 24h in seconds
+                            if r in m.roles:
+                                await m.remove_roles(r, reason=f"it is no longer {m.name}'s birthday")
+
+                        self.bot.loop.create_task(remove_role_later(member, role))
 
     @tasks.loop(hours=3)
     async def set_game_presence(self):
