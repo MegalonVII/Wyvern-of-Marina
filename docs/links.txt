@@ -8,7 +8,7 @@
 [RetroArch](<https://www.retroarch.com/?page=platforms>), [ROMs](<https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Color/>)
 [RetroArch](<https://www.retroarch.com/?page=platforms>), [ROMs](<https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/>)
 [melonDS](<https://melonds.kuribo64.net/downloads.php>), [ROMs](<https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20DS%20%28Decrypted%29/>)
-[Azahar](<https://github.com/azahar-emu/azahar/releases>), [ROMs](<https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%203DS%20%28Decrypted%29/>)
+[Azahar](<https://azahar-emu.org/pages/download/>), [ROMs](<https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%203DS%20%28Decrypted%29/>)
 [Ryubing](<https://ryujinx.app/>), [ROMs](<https://sor.bz/6gr2P>), [Firmware](<https://prodkeys.net/ryujinx-firmware/>), [Keys](<https://prodkeys.net/ryujinx-prod-keys/>), [Ad blocker](<https://ublockorigin.com/>)
 [DuckStation](<https://www.duckstation.org/>), [ROMs](<https://bit.ly/4gdjfkV>), [BIOS](<https://bit.ly/4cWoNh2>), [Covers](<https://bit.ly/3z0b8aV>)
 [PCSX2](<https://pcsx2.net/>), [ROMs](<https://bit.ly/4gsD8oq>), [BIOS](<https://bit.ly/4gl7lpp>), [Covers](<https://bit.ly/4g9LmS2>)
