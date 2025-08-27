@@ -2,7 +2,8 @@ import discord
 from discord.ext import commands
 from asyncio import subprocess, create_subprocess_shell
 
-from utils import cog_check, wups, reply # utils functions
+from utils import files
+from utils import create_list, create_birthday_list, cog_check, wups, reply # utils functions
 
 # misc commands start here
 # ping, whomuted, avi, emote, convert, translate
@@ -26,6 +27,11 @@ class Miscellaneous(commands.Cog):
     async def ping(self, ctx):
         if await cog_check(ctx):
             await ctx.message.delete()
+
+            for file in files:
+                create_list(file)
+            create_birthday_list()
+
             return await ctx.send(f'Pong! {round (self.bot.latency * 1000)}ms')
     
     @commands.command(name='whomuted')
