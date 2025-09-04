@@ -5,9 +5,9 @@ pytz
 requests
 urllib3
 python-dotenv
-yt_dlp==2025.04.30
+yt_dlp
 colorama
 pynacl
-spotdl==4.3.0
+spotdl
 scdl
 audioop-lts

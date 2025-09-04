@@ -27,7 +27,7 @@ shame_emoji='🪳'
 starboard_count=4
 zenny='<:zenny:1104179194780450906>'
 
-youtube_dl.utils.bug_reports_message = lambda: ''
+youtube_dl.utils.bug_reports_message = lambda *args, **kwargs: ''
 
 # music functionality
 # all sorts of classes for playing songs in vc. you may mostly ignore these since vc implementation is mostly complete.
@@ -39,9 +39,8 @@ class YTDLError(Exception):
 
 class YTDLSource(discord.PCMVolumeTransformer):
     YTDL_OPTIONS = {
-        'format': 'bestaudio/best',
+        'format': 'bestaudio[ext=m4a]/bestaudio/best',
         'extractaudio': True,
-        'audioformat': 'mp3',
         'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
         'restrictfilenames': True,
         'noplaylist': True,
