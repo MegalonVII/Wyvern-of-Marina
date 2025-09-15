@@ -20,9 +20,8 @@ These are also viewable from the `main.py` file in this repo, and also in our Di
 11. `!w roulette ([Admin Only] @member)` *Play a game of Russian Roulette with the bot. Moderation can roulette members for them.*
 12. `!w trivia ([Optional] type)` *Answer trivia questions given by the bot.*
 13. `!w emulation (console)` *Gets information about how to set up emulating a certain console. May not be perfect.*
-14. `!w quote` *Returns a quote from a video game character from an API.*
-15. `!w deathbattle (@user)` *Bot creates an imaginary scenario where 2 users fight to the death.*
-16. `!w ship (phrase1) (phrase2)` *Bot creates an imaginary ship percentage between the two phrases.*
+14. `!w deathbattle (@user)` *Bot creates an imaginary scenario where 2 users fight to the death.*
+15. `!w ship (phrase1) (phrase2)` *Bot creates an imaginary ship percentage between the two phrases.*
 
 ## Economical
 1. `!w slots` *Simulates a slot machine.*

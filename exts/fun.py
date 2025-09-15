@@ -12,7 +12,7 @@ from utils import lists, snipe_data, editsnipe_data, zenny # utils direct values
 from utils import cog_check, shark_react, reply, wups, capitalize_string, assert_cooldown, in_wom_shenanigans, add_coins, in_channels, in_threads, load_info, load_emulation # utils functions
 
 # fun commands start here
-# say, custc, snipe, esnipe, choose, pokedex, who, howgay, rps, 8ball, roulette, trivia, emulation, quote, deathbattle, ship
+# say, custc, snipe, esnipe, choose, pokedex, who, howgay, rps, 8ball, roulette, trivia, emulation, deathbattle, ship
 class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -317,24 +317,6 @@ class Fun(commands.Cog):
             ids.append(f"<#{discord.utils.get(ctx.guild.threads, name="Rip-bozotendo").id}>")
             await shark_react(ctx.message)
             return await reply(ctx, f"this command can only be used in the following channels: {", ".join(ids)}. go to one of those channels, jackass")
-
-    @commands.command(name='quote')
-    async def quote(self, ctx):
-        if await cog_check(ctx):
-            if await in_wom_shenanigans(ctx):
-                if assert_cooldown('quote') != 0:
-                    return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('quote')} seconds")
-    
-                async with ctx.typing():
-                    response = requests.get(f'https://ultima.rest/api/quote?id={random.randint(1,560)}')
-                    data = json.loads(response.text)
-                quote = data['quote']
-                character = data['character']
-                title = data['title']
-                release = data['release']
-                embed = discord.Embed(title="💬 Quote 💬", description=f'"{quote}"', color=discord.Color.purple())
-                embed.set_footer(text=f"From: {character} - {title}, {release}")
-                return await ctx.reply(embed=embed, mention_author=False)
 
     @commands.command(name='deathbattle', aliases=['db'])
     async def deathbattle(self, ctx, member: discord.Member):

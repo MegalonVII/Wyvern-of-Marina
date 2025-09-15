@@ -45,7 +45,6 @@ async def help(ctx, page: str = "home"):
             ('!w roulette ([Admin Only] @member)', 'Try your luck... 😈'),
             ('!w trivia ([Optional] type)', 'I\'ll give you a multiple-choice trivia question. If you do not provide a type, it will be a random question on either general knowledge or some form of media. If you do, the types you may choose from are "general", "music", "film", "tv", "games", or "anime".'),
             ('!w emulation', 'A wiki for how to set up emulators for a variety of consoles!'),
-            ('!w quote', 'Returns a random quote from a video game!'),
             ('!w deathbattle (@user)', 'Fight someone... 🤠'),
             ('!w ship (phrase1) (phrase2)', 'In the mood for some love? 😏')
         ]),
