@@ -40,7 +40,7 @@ class Miscellaneous(commands.Cog):
             try:
                 return await reply(ctx, ", ".join([member.name for member in ctx.guild.members if member.is_timed_out()]))
             except:
-                return await ctx.wups("No one is muted currently", mention_author=False)
+                return await wups(ctx, "No one is muted currently", mention_author=False)
     
     @commands.command(name='avatar', aliases=['avi'])
     async def avatar(self, ctx, member:discord.Member=None):
