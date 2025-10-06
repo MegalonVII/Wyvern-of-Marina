@@ -19,7 +19,7 @@ class Economy(commands.Cog):
   
     @commands.command(name='slots')
     async def slots(self, ctx):
-        if await cog_check(ctx) and await in_wom_shenanigans(ctx):
+        if await in_wom_shenanigans(ctx):
             if assert_cooldown('slots') != 0:
                 return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('slots')} seconds")
             if not subtract_coins(ctx.author.id, 10):
@@ -48,7 +48,7 @@ class Economy(commands.Cog):
 
     @commands.command(name='bet')
     async def bet(self, ctx, amount:int):
-        if await cog_check(ctx) and await in_wom_shenanigans(ctx):
+        if await in_wom_shenanigans(ctx):
             if assert_cooldown('bet'):
                 return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('bet')} seconds")
             if subtract_coins(ctx.author.id, amount):
@@ -63,7 +63,7 @@ class Economy(commands.Cog):
 
     @commands.command(name='steal')
     async def steal(self, ctx, target: discord.Member):
-        if await cog_check(ctx) and await in_wom_shenanigans(ctx):
+        if await in_wom_shenanigans(ctx):
             if target.bot or target == ctx.author:
                 return await wups(ctx, "You can't steal from a bot or from yourself")
             if prev_steal_targets.get(ctx.author.id) == target and target_counts.get(ctx.author.id, 0) <= 2:
@@ -95,7 +95,7 @@ class Economy(commands.Cog):
 
     @commands.command(name='heist')
     async def heist(self, ctx):
-        if await cog_check(ctx) and await in_wom_shenanigans(ctx):
+        if await in_wom_shenanigans(ctx):
             if assert_cooldown("heist") != 0:
                 return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('heist')} seconds")
             if random.randint(1, 100) == 1: # successful heist
@@ -122,45 +122,43 @@ class Economy(commands.Cog):
 
     @commands.command(name='deposit', aliases=['dep'])
     async def deposit(self, ctx, amt:int):
-        if await cog_check(ctx) and await in_wom_shenanigans(ctx):
+        if await in_wom_shenanigans(ctx):
             if dep(ctx.author.id, amt):
                 return await reply(ctx, f"Successfully deposited {amt} {zenny}!")
             return await wups(ctx, "Insufficient funds")
 
     @commands.command(name='withdraw', aliases=['wd'])
     async def withdraw(self, ctx, amt:int):
-        if await cog_check(ctx) and await in_wom_shenanigans(ctx):
+        if await in_wom_shenanigans(ctx):
             if wd(ctx.author.id, amt):
                 return await reply(ctx, f"Successfully withdrew {amt} {zenny}!")
             return await wups(ctx, "Insufficient funds")
 
     @commands.command(name='balance', aliases=['bal'])
     async def balance(self, ctx, member:discord.Member = None):
-        if await cog_check(ctx):
-            member = member or ctx.author
-            if not member == ctx.author:
-                if subtract_coins(ctx.author.id, 10):
-                    add_coins(member.id, 10)
-                else:
-                    return await wups(ctx, "Insufficient funds")
-            for userID in lists['coins'].keys():
-                if str(member.id) == userID:
-                    if not member == ctx.author:
-                        return await reply(ctx, f"{member.name} has {lists['coins'][str(member.id)]} {zenny}!")
-                    return await reply(ctx, f"You have {lists['coins'][str(member.id)]} {zenny}!")
-            return await wups(ctx, "Get some bread, broke ass")
+        member = member or ctx.author
+        if not member == ctx.author:
+            if subtract_coins(ctx.author.id, 10):
+                add_coins(member.id, 10)
+            else:
+                return await wups(ctx, "Insufficient funds")
+        for userID in lists['coins'].keys():
+            if str(member.id) == userID:
+                if not member == ctx.author:
+                    return await reply(ctx, f"{member.name} has {lists['coins'][str(member.id)]} {zenny}!")
+                return await reply(ctx, f"You have {lists['coins'][str(member.id)]} {zenny}!")
+        return await wups(ctx, "Get some bread, broke ass")
 
     @commands.command(name='bankbalance', aliases=['bankbal'])
     async def bankbalance(self, ctx):
-        if await cog_check(ctx):
-            for userID in lists['bank'].keys():
-                if str(ctx.author.id) == userID:
-                    return await reply(ctx, f"You have {lists['bank'][str(ctx.author.id)]} {zenny} in the bank!")
-            return await wups("Get some bread, broke ass")
+        for userID in lists['bank'].keys():
+            if str(ctx.author.id) == userID:
+                return await reply(ctx, f"You have {lists['bank'][str(ctx.author.id)]} {zenny} in the bank!")
+        return await wups("Get some bread, broke ass")
 
     @commands.command(name='paypal')
     async def paypal(self, ctx, recipient:discord.Member, amount:int):
-        if await cog_check(ctx) and await in_wom_shenanigans(ctx):
+        if await in_wom_shenanigans(ctx):
             if amount <= 0:
                 return await wups(ctx, "Invalid payment amount")
             if recipient.bot or recipient.id == ctx.author.id:
@@ -172,16 +170,15 @@ class Economy(commands.Cog):
 
     @commands.command(name='marketplace', aliases=['mp'])
     async def marketplace(self, ctx):
-        if await cog_check(ctx):
-            embed = discord.Embed(title='Marketplace', color=discord.Color.green())
-            for i in range(0, len(self.items)):
-                embed.add_field(name=f'{self.items[i]}, {self.priceStrs[i]} {zenny}', value=f'{self.descs[i]}', inline=False)
-            embed.set_footer(text='If you want to purchase any of these items, use !w buy (item name). The item name is exactly as you see it in this marketplace!')
-            return await ctx.reply(embed=embed, mention_author=False)
+        embed = discord.Embed(title='Marketplace', color=discord.Color.green())
+        for i in range(0, len(self.items)):
+            embed.add_field(name=f'{self.items[i]}, {self.priceStrs[i]} {zenny}', value=f'{self.descs[i]}', inline=False)
+        embed.set_footer(text='If you want to purchase any of these items, use !w buy (item name). The item name is exactly as you see it in this marketplace!')
+        return await ctx.reply(embed=embed, mention_author=False)
 
     @commands.command(name='buy')
     async def buy(self, ctx, item:str, number:int = 1):
-        if await cog_check(ctx) and await in_wom_shenanigans(ctx):
+        if await in_wom_shenanigans(ctx):
             if number < 1:
                 return await wups(ctx, "Invalid number requested")
             item = item.lower()
@@ -198,7 +195,7 @@ class Economy(commands.Cog):
 
     @commands.command(name='sell')
     async def sell(self, ctx, item:str, number:int = 1):
-        if await cog_check(ctx) and await in_wom_shenanigans(ctx):
+        if await in_wom_shenanigans(ctx):
             if number < 1:
                 return await wups(ctx, "Invalid number requested")
             item = item.lower()
@@ -216,7 +213,7 @@ class Economy(commands.Cog):
   
     @commands.command(name='inventory', aliases=['inv'])
     async def inventory(self, ctx):
-        if await cog_check(ctx) and await in_wom_shenanigans(ctx):
+        if await in_wom_shenanigans(ctx):
             inventorySTR = "You have...\n\n"
             async with ctx.typing():
                 for item in self.items:
@@ -225,7 +222,7 @@ class Economy(commands.Cog):
 
     @commands.command(name='use')
     async def use(self, ctx, item:str):
-        if await cog_check(ctx) and await in_wom_shenanigans(ctx):
+        if await in_wom_shenanigans(ctx):
             item = item.lower()
             if item not in self.items:
                 return await wups(ctx, "Invalid item")
