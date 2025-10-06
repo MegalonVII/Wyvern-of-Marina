@@ -610,9 +610,6 @@ async def wups(ctx, content: str):
     await shark_react(ctx.message)
     return await reply(ctx, content=f"Wups! {content}...")
 
-async def cog_check(ctx):
-    return True if ctx.guild else False
-
 def get_login_time(tz: str) -> str:
     return f"Time: {datetime.now(timezone(tz)).strftime('%m/%d/%Y, %I:%M:%S %p')}\nTimezone: {tz}\n"
 
