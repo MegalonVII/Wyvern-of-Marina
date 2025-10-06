@@ -231,7 +231,7 @@ class VoiceState:
 
 
 # bot helper functions
-# create_list, update_birthday, check_reaction_board, reply, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, in_channels, in_threads, assert_cooldown, capitalize_string, parse_total_duration, shark_react, wups, cog_check, get_login_time, load_info
+# create_list, update_birthday, check_reaction_board, reply, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, in_channels, in_threads, assert_cooldown, capitalize_string, parse_total_duration, shark_react, wups, get_login_time, load_info, load_emulation
 def create_list(filename):
     file_checks[filename]=False
     if not os.path.exists(f'csv/{filename}.csv'):
@@ -611,9 +611,7 @@ async def wups(ctx, content: str):
     return await reply(ctx, content=f"Wups! {content}...")
 
 async def cog_check(ctx):
-    if not ctx.guild:
-        return False
-    return True
+    return True if ctx.guild else False
 
 def get_login_time(tz: str) -> str:
     return f"Time: {datetime.now(timezone(tz)).strftime('%m/%d/%Y, %I:%M:%S %p')}\nTimezone: {tz}\n"

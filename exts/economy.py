@@ -5,7 +5,7 @@ from asyncio import sleep, TimeoutError
 from math import ceil
 
 from utils import zenny, prev_steal_targets, target_counts, lists # utils direct values
-from utils import cog_check, in_wom_shenanigans, assert_cooldown, wups, reply, subtract_coins, add_coins, stolen_funds, dep, wd, add_item, subtract_item, direct_to_bank, load_info # utils functions
+from utils import in_wom_shenanigans, assert_cooldown, wups, reply, subtract_coins, add_coins, stolen_funds, dep, wd, add_item, subtract_item, direct_to_bank, load_info # utils functions
 
 # economy commands
 # slots, bet, steal, heist, dep, wd, bal, bankbal, paypal, mp, buy, sell, inv, use

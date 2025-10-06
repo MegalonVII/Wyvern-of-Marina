@@ -5,7 +5,7 @@ from datetime import datetime
 from pytz import timezone
 
 from utils import user_info # utils direct values
-from utils import cog_check, in_wom_shenanigans, update_birthday, reply, wups # utils functions
+from utils import in_wom_shenanigans, update_birthday, reply, wups # utils functions
 
 # birthday commands start here
 # birthday, bdl
@@ -15,7 +15,7 @@ class Birthday(commands.Cog):
 
     @commands.command(name='birthday')
     async def birthday(self, ctx):
-        if await cog_check(ctx) and await in_wom_shenanigans(ctx):
+        if await in_wom_shenanigans(ctx):
             def check(m):
                 return m.author == ctx.author and m.channel == ctx.channel
 
@@ -54,7 +54,7 @@ class Birthday(commands.Cog):
             
     @commands.command(name='birthdaylist', aliases=['bdaylist', 'bdl'])
     async def birthday_list(self, ctx):
-        if await cog_check(ctx) and await in_wom_shenanigans(ctx):
+        if in_wom_shenanigans(ctx):
             temp_data = []
             for key in user_info.keys():
                 member = discord.utils.get(ctx.message.guild.members, id=key)

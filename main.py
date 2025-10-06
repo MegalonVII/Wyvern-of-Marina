@@ -16,6 +16,11 @@ bot=commands.Bot(command_prefix = '!w ', intents=discord.Intents.all())
 bot.remove_command('help')
 extensions=['fun', 'economy', 'admin', 'flair', 'misc', 'birthday', 'music', 'events']
 
+# bot forced to use in server
+@bot.check
+async def cog_check(ctx):
+    return bool(ctx.guild)
+
 # bot help command
 @bot.command(name='help')
 async def help(ctx, page: str = "home"):

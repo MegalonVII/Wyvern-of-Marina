@@ -5,7 +5,7 @@ import pandas as pd
 from asyncio import sleep
 
 from utils import lists, file_checks # utils direct values
-from utils import cog_check, wups, create_list, in_wom_shenanigans # utils functions
+from utils import wups, create_list, in_wom_shenanigans # utils functions
 
 # flair commands start here
 # addf, delf, lf, im
@@ -15,58 +15,55 @@ class Flair(commands.Cog):
 
     @commands.command(name='addflair', aliases=['addf'])
     async def addflair(self, ctx, role: discord.Role):
-        if await cog_check(ctx):
-            try:
-                if not ctx.author.guild_permissions.administrator:
-                    return await wups(ctx, 'Only administrators can use this command')
-                if role.position >= ctx.me.top_role.position:
-                    return await wups(ctx, "I can't add this role as a flair because it is above my highest role")
-                if role.name in lists["flairs"].keys():
-                    return await wups(ctx, f"'{role.name}' is already a flair")
-                
-                with open('csv/flairs.csv', 'a', newline='') as csvfile:
-                    fieldnames = ['role_name', 'role_id']
-                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames) 
-                    if file_checks["flairs"]:
-                        writer.writeheader()
-                    writer.writerow({'role_name': role.name, 'role_id': role.id})
-                create_list("flairs")
-                await ctx.message.add_reaction('✅')
-                await sleep(3)
-                return await ctx.message.delete()
-            except:
-                return await wups(ctx, 'Something went wrong. Try doing `!w addflair @Role`')
-
-    @commands.command(name='deleteflair', aliases=['delf'])
-    async def deleteflair(self, ctx, role:discord.Role):
-        if await cog_check(ctx):
+        try:
             if not ctx.author.guild_permissions.administrator:
-                return await wups(ctx, 'You do not have the required permissions')
-            if not role.name in list(lists["flairs"].keys()):
-                return await wups('This role is not a flair')
-            if len(list(lists["flairs"].keys())) == 0:
-                return await wups(ctx, 'There are no flairs to delete in the first place')
+                return await wups(ctx, 'Only administrators can use this command')
+            if role.position >= ctx.me.top_role.position:
+                return await wups(ctx, "I can't add this role as a flair because it is above my highest role")
+            if role.name in lists["flairs"].keys():
+                return await wups(ctx, f"'{role.name}' is already a flair")
             
-            flairs = pd.read_csv('csv/flairs.csv')
-            flairs = flairs[flairs.role_name != role.name]
-            flairs.to_csv('csv/flairs.csv', index=False)
+            with open('csv/flairs.csv', 'a', newline='') as csvfile:
+                fieldnames = ['role_name', 'role_id']
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames) 
+                if file_checks["flairs"]:
+                    writer.writeheader()
+                writer.writerow({'role_name': role.name, 'role_id': role.id})
             create_list("flairs")
             await ctx.message.add_reaction('✅')
             await sleep(3)
             return await ctx.message.delete()
+        except:
+            return await wups(ctx, 'Something went wrong. Try doing `!w addflair @Role`')
+
+    @commands.command(name='deleteflair', aliases=['delf'])
+    async def deleteflair(self, ctx, role:discord.Role):
+        if not ctx.author.guild_permissions.administrator:
+            return await wups(ctx, 'You do not have the required permissions')
+        if not role.name in list(lists["flairs"].keys()):
+            return await wups('This role is not a flair')
+        if len(list(lists["flairs"].keys())) == 0:
+            return await wups(ctx, 'There are no flairs to delete in the first place')
+        
+        flairs = pd.read_csv('csv/flairs.csv')
+        flairs = flairs[flairs.role_name != role.name]
+        flairs.to_csv('csv/flairs.csv', index=False)
+        create_list("flairs")
+        await ctx.message.add_reaction('✅')
+        await sleep(3)
+        return await ctx.message.delete()
 
     @commands.command(name='listflairs', aliases=['lf'])
     async def listflairs(self, ctx):
-        if await cog_check(ctx):
-            try:
-                await ctx.send('\n'.join(list(lists["flairs"].keys())))
-                return await ctx.message.delete()
-            except:
-                return await wups(ctx, 'There are no self-assignable roles in this server')
+        try:
+            await ctx.send('\n'.join(list(lists["flairs"].keys())))
+            return await ctx.message.delete()
+        except:
+            return await wups(ctx, 'There are no self-assignable roles in this server')
 
     @commands.command(name='im')
     async def im(self, ctx, *roleName:str):
-        if await cog_check(ctx) and await in_wom_shenanigans(ctx):
+        if await in_wom_shenanigans(ctx):
             roleName = ' '.join(roleName) # finds the role from the name given
             role = discord.utils.get(ctx.guild.roles, name=roleName)
             if role is None:

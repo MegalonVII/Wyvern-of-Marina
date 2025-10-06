@@ -8,7 +8,7 @@ from asyncio import subprocess, create_subprocess_shell
 import nacl # necessary for opus
 
 from utils import VoiceState, YTDLSource, YTDLError, Song # utils classes 
-from utils import reply, wups, parse_total_duration, cog_check, in_channels # utils functions
+from utils import reply, wups, parse_total_duration, in_channels # utils functions
 
 class Music(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -16,19 +16,13 @@ class Music(commands.Cog):
         self.voice_states = {}
         self.platforms = ['spotify', 'youtube', 'soundcloud']
 
-    # frontend helpers
-    # these functions make the bot act according to certain contexts, such as being used in dms or being used as an interaction
+    # outdated remnant of bot merger, need to replace
     async def respond(self, ctx: commands.Context, message: str, emoji: str):
         try:
             return await ctx.message.add_reaction(emoji)
         except:
             return await reply(f"{message} {emoji}")
 
-    async def cog_check(self, ctx: commands.Context) -> bool:
-        if not ctx.guild:
-            return False
-        return True
-    
     # backend helpers
     # this is to initiate the voice call that the bot will be in
     def get_voice_state(self, ctx: commands.Context):
@@ -191,77 +185,76 @@ class Music(commands.Cog):
             
     @commands.command(name='grabber')
     async def grabber(self, ctx, platform: str, *query):
-        if await cog_check(ctx):
-            query = " ".join(query)
-            try:
-                if query[0] == '<' and query[-1] == '>':
-                    query = query[1:-1]
-                elif query [0] == '[' and query[-1] == ')':
-                    return await wups(ctx, "I couldn't download anything in an embedded link. Try again")
+        query = " ".join(query)
+        try:
+            if query[0] == '<' and query[-1] == '>':
+                query = query[1:-1]
+            elif query [0] == '[' and query[-1] == ')':
+                return await wups(ctx, "I couldn't download anything in an embedded link. Try again")
 
-                query = re.sub(r'[?&]si=[a-zA-Z0-9_-]+', '', query)
-            except IndexError:
-                return await wups(ctx, "I need a search query ")
-            
-            if await in_channels(ctx, ["wom-shenanigans", "good-tunes"], True):
-                if platform.lower() in self.platforms[0:3]:
-                    async with ctx.typing():
-                        msg = await ctx.reply('Hang tight! I\'ll try downloading your song. You\'ll be pinged with your song once I finish.', mention_author=False)
+            query = re.sub(r'[?&]si=[a-zA-Z0-9_-]+', '', query)
+        except IndexError:
+            return await wups(ctx, "I need a search query ")
+        
+        if await in_channels(ctx, ["wom-shenanigans", "good-tunes"], True):
+            if platform.lower() in self.platforms[0:3]:
+                async with ctx.typing():
+                    msg = await ctx.reply('Hang tight! I\'ll try downloading your song. You\'ll be pinged with your song once I finish.', mention_author=False)
 
-                        if platform.lower() == 'spotify': # spotify
-                            print(f"{Style.BRIGHT}Downloading from {Fore.BLACK}{Back.GREEN}Spotify{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
-                            spotdl = await create_subprocess_shell(f'spotdl download "{query}" --format mp3 --output "{{artist}} - {{title}}.{{output-ext}}" --lyrics synced', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                            stdout, stderr = await spotdl.communicate()
-                            print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()}\n")
-                            if "LookupError" in stdout.decode():
-                                await msg.delete()
-                                return await wups(ctx, "I couldn't find a song on Spotify with that query. Try again")
-                            if spotdl.returncode != 0:
-                                await msg.delete()
-                                return await wups(ctx, "I couldn't download anything. Try again")
-                            
-                        elif platform.lower() == 'youtube': # youtube
-                            print(f"{Style.BRIGHT}Downloading from {Fore.WHITE}{Back.RED}YouTube{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
-                            ytdl = await create_subprocess_shell(f'yt-dlp ytsearch:"{query}" -x --audio-format mp3 -o "%(title)s.%(ext)s" --no-playlist --embed-metadata --embed-thumbnail', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                            stdout, stderr = await ytdl.communicate()
-                            print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()}")
-                            if 'Downloading 0 items' in stdout.decode():
-                                await msg.delete()
-                                return await wups(ctx, "I couldn't download anything. Try again (Most likely, your search query was invalid.)")
-                            
-                        elif platform.lower() == 'soundcloud': # soundcloud
-                            if query[0:23] != 'https://soundcloud.com/':
-                                await msg.delete()
-                                return await wups(ctx, "I couldn't download anything. Try again (Due to API requirements, you must make sure that you are providing a `https://soundcloud.com/` link as your query.)")
-                            index = query.find("?in=")
-                            if index != -1:
-                                query = query[:index]
-                            if query[-1] == '/':
-                                query = query[:-1]
-                            print(f"{Style.BRIGHT}Downloading from {Fore.WHITE}{Back.LIGHTRED_EX}SoundCloud{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
-                            scdl = await create_subprocess_shell(f'scdl -l {query} --onlymp3 --force-metadata --no-playlist', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                            stdout, stderr = await scdl.communicate()
-                            print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}\n{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()[:-1]}")
-                            if 'Found a playlist' in stderr.decode():
-                                await msg.delete()
-                                return await wups(ctx, "I don't want to bombard you with pings! Try downloading songs individually")
-                            if 'URL is not valid' in stderr.decode():
-                                await msg.delete()
-                                return await wups(ctx, "Invalid URL! Try again")
-                            
-                    new_files = [file for file in os.listdir('.') if file.endswith(".mp3")]
-                    for file in new_files:
-                        file_path = os.path.join('.', file)
-                        try:
-                            await ctx.reply(content='Here is your song!', file=discord.File(file_path))
-                        except:
-                            os.remove(file_path)
+                    if platform.lower() == 'spotify': # spotify
+                        print(f"{Style.BRIGHT}Downloading from {Fore.BLACK}{Back.GREEN}Spotify{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
+                        spotdl = await create_subprocess_shell(f'spotdl download "{query}" --format mp3 --output "{{artist}} - {{title}}.{{output-ext}}" --lyrics synced', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        stdout, stderr = await spotdl.communicate()
+                        print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()}\n")
+                        if "LookupError" in stdout.decode():
                             await msg.delete()
-                            return await wups(ctx, 'The file was too big for me to send')
+                            return await wups(ctx, "I couldn't find a song on Spotify with that query. Try again")
+                        if spotdl.returncode != 0:
+                            await msg.delete()
+                            return await wups(ctx, "I couldn't download anything. Try again")
+                        
+                    elif platform.lower() == 'youtube': # youtube
+                        print(f"{Style.BRIGHT}Downloading from {Fore.WHITE}{Back.RED}YouTube{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
+                        ytdl = await create_subprocess_shell(f'yt-dlp ytsearch:"{query}" -x --audio-format mp3 -o "%(title)s.%(ext)s" --no-playlist --embed-metadata --embed-thumbnail', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        stdout, stderr = await ytdl.communicate()
+                        print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()}")
+                        if 'Downloading 0 items' in stdout.decode():
+                            await msg.delete()
+                            return await wups(ctx, "I couldn't download anything. Try again (Most likely, your search query was invalid.)")
+                        
+                    elif platform.lower() == 'soundcloud': # soundcloud
+                        if query[0:23] != 'https://soundcloud.com/':
+                            await msg.delete()
+                            return await wups(ctx, "I couldn't download anything. Try again (Due to API requirements, you must make sure that you are providing a `https://soundcloud.com/` link as your query.)")
+                        index = query.find("?in=")
+                        if index != -1:
+                            query = query[:index]
+                        if query[-1] == '/':
+                            query = query[:-1]
+                        print(f"{Style.BRIGHT}Downloading from {Fore.WHITE}{Back.LIGHTRED_EX}SoundCloud{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
+                        scdl = await create_subprocess_shell(f'scdl -l {query} --onlymp3 --force-metadata --no-playlist', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        stdout, stderr = await scdl.communicate()
+                        print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout.decode()}\n{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr.decode()[:-1]}")
+                        if 'Found a playlist' in stderr.decode():
+                            await msg.delete()
+                            return await wups(ctx, "I don't want to bombard you with pings! Try downloading songs individually")
+                        if 'URL is not valid' in stderr.decode():
+                            await msg.delete()
+                            return await wups(ctx, "Invalid URL! Try again")
+                        
+                new_files = [file for file in os.listdir('.') if file.endswith(".mp3")]
+                for file in new_files:
+                    file_path = os.path.join('.', file)
+                    try:
+                        await ctx.reply(content='Here is your song!', file=discord.File(file_path))
+                    except:
                         os.remove(file_path)
-                    return await msg.delete()    
-                else:
-                    return await wups(ctx, 'Invalid platform choice! Must be either `Spotify`, `YouTube`, or `SoundCloud`')
+                        await msg.delete()
+                        return await wups(ctx, 'The file was too big for me to send')
+                    os.remove(file_path)
+                return await msg.delete()    
+            else:
+                return await wups(ctx, 'Invalid platform choice! Must be either `Spotify`, `YouTube`, or `SoundCloud`')
 
 
 async def setup(bot):
