@@ -60,6 +60,8 @@ class Events(commands.Cog):
                 for trigger, emoji in zip(self.triggers, self.trigger_emojis):
                     pattern = r'\b' + escape(trigger) + r'\b'
                     if search(pattern, message.content.lower()):
+                        if trigger == "persona" and message.channel.name == "velvet-room-but-downvoted":
+                            continue
                         try:
                             await message.add_reaction(emoji)
                         except:
