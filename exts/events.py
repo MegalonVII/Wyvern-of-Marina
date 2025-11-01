@@ -57,7 +57,7 @@ class Events(commands.Cog):
                         await message.channel.send(choice([member.name.lower() for member in message.guild.members if not member.bot]))
                 if content.lower() == "hi guys":
                     try:
-                        await message.add_reactions("🍅")
+                        await message.add_reaction("🍅")
                     except:
                         pass
 
