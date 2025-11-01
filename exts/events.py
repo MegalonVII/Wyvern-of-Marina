@@ -46,16 +46,21 @@ class Events(commands.Cog):
                     await message.reply(lists["commands"][message.content.split()[1]], mention_author=False)
 
                 # message phrase triggers
-                if message.content.lower() == "skill issue":
+                if content.lower() == "skill issue":
                     await message.channel.send(file=discord.File("img/skill-issue.gif"))
-                if message.content.lower() == "me":
+                if content.lower() == "me":
                     await message.channel.send('<:WoM:836128658828558336>')
-                if message.content.lower() == "which":
+                if content.lower() == "which":
                     if assert_cooldown("which") != 0:
                         await shark_react(message)
                     else:
                         await message.channel.send(choice([member.name.lower() for member in message.guild.members if not member.bot]))
-            
+                if content.lower() == "hi guys":
+                    try:
+                        await message.add_reactions("🍅")
+                    except:
+                        pass
+
                 # phrase trigger reactions
                 for trigger, emoji in zip(self.triggers, self.trigger_emojis):
                     pattern = r'\b' + escape(trigger) + r'\b'
