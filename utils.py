@@ -12,7 +12,7 @@ from datetime import datetime
 from pytz import timezone
 from colorama import Fore, Style
 
-files=["commands", "flairs", "coins", "bank", "shell", "bomb", "ticket", "letter", "banana", "karma"]
+files=["commands", "flairs", "coins", "bank", "voucher", "shell", "bomb", "ticket", "letter", "banana", "karma"]
 file_checks={file:False for file in files}
 lists={file:{} for file in files}
 user_info={}

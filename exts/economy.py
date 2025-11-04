@@ -187,10 +187,7 @@ class Economy(commands.Cog):
                     if not subtract_coins(ctx.author.id, number * item_price):
                         return await wups(ctx, f"You don't have enough {zenny}")
                     add_item(item, ctx.author.id, number)
-                    if number > 1:
-                        return await reply(ctx, f"You have successfully purchased {number} {item_name}s!")
-                    else:
-                        return await reply(ctx, f"You have successfully purchased {number} {item_name}!")
+                    return await reply(ctx, f"You have successfully purchased {number} {item_name}{"s" if number > 1 else ""}!")
             return await wups(ctx, "Invalid item")
 
     @commands.command(name='sell')
@@ -227,7 +224,18 @@ class Economy(commands.Cog):
             if item not in self.items:
                 return await wups(ctx, "Invalid item")
 
-            if item == 'bomb':
+            if item == 'voucher':
+                if subtract_item(item, ctx.author.id, 1):
+                    neel = discord.utils.get(ctx.guild.members, name='megalonvii')
+                    if not ctx.author.id == neel.id:
+                        moddery = discord.utils.get(ctx.guild.channels, name='moddery')
+                        await moddery.send(f"<@{neel.id}>, {ctx.author.name} has purchased a delivery. You are now obligated to personally gift them whatever! Don't back out of it now...")
+                        return await reply(ctx, "Neel has been notified, you gambling addicted bastard...")
+                    else:
+                        add_coins(ctx.author.id, 100000)
+                        return await wups(ctx, "You're Neel. If you want to gift yourself something just go out and do it")
+
+            elif item == 'bomb':
                 if subtract_item(item, ctx.author.id, 1):
                     id = random.choice([key for key in lists['bank'].keys() if not key == str(ctx.author.id)])
                     balance = int(lists['bank'][id])
@@ -243,7 +251,7 @@ class Economy(commands.Cog):
                 def check(m):
                     return m.author == ctx.author and m.channel == ctx.channel
                 if subtract_item(item, ctx.author.id, 1):
-                    await ctx.reply("You have 60 seconds to name your new custom role! This can be done by simply sending the name of that role in this channel. Be aware, however, that the next message you send will be the role name...", mention_author=False)
+                    await reply(ctx, "You have 60 seconds to name your new custom role! This can be done by simply sending the name of that role in this channel. Be aware, however, that the next message you send will be the role name...")
                     try:
                         msg = await self.bot.wait_for('message', check=check, timeout=60)
                     except TimeoutError:
