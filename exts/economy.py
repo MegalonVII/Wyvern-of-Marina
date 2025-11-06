@@ -25,7 +25,7 @@ class Economy(commands.Cog):
             if not subtract_coins(ctx.author.id, 10):
                 return await wups(f"You don't have enough {zenny} to play")
         
-            emojis = ["🍒", "🍇", "🍊", "🍋", "🍉","7️⃣"]
+            emojis = ["🍒", "🍇", "🍊", "🍋", "🍉","🫐","7️⃣"]
             reels = ["❓","❓","❓"]
             msg = await ctx.reply(f"{reels[0]} | {reels[1]} | {reels[2]}", mention_author=False)
             for i in range(0,3):
