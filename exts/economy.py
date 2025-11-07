@@ -109,16 +109,22 @@ class Economy(commands.Cog):
             else: # unsuccesful heist
                 handBal = int(lists['coins'][str(ctx.author.id)])
                 bankBal = int(lists['bank'][str(ctx.author.id)])
-                if handBal != 0: # check if can take from hand
-                    bail = ceil(handBal * 0.2)
-                    if subtract_coins(ctx.author.id, bail):
-                        return await reply(ctx, f"Unsuccessful heist! <:PoM:888677251615449158> arrested you! You paid {bail} {zenny} as bail...")
-                elif handBal == 0 and bankBal != 0: # can't take from hand, takes from bank instead
-                    bail = ceil(bankBal * 0.2)
-                    if stolen_funds(ctx.author.id, bail):
-                        return await reply(ctx, f"Unsuccessful heist! <:PoM:888677251615449158> arrested you! You paid {bail} {zenny} from the bank as bail...")
-                else: # can't take from either
+                totalBal = handBal + bankBal
+                bailAmt = totalBal // 5
+                bailLeft = bailAmt
+
+                if bailAmt == 0:
                     return await reply(ctx, "Unsuccessful heist! <:PoM:888677251615449158> arrested you! You couldn't pay a bail, however, so you spent the night in jail...")
+
+                if handBal < bailAmt:
+                    if subtract_coins(ctx.author.id, handBal):
+                        bailLeft -= handBal
+                    if stolen_funds(ctx.author.id, bailLeft):
+                        pass
+                    return await reply(ctx, f"Unsuccessful heist! <:PoM:888677251615449158> arrested you! You paid {bailAmt} {zenny} as bail...")
+                else:
+                    if subtract_coins(ctx.author.id, bailAmt):
+                        return await reply(ctx, f"Unsuccessful heist! <:PoM:888677251615449158> arrested you! You paid {bailAmt} {zenny} as bail...")
 
     @commands.command(name='deposit', aliases=['dep'])
     async def deposit(self, ctx, amt:int):
