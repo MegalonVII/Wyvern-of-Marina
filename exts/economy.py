@@ -114,7 +114,11 @@ class Economy(commands.Cog):
                 bailLeft = bailAmt
 
                 if bailAmt == 0:
-                    return await reply(ctx, "Unsuccessful heist! <:PoM:888677251615449158> arrested you! You couldn't pay a bail, however, so you spent the night in jail...")
+                    if subtract_coins(ctx.author.id, handBal):
+                        pass
+                    if stolen_funds(ctx.author.id, bankBal):
+                        pass
+                    return await reply(ctx, "Unsuccessful heist! <:PoM:888677251615449158> arrested you! You couldn't pay a bail, however, so you paid what little you had left and wrote an IOU...")
 
                 if handBal < bailAmt:
                     if subtract_coins(ctx.author.id, handBal):
