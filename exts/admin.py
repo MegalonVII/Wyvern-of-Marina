@@ -3,6 +3,7 @@ import csv
 from discord.ext import commands
 import pandas as pd
 from datetime import timedelta
+import re
 
 from utils import lists, file_checks # utils direct values
 from utils import wups, reply, assert_cooldown, create_list # utils functions
