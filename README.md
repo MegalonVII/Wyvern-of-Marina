@@ -42,10 +42,10 @@ These are also viewable from the `main.py` file in this repo, and also in our Di
 ## Administrative
 1. `!w createcommand (name) (output)` *Creates a custom macro.*
 2. `!w deletecommand (name)` *Deletes a custom macro.*
-3. `!w clear (number of messages)` *Deletes a number of messages from a chat. Ranges from 1-10 to avoid API rate limits.*
+3. `!w clear (number of messages, 1-10)` *Deletes a number of messages from a chat.*
 4. `!w kick (@member)` *Kicks a member from the server.*
 5. `!w ban (@member)` *Bans a member from the server.*
-6. `!w mute (@member) (time amount)(s, m, h, d, or w)` *Mutes mentioned member for specified time. "s" for seconds, "m" for minutes, "h" for hours, "d" for days, and "w" for weeks. No space in between the time amount and the letter!*
+6. `!w mute (@member) ([Optional] (time amount) (s, m, h, d, or w)) ([Optional] Reasoning)` *Mutes mentioned member for specified time, defaulting to 1 hour. "s" for seconds, "m" for minutes, "h" for hours, "d" for days, and "w" for weeks.*
 7. `!w unmute (@member)` *Unmutes mentioned member.*
 
 ## Flair

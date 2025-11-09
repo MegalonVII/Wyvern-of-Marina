@@ -231,7 +231,7 @@ class VoiceState:
 
 
 # bot helper functions
-# create_list, update_birthday, check_reaction_board, reply, add_to_board, add_coins, subtract_coins, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, in_channels, in_threads, assert_cooldown, capitalize_string, parse_total_duration, shark_react, wups, get_login_time, load_info, load_emulation
+# create_list, update_birthday, check_reaction_board, reply, add_to_board, add_coins, subtract_coins, dual_spend, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, in_channels, in_threads, assert_cooldown, capitalize_string, parse_total_duration, shark_react, wups, get_login_time, load_info, load_emulation
 def create_list(filename):
     file_checks[filename]=False
     if not os.path.exists(f'csv/{filename}.csv'):
@@ -390,6 +390,26 @@ def subtract_coins(userID: int, coins: int) -> bool:
             writer.writerow(row)
     create_list("coins")
     return True
+
+def dual_spend(userID: int, spending: int) -> bool:
+    handBal = int(lists['coins'][str(ctx.author.id)])
+    bankBal = int(lists['bank'][str(ctx.author.id)])
+    totalBal = handBal + bankBal
+
+    if totalBal < spending:
+        return False
+
+    spendingLeft = spending
+
+    if handBal < spending:
+        if subtract_coins(ctx.author.id, handBal):
+            spendingLeft -= handBal
+        if stolen_funds(ctx.author.id, spendingLeft):
+            pass
+        return True
+    else:
+        if subtract_coins(ctx.author.id, spending):
+            return True
 
 def add_item(itemName:str, userID:int, quantity:int):
     fieldnames = ['user_id', f'{itemName}s']

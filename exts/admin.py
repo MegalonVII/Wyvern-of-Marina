@@ -84,26 +84,34 @@ class Admin(commands.Cog):
         return await ctx.message.delete()
 
     @commands.command(name='mute')
-    async def mute(self, ctx, member:discord.Member, timelimit):
-        try:
-            timelimitList = [timelimit[:-1], timelimit[-1]]
-            timelimitList[0] = int(timelimitList[0])
-        except:
-            return await wups(ctx, "Invalid time amount")
-        valid = False
-        timelimit = timelimit.lower()
+    async def mute(self, ctx, member:discord.Member, *, args: str = " "):
+        # static variables
         timepossibilities = ['s', 'm', 'h', 'd', 'w']
-        if timelimit[-1] in timepossibilities:
-            valid = True
-        current_time = discord.utils.utcnow()
     
+        # default modifiable variable declarations
+        timeunit = 1
+        timelimit = 'h'
+    
+        # regex parsing
+        match = re.match(r'^\s*(\d+)\s*([smhdw])\s*(.*)$', args, re.IGNORECASE)
+        if match:
+            timeunit = int(match.group(1))
+            timelimit = match.group(2).lower()
+            reason = match.group(3).strip() or "No reason provided"
+        else:
+            reason = args.strip() or "No reason provided"
+    
+        # validity checks
+        if timeunit <= 0:
+            return await wups(ctx, "Time duration has to be 1 or higher")
+        if timelimit not in timepossibilities:
+            return await wups(ctx, f"Invalid measure of time. Has to be one of the following: `{", ".join(timepossibilities)}`")
         if not ctx.author.guild_permissions.administrator:
             return await wups(ctx, "Only administrators are allowed to use this command")
         if member.guild_permissions.administrator:
             return await wups(ctx, "Administrators can\'t be muted")
-        if not valid:
-            return await wups(ctx, "Invalid time amount")
-        
+    
+        # discord api limits for muting people
         time_units = {
             's': (timedelta, 'seconds', 2419200),
             'm': (timedelta, 'minutes', 40320),
@@ -111,16 +119,14 @@ class Admin(commands.Cog):
             'd': (timedelta, 'days', 28),
             'w': (timedelta, 'weeks', 4)
         }
-
-        for unit, (timedelta_type, attribute, limit) in time_units.items():
-            if unit in timelimit:
-                gettime = int(timelimit.strip(unit))
-                if gettime > limit:
-                    return await wups(ctx, "Cannot mute member for more than 4 weeks")
-                newtime = timedelta_type(**{attribute: gettime})
-                break
-        
-        await member.edit(timed_out_until=current_time+newtime)
+    
+        # logic for muting
+        timedelta_type, attribute, limit = time_units[timelimit]
+        if timeunit > limit:
+            return await wups(ctx, "Cannot mute member for more than 4 weeks")
+        newtime = timedelta_type(**{attribute: timeunit})
+    
+        await member.edit(timed_out_until=discord.utils.utcnow() + newtime, reason=reason)
         return await ctx.message.delete()
 
     @commands.command(name='unmute')

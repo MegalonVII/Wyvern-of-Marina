@@ -5,7 +5,7 @@ from asyncio import sleep, TimeoutError
 from math import ceil
 
 from utils import zenny, prev_steal_targets, target_counts, lists # utils direct values
-from utils import in_wom_shenanigans, assert_cooldown, wups, reply, subtract_coins, add_coins, stolen_funds, dep, wd, add_item, subtract_item, direct_to_bank, load_info # utils functions
+from utils import in_wom_shenanigans, assert_cooldown, wups, reply, subtract_coins, add_coins, dual_spend, stolen_funds, dep, wd, add_item, subtract_item, direct_to_bank, load_info # utils functions
 
 # economy commands
 # slots, bet, steal, heist, dep, wd, bal, bankbal, paypal, mp, buy, sell, inv, use
@@ -87,7 +87,7 @@ class Economy(commands.Cog):
             
             else: 
                 lost_coins = random.randint(1, 100)
-                if subtract_coins(ctx.author.id, lost_coins): # unsuccessful steal
+                if dual_spend(ctx.author.id, lost_coins): # unsuccessful steal
                     add_coins(target.id, lost_coins)
                     return await reply(ctx, f"You got caught trying to steal {lost_coins} {zenny} from {target.name}! You were forced to pay them back instead...")
                 else:
@@ -107,28 +107,17 @@ class Economy(commands.Cog):
                         add_coins(ctx.author.id, amount)
                 return await reply(ctx, f"Successful heist! {total} {zenny}!")
             else: # unsuccesful heist
-                handBal = int(lists['coins'][str(ctx.author.id)])
-                bankBal = int(lists['bank'][str(ctx.author.id)])
-                totalBal = handBal + bankBal
-                bailAmt = totalBal // 5
-                bailLeft = bailAmt
+                bailAmt = (int(lists['coins'][str(ctx.author.id)]) + int(lists['bank'][str(ctx.author.id)])) // 5
 
-                if bailAmt == 0:
-                    if subtract_coins(ctx.author.id, handBal):
+                if bailAmt == 0: # total balance less than 5
+                    if subtract_coins(ctx.author.id, int(lists['coins'][str(ctx.author.id)])):
                         pass
-                    if stolen_funds(ctx.author.id, bankBal):
+                    if stolen_funds(ctx.author.id, int(lists['bank'][str(ctx.author.id)])):
                         pass
-                    return await reply(ctx, "Unsuccessful heist! <:PoM:888677251615449158> arrested you! You couldn't pay a bail, however, so you paid what little you had left and wrote an IOU...")
+                    return await reply(ctx, "Unsuccessful heist! <:PoM:888677251615449158> arrested you! You couldn't pay a bail, however, so you paid what little you had left and wrote an IOU...") # unsuccessful, clears out what little you have, brokie
 
-                if handBal < bailAmt:
-                    if subtract_coins(ctx.author.id, handBal):
-                        bailLeft -= handBal
-                    if stolen_funds(ctx.author.id, bailLeft):
-                        pass
-                    return await reply(ctx, f"Unsuccessful heist! <:PoM:888677251615449158> arrested you! You paid {bailAmt} {zenny} as bail...")
-                else:
-                    if subtract_coins(ctx.author.id, bailAmt):
-                        return await reply(ctx, f"Unsuccessful heist! <:PoM:888677251615449158> arrested you! You paid {bailAmt} {zenny} as bail...")
+                if dual_spend(ctx.author.id, bailAmt):
+                    return await reply(ctx, f"Unsuccessful heist! <:PoM:888677251615449158> arrested you! You paid {bailAmt} {zenny} as bail...") # unsuccessful, pays 20% of total balance
 
     @commands.command(name='deposit', aliases=['dep'])
     async def deposit(self, ctx, amt:int):

@@ -72,10 +72,10 @@ async def help(ctx, page: str = "home"):
         "admin": ('Administrative Commands', [
             ('!w createcommand (name) (output)', 'Create your own commands that make me send custom text or links.'),
             ('!w deletecommand (name)', 'Delete commands that have already been created.'),
-            ('!w clear (number of messages)', 'Deletes the last number you specify of messages from the specific chat. To avoid rate limits, please enter a number between 1 and 10.'),
+            ('!w clear (number of messages, 1-10)', 'Deletes the last number you specify of messages from the specific chat.'),
             ('!w kick (@member)', 'Kicks the mentioned member from the server.'),
             ('!w ban (@member)', 'Bans the mentioned member from the server.'),
-            ('!w mute (@member) (time amount)(s, m, h, d, or w)', 'Mutes the mentioned member for the given time amount. \"s\" for seconds, \"m\" for minutes, \"h\" for hours, \"d\" for days, and \"w\" for weeks. No space in between the time amount and the letter!'),
+            ('!w mute (@member) ([Optional] (time amount) (s, m, h, d, or w)) ([Optional] Reasoning)', 'Mutes the mentioned member for the given time amount, defaulting to 1 hour. \"s\" for seconds, \"m\" for minutes, \"h\" for hours, \"d\" for days, and \"w\" for weeks.'),
             ('!w unmute (@member)', 'Unmutes the mentioned member.')
         ]),
         "flair": ('Flair Commands', [
