@@ -21,7 +21,7 @@ class Music(commands.Cog):
         try:
             return await ctx.message.add_reaction(emoji)
         except:
-            return await reply(f"{message} {emoji}")
+            return await reply(ctx, f"{message} {emoji}")
 
     # backend helpers
     # this is to initiate the voice call that the bot will be in
@@ -167,11 +167,13 @@ class Music(commands.Cog):
 
     @commands.command(name='play')
     async def _play(self, ctx: commands.Context, *, search: str):
-        if not ctx.voice_state.voice:
+        if not ctx.voice_state.voice: # bot not in vc at all
             return await wups(ctx, 'I\'m not connected to a voice channel')
         if ctx.voice_client:
-            if ctx.voice_client.channel != ctx.author.voice.channel:
-                return await wups(ctx, 'I\'m already in a voice channel')
+            if ctx.voice_client.channel != ctx.author.voice.channel: # user in different vc than bot
+                return await wups(ctx, 'I\'m already in a different voice channel')
+            elif not ctx.author.voice.channel: # user not in vc at all but bot is
+                return await wups(ctx, 'You\'re not connected to a voice channel')
             
         async with ctx.typing():
             try:
