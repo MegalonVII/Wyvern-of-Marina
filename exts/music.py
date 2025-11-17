@@ -52,7 +52,7 @@ class Music(commands.Cog):
         if not ctx.voice_state.voice:
             return await wups(ctx, 'I\'m not connected to any voice channel')
         if ctx.voice_client:
-            if ctx.voice_client.channel != ctx.author.voice.channel or ctx.author.voice is None:
+            if ctx.author.voice is None or ctx.voice_client.channel != ctx.author.voice.channel:
                 return await wups(ctx, 'You\'re not in my voice channel')
         await ctx.voice_state.stop()
         print(f'{Style.BRIGHT}Left {Style.RESET_ALL}{Fore.BLUE}{ctx.author.voice.channel.name}{Fore.RESET}')
@@ -170,10 +170,10 @@ class Music(commands.Cog):
         if not ctx.voice_state.voice: # bot not in vc at all
             return await wups(ctx, 'I\'m not connected to a voice channel')
         if ctx.voice_client:
-            if ctx.voice_client.channel != ctx.author.voice.channel: # user in different vc than bot
-                return await wups(ctx, 'I\'m already in a different voice channel')
-            elif not ctx.author.voice.channel: # user not in vc at all but bot is
+            if ctx.author.voice is None: # user not in vc at all but bot is
                 return await wups(ctx, 'You\'re not connected to a voice channel')
+            elif ctx.voice_client.channel != ctx.author.voice.channel: # user in different vc than bot
+                return await wups(ctx, 'I\'m already in a different voice channel')
             
         async with ctx.typing():
             try:
