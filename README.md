@@ -66,11 +66,12 @@ These are also viewable from the `main.py` file in this repo, and also in our Di
 5. `!w queue (optional: page number)` *Displays the queue of songs incoming to the voice call.*
 6. `!w shuffle` *Shuffles queue. DJs or Admins only.*
 7. `!w remove (index)` *Removes song at index of queue. DJs, Admins, or song requester only.*
-8. `!w pause` *Pauses current song.*
-9. `!w resume` *Resumes paused song.*
-10. `!w stop` *Clears queue and stops currently playing song.*
-11. `!w skip` *Skips to next song in queue. DJs, Admins, or song requester only.*
-12. `!w grabber (platform) (query)` *Gets information about a song from that platform. May not be perfect.*
+8. `!w moveto (from_index) (to_index)` *Moves song from source index to destination index in queue. DJs or Admins only.*
+9. `!w pause` *Pauses current song.*
+10. `!w resume` *Resumes paused song.*
+11. `!w stop` *Clears queue and stops currently playing song.*
+12. `!w skip` *Skips to next song in queue. DJs, Admins, or song requester only.*
+13. `!w grabber (platform) (query)` *Gets information about a song from that platform. May not be perfect.*
 
 ## Miscellaneous
 1. `!w ping` *Returns bot response time in milliseconds.*

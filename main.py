@@ -96,6 +96,7 @@ async def help(ctx, page: str = "home"):
             ('!w queue (optional: page number)', 'Displays the queue of songs to play in voice call. Page value defaults to 1. Each page displays the first 10 songs in the queue.'),
             ('!w shuffle', 'Shuffles the current queue of songs for voice calls. *[DJs/Admin Only]*'),
             ('!w remove (index)', 'Removes the song at the provided index from the queue of songs for voice calls.'),
+            ('!w moveto (from_index) (to_index)', 'Moves the song at the provided source index to the destination index in the queue. *[DJs/Admin Only]*'),
             ('!w pause', 'Pauses any music that I\'m playing in a call.'),
             ('!w resume', 'Resumes any paused music in a call.'),
             ('!w stop', 'Stops any playing music in a call entirely.'),

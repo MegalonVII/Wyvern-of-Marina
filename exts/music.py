@@ -36,7 +36,7 @@ class Music(commands.Cog):
         ctx.voice_state = self.get_voice_state(ctx)
 
     # commands that are usable
-    # join*, leave*, now, pause*, resume*, stop*, skip*, queue, shuffle*, remove*, play, grabber
+    # join*, leave*, now, pause*, resume*, stop*, skip*, queue, shuffle*, remove*, moveto*, play, grabber
     @commands.command(name='join')
     async def _join(self, ctx: commands.Context):
         destination = ctx.author.voice.channel if ctx.author.voice else None 
@@ -164,6 +164,38 @@ class Music(commands.Cog):
             return await wups(ctx, 'Index out of bounds')
         ctx.voice_state.songs.remove(index - 1)
         return await Music.respond(self, ctx, 'Song removed from queue!', '✅')
+
+    @commands.command(name='moveto')
+    async def _moveto(self, ctx: commands.Context, from_index: int, to_index: int):
+        author = ctx.message.author
+        djRole = discord.utils.get(ctx.guild.roles, name="DJ")
+        
+        queue = ctx.voice_state.songs
+        if ctx.voice_client:
+            if ctx.author.voice is None or ctx.voice_client.channel != ctx.author.voice.channel:
+                return await wups(ctx, 'You\'re not in my voice channel')
+        if author.guild_permissions.administrator or djRole in author.roles:
+            if len(queue) == 0:
+                return await wups(ctx, 'Queue is empty')
+            if from_index < 1 or from_index > len(queue):
+                return await wups(ctx, f'Source index out of bounds (must be between 1 and {len(queue)})')
+            if to_index < 1 or to_index > len(queue):
+                return await wups(ctx, f'Destination index out of bounds (must be between 1 and {len(queue)})')
+            if from_index == to_index:
+                return await wups(ctx, 'Source and destination positions are the same')
+            
+            # convert to 0-based indexing
+            from_pos = from_index - 1
+            to_pos = to_index - 1
+            
+            # move the song
+            song = queue._queue[from_pos]
+            del queue._queue[from_pos]
+            queue._queue.insert(to_pos, song)
+            
+            return await Music.respond(self, ctx, f'Moved song from position {from_index} to position {to_index}!', '✅')
+        else:
+            return await wups(ctx, 'You don\'t have the permissions to use this. Must be either a DJ or administrator')
 
     @commands.command(name='play')
     async def _play(self, ctx: commands.Context, *, search: str):
