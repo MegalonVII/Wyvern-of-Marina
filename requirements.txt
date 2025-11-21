@@ -11,4 +11,3 @@ pynacl
 spotdl
 scdl
 audioop-lts
-deno
