@@ -268,7 +268,7 @@ class Music(commands.Cog):
                     )
                 elif platform_lower == 'youtube':
                     success, error = await self._run_download(
-                        f'yt-dlp ytsearch:"{query}" -x --audio-format mp3 -o "%(title)s.%(ext)s" --no-playlist --embed-metadata --embed-thumbnail',
+                            f'yt-dlp ytsearch:"{query}" -x --audio-format mp3 -o "%(title)s.%(ext)s" --no-playlist --embed-metadata --embed-thumbnail --remote-components ejs:github',
                         'YouTube', (Fore.WHITE, Back.RED),
                         {'Downloading 0 items': "I couldn't download anything. Try again (Most likely, your search query was invalid.)"}
                     )
