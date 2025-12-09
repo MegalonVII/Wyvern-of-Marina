@@ -392,8 +392,8 @@ def subtract_coins(userID: int, coins: int) -> bool:
     return True
 
 def dual_spend(userID: int, spending: int) -> bool:
-    handBal = int(lists['coins'][str(ctx.author.id)])
-    bankBal = int(lists['bank'][str(ctx.author.id)])
+    handBal = int(lists['coins'][str(userID)])
+    bankBal = int(lists['bank'][str(userID)])
     totalBal = handBal + bankBal
 
     if totalBal < spending:
@@ -402,13 +402,13 @@ def dual_spend(userID: int, spending: int) -> bool:
     spendingLeft = spending
 
     if handBal < spending:
-        if subtract_coins(ctx.author.id, handBal):
+        if subtract_coins(userID, handBal):
             spendingLeft -= handBal
-        if stolen_funds(ctx.author.id, spendingLeft):
+        if stolen_funds(userID, spendingLeft):
             pass
         return True
     else:
-        if subtract_coins(ctx.author.id, spending):
+        if subtract_coins(userID, spending):
             return True
 
 def add_item(itemName:str, userID:int, quantity:int):
