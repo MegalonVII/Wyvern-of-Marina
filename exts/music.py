@@ -270,7 +270,8 @@ class Music(commands.Cog):
                     youtube_url_pattern = r'(?:https?://)?(?:www\.)?(?:youtube\.com/(?:watch\?v=|embed/)|youtu\.be/|m\.youtube\.com/watch\?v=)'
                     download_query = query if re.search(youtube_url_pattern, query) else f'ytsearch:"{query}"'
                     success, error = await self._run_download(
-                        f'yt-dlp {download_query} -x --audio-format mp3 -o "%(title)s.%(ext)s" --no-playlist --embed-metadata --embed-thumbnail --remote-components ejs:github',
+                        # change the browser if you want to change, but then change back to firefox once finished testing as that is the browser neel's server relies on
+                        f'yt-dlp {download_query} -x --audio-format mp3 -o "%(title)s.%(ext)s" --no-playlist --embed-metadata --embed-thumbnail --remote-components ejs:github --cookies-from-browser firefox', 
                         'YouTube', (Fore.WHITE, Back.RED),
                         {'Downloading 0 items': "I couldn't download anything. Try again (Most likely, your search query was invalid.)"}
                     )

@@ -41,7 +41,7 @@ class Flair(commands.Cog):
         if not ctx.author.guild_permissions.administrator:
             return await wups(ctx, 'You do not have the required permissions')
         if not role.name in list(lists["flairs"].keys()):
-            return await wups('This role is not a flair')
+            return await wups(ctx, 'This role is not a flair')
         if len(list(lists["flairs"].keys())) == 0:
             return await wups(ctx, 'There are no flairs to delete in the first place')
         

@@ -51,7 +51,7 @@ class Events(commands.Cog):
                 if content.lower() == "me":
                     await message.channel.send('<:WoM:836128658828558336>')
                 if content.lower() == "which":
-                    if assert_cooldown("which") != 0:
+                    if assert_cooldown("which", message.author.id) != 0:
                         await shark_react(message)
                     else:
                         await message.channel.send(choice([member.name.lower() for member in message.guild.members if not member.bot]))
@@ -84,7 +84,7 @@ class Events(commands.Cog):
                 try:
                     if the_thing.fullmatch(content):
                         if wom.nick and wom.nick.lower() == "wrok":
-                            if assert_cooldown("itt") != 0:
+                            if assert_cooldown("itt", message.author.id) != 0:
                                 await shark_react(message)
                             else:
                                 async with message.channel.typing():
@@ -94,7 +94,7 @@ class Events(commands.Cog):
                             await shark_react(message)
                             await message.reply("Wups! I need to be nicknamed \"Wrok\" for this to work...", mention_author=False)
                     elif the_thing2.fullmatch(content):
-                        if assert_cooldown("react") != 0:
+                        if assert_cooldown("react", message.author.id) != 0:
                             await shark_react(message)
                         else:
                             async with message.channel.typing():

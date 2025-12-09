@@ -20,10 +20,10 @@ class Economy(commands.Cog):
     @commands.command(name='slots')
     async def slots(self, ctx):
         if await in_wom_shenanigans(ctx):
-            if assert_cooldown('slots') != 0:
-                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('slots')} seconds")
+            if assert_cooldown('slots', ctx.author.id) != 0:
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('slots', ctx.author.id)} seconds")
             if not subtract_coins(ctx.author.id, 10):
-                return await wups(f"You don't have enough {zenny} to play")
+                return await wups(ctx, f"You don't have enough {zenny} to play")
         
             emojis = ["🍒", "🍇", "🍊", "🍋", "🍉","🫐","7️⃣"]
             reels = ["❓","❓","❓"]
@@ -49,8 +49,8 @@ class Economy(commands.Cog):
     @commands.command(name='bet')
     async def bet(self, ctx, amount:int):
         if await in_wom_shenanigans(ctx):
-            if assert_cooldown('bet'):
-                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('bet')} seconds")
+            if assert_cooldown('bet', ctx.author.id) != 0:
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('bet', ctx.author.id)} seconds")
             if subtract_coins(ctx.author.id, amount):
                 roll = random.randint(1,6)
                 roll2 = random.randint(1,6)
@@ -68,8 +68,8 @@ class Economy(commands.Cog):
                 return await wups(ctx, "You can't steal from a bot or from yourself")
             if prev_steal_targets.get(ctx.author.id) == target and target_counts.get(ctx.author.id, 0) <= 2:
                 return await wups(ctx, "You can't target this person again so soon. Choose a different target")
-            if assert_cooldown('steal') != 0:
-                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('steal')} seconds")
+            if assert_cooldown('steal', ctx.author.id) != 0:
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('steal', ctx.author.id)} seconds")
         
             if prev_steal_targets.get(ctx.author.id) != target:
                 target_counts[ctx.author.id] = target_counts.get(ctx.author.id, 0) + 1
@@ -96,8 +96,8 @@ class Economy(commands.Cog):
     @commands.command(name='heist')
     async def heist(self, ctx):
         if await in_wom_shenanigans(ctx):
-            if assert_cooldown("heist") != 0:
-                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('heist')} seconds")
+            if assert_cooldown("heist", ctx.author.id) != 0:
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('heist', ctx.author.id)} seconds")
             if random.randint(1, 100) == 1: # successful heist
                 total = 0
                 for key in lists['bank'].keys():

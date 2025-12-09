@@ -151,8 +151,8 @@ class Fun(commands.Cog):
         
     @commands.command(name='howgay')
     async def howgay(self, ctx, member:discord.Member=None):
-        if assert_cooldown("howgay") != 0:
-            return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('howgay')} seconds")
+        if assert_cooldown("howgay", ctx.author.id) != 0:
+            return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('howgay', ctx.author.id)} seconds")
     
         member = member or ctx.author
         percent = random.randint(0,100)
@@ -171,8 +171,8 @@ class Fun(commands.Cog):
     @commands.command(name='rps')
     async def rps(self, ctx, playerChoice: str=None):
         if await in_wom_shenanigans(ctx):
-            if assert_cooldown("rps") != 0 :
-                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('rps')} seconds")
+            if assert_cooldown("rps", ctx.author.id) != 0 :
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('rps', ctx.author.id)} seconds")
             if playerChoice is None:
                 return await wups(ctx, "You need to give me your choice")
             
@@ -193,8 +193,8 @@ class Fun(commands.Cog):
 
     @commands.command(name='8ball')
     async def eightball(self, ctx):
-        if assert_cooldown("8ball") != 0 :
-            return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('8ball')} seconds")
+        if assert_cooldown("8ball", ctx.author.id) != 0 :
+            return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('8ball', ctx.author.id)} seconds")
         if len(ctx.message.content) < 9:
             return await wups(ctx, "You need to give me a question to respond to")
         
@@ -203,8 +203,8 @@ class Fun(commands.Cog):
 
     @commands.command(name='roulette')
     async def roulette(self, ctx, member:discord.Member=None):
-        if assert_cooldown("roulette") != 0:
-            return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('roulette')} seconds")
+        if assert_cooldown("roulette", ctx.author.id) != 0:
+            return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('roulette', ctx.author.id)} seconds")
         
         member = member or ctx.author
         chance = int(lists["karma"][str(member.id)])
@@ -244,8 +244,8 @@ class Fun(commands.Cog):
         if await in_wom_shenanigans(ctx):
             types = ['general', 'film', 'music', 'tv', 'games', 'anime']
             categories = [9, 11, 12, 14, 15, 31]
-            if assert_cooldown('trivia') != 0:
-                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('trivia')} seconds")
+            if assert_cooldown('trivia', ctx.author.id) != 0:
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('trivia', ctx.author.id)} seconds")
             if not type is None and type.lower() not in types:
                 return await wups(ctx, "Invalid trivia type")
             

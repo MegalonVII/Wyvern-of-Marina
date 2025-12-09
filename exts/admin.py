@@ -57,8 +57,8 @@ class Admin(commands.Cog):
             return await wups(ctx, "You do not have the required permissions")
         if num is None or num < 1 or num > 10:
             return await wups(ctx, "Please enter a number between 1 and 10")
-        if assert_cooldown("clear") != 0:
-            return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('clear')} seconds")
+        if assert_cooldown("clear", ctx.author.id) != 0:
+            return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('clear', ctx.author.id)} seconds")
 
         await ctx.message.add_reaction('✅')
         return await ctx.message.channel.purge(limit=num+1)

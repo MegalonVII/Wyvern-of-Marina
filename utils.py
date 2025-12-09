@@ -21,7 +21,7 @@ editsnipe_data={"content":{}, "author":{}, "id":{}}
 prev_steal_targets={}
 target_counts={}
 cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "itt":10.0, "react":5.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":25.0, "slots":10.0, "steal":30.0, 'bet':30.0, 'heist':600.0}
-last_executed={cooldown:0 for cooldown in cooldowns}
+last_executed={cooldown:{} for cooldown in cooldowns}
 starboard_emoji='<:spuperman:670852114070634527>'
 shame_emoji='🪳'
 starboard_count=4
@@ -51,6 +51,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
         'no_warnings': True,
         'default_search': 'auto',
         'source_address': '0.0.0.0',
+        # change the browser if you want to change, but then change back to firefox once finished testing as that is the browser neel's server relies on
+        'cookiesfrombrowser': ('firefox', )
     }
 
     FFMPEG_OPTIONS = {
@@ -585,12 +587,12 @@ async def in_threads(ctx, threads: list, giveResponse: bool):
         return False
     return True
 
-def assert_cooldown(command):
+def assert_cooldown(command, user_id):
     global last_executed
-    if last_executed[command] + cooldowns[command] < time.time():
-        last_executed[command] = time.time()
+    if user_id not in last_executed[command] or last_executed[command][user_id] + cooldowns[command] < time.time():
+        last_executed[command][user_id] = time.time()
         return 0
-    return round(last_executed[command] + cooldowns[command] - time.time())
+    return round(last_executed[command][user_id] + cooldowns[command] - time.time())
 
 def capitalize_string(string: str) -> str:
     return ' '.join(word.capitalize() for word in string.split('-'))
