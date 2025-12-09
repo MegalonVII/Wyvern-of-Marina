@@ -267,8 +267,10 @@ class Music(commands.Cog):
                         {"LookupError": "I couldn't find a song on Spotify with that query. Try again"}
                     )
                 elif platform_lower == 'youtube':
+                    youtube_url_pattern = r'(?:https?://)?(?:www\.)?(?:youtube\.com/(?:watch\?v=|embed/)|youtu\.be/|m\.youtube\.com/watch\?v=)'
+                    download_query = query if re.search(youtube_url_pattern, query) else f'ytsearch:"{query}"'
                     success, error = await self._run_download(
-                            f'yt-dlp ytsearch:"{query}" -x --audio-format mp3 -o "%(title)s.%(ext)s" --no-playlist --embed-metadata --embed-thumbnail --remote-components ejs:github',
+                        f'yt-dlp {download_query} -x --audio-format mp3 -o "%(title)s.%(ext)s" --no-playlist --embed-metadata --embed-thumbnail --remote-components ejs:github',
                         'YouTube', (Fore.WHITE, Back.RED),
                         {'Downloading 0 items': "I couldn't download anything. Try again (Most likely, your search query was invalid.)"}
                     )

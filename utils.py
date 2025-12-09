@@ -81,7 +81,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         data = await loop.run_in_executor(None, partial)
 
         if data is None:
-            return await reply(ctx, f"Wups! Couldn\'t find anything that matches `{search}`...")
+            raise YTDLError(f"Wups! Couldn\'t find anything that matches `{search}`")
         if 'entries' not in data:
             process_info = data
         else:
@@ -91,7 +91,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
                     process_info = entry
                     break
             if process_info is None:
-                return await reply(ctx, f"Wups! Couldn\'t find anything that matches `{search}`...")
+                raise YTDLError(f"Wups! Couldn\'t find anything that matches `{search}`")
 
         webpage_url = process_info['webpage_url']
         partial = functools.partial(cls.ytdl.extract_info, webpage_url, download=False)
@@ -108,7 +108,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
             try:
                 info = processed_info['entries'].pop(0)
             except IndexError:
-                return await reply(ctx, f'Wups! Couldn\'t retrieve any matches for `{webpage_url}`...')
+                raise YTDLError(f'Wups! Couldn\'t retrieve any matches for `{webpage_url}`')
 
         return cls(ctx, discord.FFmpegPCMAudio(info['url'], **cls.FFMPEG_OPTIONS), data=info)
 
