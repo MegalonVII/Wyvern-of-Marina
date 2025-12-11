@@ -114,16 +114,20 @@ class Events(commands.Cog):
             return
 
         channel = message.channel.id
+        message_id = message.id
         snipe_data[channel] = {
             "content": str(message.content) if message.content else "",
             "author": message.author,
-            "id": message.id,
+            "id": message_id,
             "attachment": message.attachments[0] if message.attachments else None
         }
 
-        await asyncio.sleep(60)
-        if snipe_data.get(channel) and snipe_data[channel]["id"] == message.id:
-            del snipe_data[channel]
+        async def cleanup_snipe():
+            await asyncio.sleep(60)
+            if snipe_data.get(channel) and snipe_data[channel]["id"] == message_id:
+                del snipe_data[channel]
+        
+        self.bot.loop.create_task(cleanup_snipe())
 
     @commands.Cog.listener()
     async def on_message_edit(self, message_before, message_after):
@@ -131,15 +135,19 @@ class Events(commands.Cog):
             return
 
         channel = message_after.channel.id
+        message_id = message_after.id
         editsnipe_data[channel] = {
             "content": str(message_before.content) if message_before.content else "",
             "author": message_after.author,
-            "id": message_after.id
+            "id": message_id
         }
 
-        await asyncio.sleep(60)
-        if editsnipe_data.get(channel) and editsnipe_data[channel]["id"] == message_after.id:
-            del editsnipe_data[channel]
+        async def cleanup_editsnipe():
+            await asyncio.sleep(60)
+            if editsnipe_data.get(channel) and editsnipe_data[channel]["id"] == message_id:
+                del editsnipe_data[channel]
+        
+        self.bot.loop.create_task(cleanup_editsnipe())
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -218,9 +226,12 @@ class Events(commands.Cog):
                         await member.add_roles(role, reason=f"it is {member.name}'s birthday")
 
                         async def remove_role_later(m, r):
-                            await asyncio.sleep(86400)  # 24h in seconds
-                            if r in m.roles:
-                                await m.remove_roles(r, reason=f"it is no longer {m.name}'s birthday")
+                            try:
+                                await asyncio.sleep(86400)  # 24h in seconds
+                                if r in m.roles:
+                                    await m.remove_roles(r, reason=f"it is no longer {m.name}'s birthday")
+                            except asyncio.CancelledError:
+                                pass
 
                         self.bot.loop.create_task(remove_role_later(member, role))
 
@@ -235,6 +246,10 @@ class Events(commands.Cog):
 
     def cog_unload(self):
         self.wish_birthday.cancel()
+        if hasattr(self, '_role_removal_tasks'):
+            for task in self._role_removal_tasks:
+                if not task.done():
+                    task.cancel()
 
 
 async def setup(bot):

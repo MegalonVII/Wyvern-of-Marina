@@ -58,6 +58,17 @@ class Music(commands.Cog):
             os.remove(file_path)
         return await msg.delete()
 
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        if member == self.bot.user:
+            if before.channel and not after.channel:
+                guild_id = before.channel.guild.id
+                if guild_id in self.voice_states:
+                    voice_state = self.voice_states[guild_id]
+                    await voice_state.stop()
+                    del self.voice_states[guild_id]
+
+
     # commands that are usable
     # join, leave, now, pause, resume, stop, skip, queue, shuffle, remove, moveto, play, grabber
     @commands.command(name='join')
@@ -77,9 +88,15 @@ class Music(commands.Cog):
         if ctx.voice_client:
             if ctx.author.voice is None or ctx.voice_client.channel != ctx.author.voice.channel:
                 return await wups(ctx, 'You\'re not in my voice channel')
+        
+        channel_name = ctx.voice_state.voice.channel.name if ctx.voice_state.voice and ctx.voice_state.voice.channel else "voice channel"
+        
         await ctx.voice_state.stop()
-        print(f'{Style.BRIGHT}Left {Style.RESET_ALL}{Fore.BLUE}{ctx.author.voice.channel.name}{Fore.RESET}')
-        del self.voice_states[ctx.guild.id]
+        
+        if ctx.guild.id in self.voice_states:
+            del self.voice_states[ctx.guild.id]
+        
+        print(f'{Style.BRIGHT}Left {Style.RESET_ALL}{Fore.BLUE}{channel_name}{Fore.RESET}')
         return await ctx.message.add_reaction('👋')
 
     @commands.command(name='now')

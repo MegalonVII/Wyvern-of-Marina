@@ -227,10 +227,15 @@ class VoiceState:
 
     async def stop(self):
         self.songs.clear()
+        if hasattr(self, 'audio_player') and not self.audio_player.done():
+            self.audio_player.cancel()
+            try:
+                await self.audio_player
+            except asyncio.CancelledError:
+                pass
         if self.voice:
             await self.voice.disconnect()
             self.voice = None
-
 
 # bot helper functions
 # create_list, update_birthday, create_birthday_list, check_reaction_board, add_to_board, reply, add_coins, subtract_coins, dual_spend, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, in_channels, in_threads, assert_cooldown, capitalize_string, parse_total_duration, shark_react, wups, get_login_time, load_info, load_emulation
@@ -589,6 +594,17 @@ async def in_threads(ctx, threads: list, giveResponse: bool):
 
 def assert_cooldown(command, user_id):
     global last_executed
+
+    def cleanup_old_cooldowns(command):
+        global last_executed
+        current_time = time.time()
+        to_remove = [user_id for user_id, timestamp in last_executed[command].items() 
+                    if current_time - timestamp > 3600]
+        for user_id in to_remove:
+            del last_executed[command][user_id]
+
+    if random.randint(1, 100) == 1:
+        cleanup_old_cooldowns(command)
     if user_id not in last_executed[command] or last_executed[command][user_id] + cooldowns[command] < time.time():
         last_executed[command][user_id] = time.time()
         return 0
