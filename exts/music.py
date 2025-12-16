@@ -4,7 +4,9 @@ import math
 import os
 import re
 from colorama import Fore, Back, Style
-from asyncio import subprocess, create_subprocess_shell
+import asyncio
+from gtts import gTTS
+import tempfile
 import nacl # necessary for opus
 
 from utils import VoiceState, YTDLSource, YTDLError, Song # utils classes 
@@ -15,6 +17,8 @@ class Music(commands.Cog):
         self.bot = bot
         self.voice_states = {}
         self.platforms = ['spotify', 'youtube', 'soundcloud']
+        self.tts_queue = asyncio.Queue()
+        self.tts_processing = False
 
     # backend helpers
     # this is to initiate the voice call that the bot will be in
@@ -27,11 +31,76 @@ class Music(commands.Cog):
 
     async def cog_before_invoke(self, ctx: commands.Context):
         ctx.voice_state = self.get_voice_state(ctx)
+    
+    async def process_tts_queue(self, voice_state):
+        if self.tts_processing:
+            return
+        
+        self.tts_processing = True
+        
+        # full processing loop
+        try:
+            while True:
+                tts_item = await self.tts_queue.get()
+                tts_text, temp_file_name, was_playing, was_paused, current_song = tts_item
+                
+                try:
+                    source = discord.FFmpegPCMAudio(temp_file_name)
+                    
+                    if was_playing and not was_paused and voice_state.voice:
+                        voice_state.voice.pause()
+                    
+                    tts_done = asyncio.Event()
+                    
+                    def after_playing(error):
+                        try:
+                            if os.path.exists(temp_file_name):
+                                os.remove(temp_file_name)
+                        except:
+                            pass
+                        
+                        if error:
+                            print(f'{Style.BRIGHT}TTS Error{Style.RESET_ALL}: {error}')
+                        
+                        if was_playing and not was_paused and current_song:
+                            try:
+                                if voice_state.voice:
+                                    if not voice_state.voice.is_playing():
+                                        current_song.source.volume = voice_state.volume
+                                        voice_state.voice.play(
+                                            current_song.source, 
+                                            after=voice_state.play_next_song
+                                        )
+                                        voice_state.current = current_song
+                            except Exception as e:
+                                print(f'{Style.BRIGHT}TTS Resume Error{Style.RESET_ALL}: {e}')
+                        
+                        tts_done.set()
+                    
+                    if voice_state.voice:
+                        voice_state.voice.play(source, after=after_playing)
+                        await tts_done.wait()
+                    
+                except Exception as e:
+                    # clean up on error
+                    try:
+                        if os.path.exists(temp_file_name):
+                            os.remove(temp_file_name)
+                    except:
+                        pass
+                    print(f'{Style.BRIGHT}TTS Queue Processing Error{Style.RESET_ALL}: {e}')
+                
+                self.tts_queue.task_done()
+                
+                if self.tts_queue.empty():
+                    break
+                
+        finally:
+            self.tts_processing = False
 
     async def _run_download(self, cmd: str, name: str, colors: tuple, error_checks: dict = None):
-        """Helper to run download subprocess and handle output."""
         print(f"{Style.BRIGHT}Downloading from {colors[0]}{colors[1]}{name}{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
-        proc = await create_subprocess_shell(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = await asyncio.create_subprocess_shell(cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         stdout, stderr = await proc.communicate()
         stdout_str, stderr_str = stdout.decode(), stderr.decode()
         print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout_str}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr_str}\n")
@@ -310,6 +379,53 @@ class Music(commands.Cog):
                     return await wups(ctx, error)
                 
                 return await self._send_downloaded_files(ctx, msg)
+
+    @commands.command(name='tts')
+    async def _tts(self, ctx: commands.Context, *, message: str):
+        if not ctx.voice_state.voice: # bot not in vc at all
+            return await wups(ctx, 'I\'m not connected to a voice channel')
+        if ctx.voice_client:
+            if ctx.author.voice is None: # user not in vc at all but bot is
+                return await wups(ctx, 'You\'re not connected to a voice channel')
+            elif ctx.voice_client.channel != ctx.author.voice.channel: # user in different vc than bot
+                return await wups(ctx, 'I\'m already in a different voice channel')
+        
+        # tts text formatting
+        tts_text = f"{ctx.author.display_name or ctx.author.global_name} said {message}"
+        if len(tts_text) > 200:
+            return await wups(ctx, 'Message is too long. Please keep it under 200 characters')
+        
+        # full tts process
+        try:
+            async with ctx.typing():
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+                temp_file.close()
+                
+                loop = asyncio.get_event_loop()
+                await loop.run_in_executor(
+                    None,
+                    lambda: gTTS(text=tts_text, lang='en', slow=False).save(temp_file.name)
+                )
+                
+                was_playing = ctx.voice_state.is_playing and ctx.voice_state.voice.is_playing()
+                was_paused = ctx.voice_state.voice.is_paused() if ctx.voice_state.voice else False
+                current_song = ctx.voice_state.current if was_playing else None
+                
+                await self.tts_queue.put((tts_text, temp_file.name, was_playing, was_paused, current_song))
+                
+                if not self.tts_processing:
+                    self.bot.loop.create_task(self.process_tts_queue(ctx.voice_state))
+                
+                return await ctx.message.add_reaction('✅')
+                
+        except Exception as e:
+            # clean up on error
+            try:
+                if 'temp_file' in locals() and os.path.exists(temp_file.name):
+                    os.remove(temp_file.name)
+            except:
+                pass
+            return await wups(ctx, f'An error occurred while generating TTS: `{str(e)}`')
 
 
 async def setup(bot):

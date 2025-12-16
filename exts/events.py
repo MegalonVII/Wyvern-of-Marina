@@ -54,7 +54,7 @@ class Events(commands.Cog):
                     if assert_cooldown("which", message.author.id) != 0:
                         await shark_react(message)
                     else:
-                        await message.channel.send(choice([member.name.lower() for member in message.guild.members if not member.bot]))
+                        await message.channel.send(choice([member.display_name.lower() for member in message.guild.members if not member.bot]))
                 if content.lower() == "hi guys":
                     try:
                         await message.add_reaction("🍅")

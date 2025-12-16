@@ -72,6 +72,7 @@ These are also viewable from the `main.py` file in this repo, and also in our Di
 11. `!w stop` *Clears queue and stops currently playing song.*
 12. `!w skip` *Skips to next song in queue. DJs, Admins, or song requester only.*
 13. `!w grabber (platform) (query)` *Gets information about a song from that platform. May not be perfect.*
+14. `!w tts (message)` *Plays the message provided as a text-to-speech for people in voice call. Limited to 200 characters per message.*
 
 ## Miscellaneous
 1. `!w ping` *Returns bot response time in milliseconds.*

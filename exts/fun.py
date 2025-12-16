@@ -147,7 +147,7 @@ class Fun(commands.Cog):
 
     @commands.command(name='who')
     async def who(self, ctx):
-        return await reply(ctx, f"`{ctx.message.content[3:]}`? {random.choice([member.name for member in ctx.message.guild.members if not member.bot])}")
+        return await reply(ctx, f"`{ctx.message.content[3:]}`? {random.choice([member.display_name for member in ctx.message.guild.members if not member.bot])}")
         
     @commands.command(name='howgay')
     async def howgay(self, ctx, member:discord.Member=None):

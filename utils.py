@@ -120,9 +120,17 @@ class YTDLSource(discord.PCMVolumeTransformer):
         hours, minutes = divmod(minutes, 60)
         days, hours = divmod(hours, 24)
 
-        duration = [unit for value, unit in zip([days, hours, minutes, seconds], ["day", "hour", "minute", "second"]) if value != 0]
-        duration = [f"{value} {unit}{'s' if value != 1 else ''}" for value, unit in zip([days, hours, minutes, seconds], ["day", "hour", "minute", "second"]) if value != 0]
-        return ", ".join(duration)
+        parts = [days, hours, minutes, seconds]
+        start_idx = None
+        for i, part in enumerate(parts):
+            if part != 0:
+                start_idx = i
+                break
+        if start_idx is None or start_idx > 2:
+            start_idx = 2
+
+        formatted_parts = [f"{part:02d}" for part in parts[start_idx:]]
+        return ':'.join(formatted_parts)
 
 class Song:
     def __init__(self, source: YTDLSource):
@@ -623,23 +631,43 @@ def parse_total_duration(total_duration: list) -> str:
     }
 
     for duration in total_duration:
-        parts = duration.split(', ')
-        seconds = 0
-        for part in parts:
-            value, unit = part.split(' ')
-            value = int(value)
-            if unit.endswith('s'):
-                unit = unit[:-1]
-            seconds += value * conversion_factors[unit]
-        all_seconds += seconds
+        if ':' in duration:
+            parts = duration.split(':')
+            if len(parts) == 4:
+                days, hours, minutes, seconds = map(int, parts)
+                all_seconds += days * 86400 + hours * 3600 + minutes * 60 + seconds
+            elif len(parts) == 3:
+                hours, minutes, seconds = map(int, parts)
+                all_seconds += hours * 3600 + minutes * 60 + seconds
+            elif len(parts) == 2:
+                minutes, seconds = map(int, parts)
+                all_seconds += minutes * 60 + seconds
+        else:
+            parts = duration.split(', ')
+            seconds = 0
+            for part in parts:
+                value, unit = part.split(' ')
+                value = int(value)
+                if unit.endswith('s'):
+                    unit = unit[:-1]
+                seconds += value * conversion_factors[unit]
+            all_seconds += seconds
 
     days, remainder = divmod(all_seconds, 86400)
     hours, remainder = divmod(remainder, 3600)
     minutes, seconds = divmod(remainder, 60)
 
-    result = [unit for value, unit in zip([days, hours, minutes, seconds], ["day", "hour", "minute", "second"]) if value != 0]
-    result = [f"{value} {unit}{'s' if value != 1 else ''}" for value, unit in zip([days, hours, minutes, seconds], ["day", "hour", "minute", "second"]) if value != 0]
-    return ', '.join(result)
+    parts = [days, hours, minutes, seconds]
+    start_idx = None
+    for i, part in enumerate(parts):
+        if part != 0:
+            start_idx = i
+            break
+    if start_idx is None or start_idx > 2:
+        start_idx = 2
+    
+    formatted_parts = [f"{part:02d}" for part in parts[start_idx:]]
+    return ':'.join(formatted_parts)
 
 async def shark_react(message: discord.Message):
     return await message.add_reaction('🦈')
