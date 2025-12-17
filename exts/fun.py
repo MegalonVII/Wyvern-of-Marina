@@ -205,7 +205,10 @@ class Fun(commands.Cog):
     async def roulette(self, ctx, member:discord.Member=None):
         if assert_cooldown("roulette", ctx.author.id) != 0:
             return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('roulette', ctx.author.id)} seconds")
-        
+
+        if member.bot:
+            return await wups(ctx, "❌🔫 You can\'t shoot the one with the bullets")
+
         member = member or ctx.author
         chance = int(lists["karma"][str(member.id)])
         if member == ctx.author: # if a member wants to roulette themselves
