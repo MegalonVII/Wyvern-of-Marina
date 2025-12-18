@@ -206,41 +206,40 @@ class Fun(commands.Cog):
         if assert_cooldown("roulette", ctx.author.id) != 0:
             return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('roulette', ctx.author.id)} seconds")
 
-        if member.bot:
+        # variable initializations
+        target = member or ctx.author
+        if target.bot:
             return await wups(ctx, "❌🔫 You can\'t shoot the one with the bullets")
+        shooter = ctx.author
+        shooter_is_admin = shooter.guild_permissions.administrator
+        target_is_admin = target.guild_permissions.administrator
+        is_self = shooter == target
+        chance = int(lists["karma"][str(target.id)])
 
-        member = member or ctx.author
-        chance = int(lists["karma"][str(member.id)])
-        if member == ctx.author: # if a member wants to roulette themselves
-            if not member.guild_permissions.administrator:
-                if random.randint(1,chance) == 1:
-                    await member.edit(timed_out_until=discord.utils.utcnow() + timedelta(hours=1), reason='roulette')
-                    return await reply(ctx, "🔥🔫 You died! (muted for 1 hour)")
-                add_coins(member.id,1)
-                return await reply(ctx, f"🚬🔫 Looks like you\'re safe, for now... Here's 1 {zenny} as a pity prize...")
-            return await reply(ctx, "❌🔫 Looks like you\'re safe, you filthy admin...")
+        # backend logic
+        async def spin(ctx, self_fired:bool):
+            if random.randint(1, chance) == 1:
+                await target.edit(timed_out_until=discord.utils.utcnow() + timedelta(hours=1), reason='roulette')
+                return await reply(ctx, f"🔥🔫 {'You' if self_fired else 'This user'} died! (muted for 1 hour)")
+            add_coins(target.id, 1)
+            return await reply(ctx, f"🚬🔫 Looks like {'you' if self_fired else 'they'}\'re safe, for now... {"Here\'s" if self_fired else "I gave them"} 1 {zenny} as a pity prize...")
+
+        # main intention
+        if is_self:
+            if target_is_admin:
+                return await wups(ctx, "❌🔫 Looks like you\'re safe, you filthy admin...")
+            return await spin(ctx, True)
+
+        # error checks
+        if not shooter_is_admin:
+            return await wups(ctx, "❌🔫 A lowlife like you can\'t possibly fire the gun at someone else...")
+        if target_is_admin:
+            return await wups(ctx, "❌🔫 Looks like they\'re safe, that filthy admin...")
+        if target.is_timed_out():
+            return await wups(ctx, "❌🔫 Don\'t you think it\'d be overkill to shoot a dead body?")
         
-        else: # if an admin wants to roulette a member they specify
-            if not ctx.message.author.guild_permissions.administrator:
-                if member == ctx.author:  # roulette themselves if not admin (pinged themself)
-                    if random.randint(1,chance) == 1:
-                        await member.edit(timed_out_until=discord.utils.utcnow() + timedelta(hours=1), reason='roulette')
-                        return await reply(ctx, "🔥🔫 You died! (muted for 1 hour)")
-                    add_coins(member.id,1)
-                    return await reply(ctx, f"🚬🔫 Looks like you\'re safe, for now... Here's 1 {zenny} as a pity prize...")
-                return await reply(ctx, "❌🔫 A lowlife like you can\'t possibly fire the gun at someone else...")
-            elif member == ctx.author: # admin tries rouletting themself
-                return await reply(ctx, "❌🔫 Admins are valued. Don\'t roulette an admin like yourself...")
-            elif member.is_timed_out() == True: # admin tries rouletting a "dead" server member
-                return await reply(ctx, "❌🔫 Don\'t you think it\'d be overkill to shoot a dead body?")
-            else:
-                if not member.guild_permissions.administrator: # admin tries rouletting "alive" non admin
-                    if random.randint(1,chance) == 1:
-                        await member.edit(timed_out_until=discord.utils.utcnow() + timedelta(hours=1), reason='roulette')
-                        return await reply(ctx, "🔥🔫 This user died! (muted for 1 hour)")
-                    add_coins(member.id,1)
-                    return await reply(ctx, f"🚬🔫 Looks like they\'re safe, for now... I gave them 1 {zenny} as a pity prize...")
-                return await reply(ctx, "❌🔫 Looks like they\'re safe, that filthy admin...")
+        # admin power abuse
+        return await spin(ctx, False)
 
     @commands.command(name='trivia')
     async def trivia(self, ctx, type:str = None):

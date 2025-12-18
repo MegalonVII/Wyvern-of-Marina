@@ -42,44 +42,40 @@ class Music(commands.Cog):
         try:
             while True:
                 tts_item = await self.tts_queue.get()
-                tts_text, temp_file_name, was_playing, was_paused, current_song = tts_item
+                _tts_text, temp_file_name, _was_playing, _was_paused, _current_song = tts_item
                 
                 try:
-                    source = discord.FFmpegPCMAudio(temp_file_name)
+                    # decide whether to mix over music or play tts alone
+                    mixer_available = bool(getattr(voice_state, 'mixer', None))
+                    music_currently_playing = bool(voice_state.voice and voice_state.voice.is_playing())
                     
-                    if was_playing and not was_paused and voice_state.voice:
-                        voice_state.voice.pause()
-                    
-                    tts_done = asyncio.Event()
-                    
-                    def after_playing(error):
+                    if not voice_state.voice or not (mixer_available and music_currently_playing):
+                        # no active music pipeline – just play tts directly and wait for it to finish
+                        source = discord.FFmpegPCMAudio(temp_file_name)
+                        done = asyncio.Event()
+                        
+                        def after_direct(error):
+                            try:
+                                if os.path.exists(temp_file_name):
+                                    os.remove(temp_file_name)
+                            except:
+                                pass
+                            if error:
+                                print(f'{Style.BRIGHT}TTS Error{Style.RESET_ALL}: {error}')
+                            done.set()
+                        
+                        voice_state.voice.play(source, after=after_direct)
+                        await done.wait()
+                    else:
+                        # use the mixed audio pipeline, where we add tts on top of currently playing music
+                        source = discord.FFmpegPCMAudio(temp_file_name)
+                        done_event = voice_state.mixer.start_tts(source)
+                        await done_event.wait()
                         try:
                             if os.path.exists(temp_file_name):
                                 os.remove(temp_file_name)
                         except:
                             pass
-                        
-                        if error:
-                            print(f'{Style.BRIGHT}TTS Error{Style.RESET_ALL}: {error}')
-                        
-                        if was_playing and not was_paused and current_song:
-                            try:
-                                if voice_state.voice:
-                                    if not voice_state.voice.is_playing():
-                                        current_song.source.volume = voice_state.volume
-                                        voice_state.voice.play(
-                                            current_song.source, 
-                                            after=voice_state.play_next_song
-                                        )
-                                        voice_state.current = current_song
-                            except Exception as e:
-                                print(f'{Style.BRIGHT}TTS Resume Error{Style.RESET_ALL}: {e}')
-                        
-                        tts_done.set()
-                    
-                    if voice_state.voice:
-                        voice_state.voice.play(source, after=after_playing)
-                        await tts_done.wait()
                     
                 except Exception as e:
                     # clean up on error
@@ -139,7 +135,7 @@ class Music(commands.Cog):
 
 
     # commands that are usable
-    # join, leave, now, pause, resume, stop, skip, queue, shuffle, remove, moveto, play, grabber
+    # join, leave, now, pause, resume, stop, skip, queue, shuffle, remove, moveto, play, grabber, tts
     @commands.command(name='join')
     async def _join(self, ctx: commands.Context):
         destination = ctx.author.voice.channel if ctx.author.voice else None 

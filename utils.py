@@ -8,16 +8,19 @@ import asyncio
 import functools
 import itertools
 import yt_dlp as youtube_dl
+import audioop
+
 from datetime import datetime
 from pytz import timezone
+from typing import Optional
 from colorama import Fore, Style
 
 files=["commands", "flairs", "coins", "bank", "voucher", "shell", "bomb", "ticket", "letter", "banana", "karma"]
 file_checks={file:False for file in files}
 lists={file:{} for file in files}
 user_info={}
-snipe_data={"content":{}, "author":{}, "id":{}, "attachment":{}}
-editsnipe_data={"content":{}, "author":{}, "id":{}}
+snipe_data={item:{} for item in ["content", "author", "id", "attachment"]}
+editsnipe_data={item:{} for item in ["content", "author", "id"]}
 prev_steal_targets={}
 target_counts={}
 cooldowns={"roulette":10.0, "howgay":10.0, "which":10.0, "itt":10.0, "react":5.0, "rps":5.0, "8ball":5.0, "clear":5.0, "trivia":25.0, "slots":10.0, "steal":30.0, 'bet':30.0, 'heist':600.0}
@@ -26,6 +29,7 @@ starboard_emoji='<:spuperman:670852114070634527>'
 shame_emoji='🪳'
 starboard_count=4
 zenny='<:zenny:1104179194780450906>'
+volume_adjustment=0.2
 
 youtube_dl.utils.bug_reports_message = lambda *args, **kwargs: ''
 
@@ -36,6 +40,67 @@ class VoiceError(Exception):
 
 class YTDLError(Exception):
     pass
+
+class MixedAudioSource(discord.AudioSource):
+    def __init__(self, music_source: discord.AudioSource, *, music_volume_when_tts: float = volume_adjustment) -> None:
+        self.music_source = music_source
+        self.tts_source: Optional[discord.AudioSource] = None
+        self.music_volume_when_tts = music_volume_when_tts
+        self._tts_done: Optional[asyncio.Event] = None
+
+    def start_tts(self, tts_source: discord.AudioSource) -> asyncio.Event:
+        self.tts_source = tts_source
+        self._tts_done = asyncio.Event()
+        return self._tts_done
+
+    def clear_tts(self) -> None:
+        self.tts_source = None
+        if self._tts_done and not self._tts_done.is_set():
+            self._tts_done.set()
+        self._tts_done = None
+
+    def is_opus(self) -> bool:
+        return False
+
+    def _mix_frames(self, music_frame: bytes, tts_frame: bytes) -> bytes:
+        if not music_frame and not tts_frame:
+            return b""
+
+        max_len = max(len(music_frame), len(tts_frame))
+        if len(music_frame) < max_len:
+            music_frame = music_frame.ljust(max_len, b"\x00")
+        if len(tts_frame) < max_len:
+            tts_frame = tts_frame.ljust(max_len, b"\x00")
+
+        scaled_music = audioop.mul(music_frame, 2, self.music_volume_when_tts)
+
+        mixed = audioop.add(scaled_music, tts_frame, 2)
+        return mixed
+
+    def read(self) -> bytes:
+        music_frame = b""
+        if self.music_source:
+            music_frame = self.music_source.read()
+
+        if not self.tts_source:
+            return music_frame
+
+        tts_frame = self.tts_source.read()
+
+        if not tts_frame:
+            if self._tts_done and not self._tts_done.is_set():
+                self._tts_done.set()
+            self.tts_source = None
+            self._tts_done = None
+            return music_frame
+
+        return self._mix_frames(music_frame, tts_frame)
+
+    def cleanup(self) -> None:
+        if self.music_source:
+            self.music_source.cleanup()
+        if self.tts_source:
+            self.tts_source.cleanup()
 
 class YTDLSource(discord.PCMVolumeTransformer):
     YTDL_OPTIONS = {
@@ -51,8 +116,10 @@ class YTDLSource(discord.PCMVolumeTransformer):
         'no_warnings': True,
         'default_search': 'auto',
         'source_address': '0.0.0.0',
-        # change the browser if you want to change, but then change back to firefox once finished testing as that is the browser neel's server relies on
         'cookiesfrombrowser': ('firefox', )
+        # change the browser if you want to test,
+        # but then change back to firefox once finished testing as that is the browser neel's server relies on.
+        # MAKE SURE YOU ARE SIGNED INTO YOUTUBE ON YOUR BROWSER WITH THE ASSOCIATED COOKIES!
     }
 
     FFMPEG_OPTIONS = {
@@ -62,7 +129,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
     ytdl = youtube_dl.YoutubeDL(YTDL_OPTIONS)
 
-    def __init__(self, ctx: commands.Context, source: discord.FFmpegPCMAudio, *, data: dict, volume: float = 0.5):
+    def __init__(self, ctx: commands.Context, source: discord.FFmpegPCMAudio, *, data: dict, volume: float = 1.0):
         super().__init__(source, volume)
         self.requester = ctx.author
         self.channel = ctx.channel
@@ -178,6 +245,7 @@ class VoiceState:
         self._loop = False
         self._volume = 0.5
         self.skip_votes = set()
+        self.mixer = None
         self.audio_player = bot.loop.create_task(self.audio_player_task())
 
     def __del__(self):
@@ -217,8 +285,12 @@ class VoiceState:
                 await self.stop()
                 return
 
+            # ensure current song respects volume
             self.current.source.volume = self._volume
-            self.voice.play(self.current.source, after=self.play_next_song)
+
+            # create a mixed audio source for this song, allowing tts overlay
+            self.mixer = MixedAudioSource(self.current.source, music_volume_when_tts=volume_adjustment)
+            self.voice.play(self.mixer, after=self.play_next_song)
             print(f'{Style.BRIGHT}Playing {Fore.MAGENTA}{self.current.source.__str__()[2:-2]}{Fore.RESET} in {Style.RESET_ALL}{Fore.BLUE}{self.voice.channel.name}{Fore.RESET}')
             await self.current.source.channel.send(embed=self.current.create_embed())
             await self.next.wait()
