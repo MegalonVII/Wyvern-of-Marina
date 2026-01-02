@@ -68,7 +68,8 @@ class Events(commands.Cog):
                         if trigger == "persona" and message.channel.name == "the-velvet-room":
                             continue
                         try:
-                            await message.add_reaction(emoji)
+                            if not message.channel.name in ['venting', 'serious-talk']:
+                                await message.add_reaction(emoji)
                         except:
                             pass
             
