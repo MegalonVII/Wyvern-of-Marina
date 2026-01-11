@@ -54,7 +54,7 @@ class Birthday(commands.Cog):
             
     @commands.command(name='birthdaylist', aliases=['bdaylist', 'bdl'])
     async def birthday_list(self, ctx):
-        if in_wom_shenanigans(ctx):
+        if await in_wom_shenanigans(ctx):
             temp_data = []
             for key in user_info.keys():
                 member = discord.utils.get(ctx.message.guild.members, id=key)
