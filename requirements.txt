@@ -12,3 +12,4 @@ spotdl
 scdl
 audioop-lts
 gtts
+deno
