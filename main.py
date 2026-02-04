@@ -102,6 +102,7 @@ async def help(ctx, page: str = "home"):
             ('!w stop', 'Stops any playing music in a call entirely.'),
             ('!w skip', 'In a voice call, skips the current playing song to the next one in the queue. Only the song requester can do this, though DJs and Admins are unaffected.'),
             ('!w grabber (platform) (song name)', 'Yar har, me mateys! Sail the high seas and let me give you music from streaming platforms! 🏴‍☠️  (Platform must be one of the following: Spotify, YouTube, SoundCloud. If platform is SoundCloud, query must be a soundcloud.com link.)'),
+            ('!w mix (music volume) (TTS volume)', 'Allows for users to mix the volume of the two sources while they are both playing simultaneously. Volumes must be between 0 and 100. If no volumes are provided, I will display the current mix levels. *[DJs/Admins Only]*'),
             ('!w tts (message)', 'I\'ll speak the given message in the voice channel. Limited to 200 characters.')
         ]),
         "misc": ('Miscellaneous Commands', [

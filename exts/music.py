@@ -7,10 +7,12 @@ from colorama import Fore, Back, Style
 import asyncio
 from gtts import gTTS
 import tempfile
+from typing import Optional
 import nacl # necessary for opus
 
 from utils import VoiceState, YTDLSource, YTDLError, Song # utils classes 
 from utils import reply, wups, parse_total_duration, in_channels # utils functions
+from utils import volume_adjustment, tts_volume_adjustment # utils variables
 
 class Music(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -375,6 +377,73 @@ class Music(commands.Cog):
                     return await wups(ctx, error)
                 
                 return await self._send_downloaded_files(ctx, msg)
+
+    @commands.command(name='mix')
+    async def _mix(self, ctx: commands.Context, music_volume: Optional[int] = None, tts_volume: Optional[int] = None):
+        djRole = discord.utils.get(ctx.guild.roles, name="DJ")
+        if not (ctx.author.guild_permissions.administrator or (djRole and djRole in ctx.author.roles)):
+            return await wups(ctx, "You don't have the permissions to use this. Must be either a DJ or administrator")
+
+        global volume_adjustment, tts_volume_adjustment
+        mix_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs", "mix.txt")
+        current_music = volume_adjustment
+        current_tts = tts_volume_adjustment
+        try:
+            with open(mix_path, "r") as mix_file:
+                lines = [line.strip() for line in mix_file if line.strip()]
+            if len(lines) >= 2:
+                current_music = float(lines[0])
+                current_tts = float(lines[1])
+        except Exception:
+            pass
+
+        if music_volume is None and tts_volume is None:
+            return await reply(ctx, f'Current mix levels — Music: `{int(current_music * 100)}%`, TTS: `{int(current_tts * 100)}%`')
+
+        if (music_volume is None) != (tts_volume is None):
+            return await wups(ctx, 'Please specify two different volume percentages, e.g. `!w mix 35 100`')
+
+        current_music_percent = int(current_music * 100)
+        current_tts_percent = int(current_tts * 100)
+
+        if music_volume is None:
+            music_volume = current_music_percent
+        if tts_volume is None:
+            tts_volume = current_tts_percent
+
+        try:
+            music_volume = int(music_volume)
+            tts_volume = int(tts_volume)
+        except (TypeError, ValueError):
+            return await wups(ctx, 'Please provide whole numbers between 0 and 100 for both values')
+
+        if not (0 <= music_volume <= 100) or not (0 <= tts_volume <= 100):
+            return await wups(ctx, 'Please keep both values between 0 and 100')
+
+        music_scalar = music_volume / 100.0
+        tts_scalar = tts_volume / 100.0
+
+        if music_scalar < 0.0:
+            music_scalar = 0.0
+        if music_scalar > 1.0:
+            music_scalar = 1.0
+        if tts_scalar < 0.0:
+            tts_scalar = 0.0
+        if tts_scalar > 1.0:
+            tts_scalar = 1.0
+
+        volume_adjustment = music_scalar
+        tts_volume_adjustment = tts_scalar
+        os.makedirs(os.path.dirname(mix_path), exist_ok=True)
+        with open(mix_path, "w") as mix_file:
+            mix_file.write(f"{music_scalar:.4f}\n{tts_scalar:.4f}\n")
+
+        if ctx.voice_state and getattr(ctx.voice_state, 'mixer', None):
+            ctx.voice_state.mixer.music_volume_when_tts = music_scalar
+            ctx.voice_state.mixer.tts_volume_when_mixed = tts_scalar
+
+        await ctx.message.add_reaction('✅')
+        return None
 
     @commands.command(name='tts')
     async def _tts(self, ctx: commands.Context, *, message: str):

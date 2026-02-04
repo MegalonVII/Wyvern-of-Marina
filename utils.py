@@ -7,7 +7,7 @@ import csv
 import asyncio
 import functools
 import itertools
-import yt_dlp as youtube_dl
+import json
 import audioop
 
 from datetime import datetime
@@ -15,6 +15,7 @@ from pytz import timezone
 from typing import Optional
 from colorama import Fore, Style
 
+# global variable declarations, with 1 exception that mix_settings is a function that defines the default global mix settings
 files=["commands", "flairs", "coins", "bank", "voucher", "shell", "bomb", "ticket", "letter", "banana", "karma"]
 file_checks={file:False for file in files}
 lists={file:{} for file in files}
@@ -29,9 +30,49 @@ starboard_emoji='<:spuperman:670852114070634527>'
 shame_emoji='🪳'
 starboard_count=4
 zenny='<:zenny:1104179194780450906>'
-volume_adjustment=0.2
 
-youtube_dl.utils.bug_reports_message = lambda *args, **kwargs: ''
+def mix_settings(music_volume: Optional[float] = None, tts_volume: Optional[float] = None) -> tuple[float, float]:
+    global volume_adjustment, tts_volume_adjustment
+    file_path = os.path.join(os.path.dirname(__file__), "docs", "mix.txt")
+
+    if music_volume is None and tts_volume is None:
+        music_volume, tts_volume = 0.2, 1.0
+        try:
+            with open(file_path, "r") as mix_file:
+                lines = [line.strip() for line in mix_file if line.strip()]
+            if len(lines) >= 2:
+                music_volume = float(lines[0])
+                tts_volume = float(lines[1])
+        except Exception:
+            pass
+
+    try:
+        music_volume = float(music_volume)
+    except (TypeError, ValueError):
+        music_volume = 0.2
+    try:
+        tts_volume = float(tts_volume)
+    except (TypeError, ValueError):
+        tts_volume = 1.0
+
+    if music_volume < 0.0:
+        music_volume = 0.0
+    if music_volume > 1.0:
+        music_volume = 1.0
+    if tts_volume < 0.0:
+        tts_volume = 0.0
+    if tts_volume > 1.0:
+        tts_volume = 1.0
+
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, "w") as mix_file:
+        mix_file.write(f"{music_volume:.4f}\n{tts_volume:.4f}\n")
+
+    volume_adjustment = music_volume
+    tts_volume_adjustment = tts_volume
+    return music_volume, tts_volume
+
+volume_adjustment, tts_volume_adjustment = mix_settings()
 
 # music functionality
 # all sorts of classes for playing songs in vc. you may mostly ignore these since vc implementation is mostly complete.
@@ -42,10 +83,11 @@ class YTDLError(Exception):
     pass
 
 class MixedAudioSource(discord.AudioSource):
-    def __init__(self, music_source: discord.AudioSource, *, music_volume_when_tts: float = volume_adjustment) -> None:
+    def __init__(self, music_source: discord.AudioSource, *, music_volume_when_tts: float = volume_adjustment, tts_volume_when_mixed: float = tts_volume_adjustment) -> None:
         self.music_source = music_source
         self.tts_source: Optional[discord.AudioSource] = None
         self.music_volume_when_tts = music_volume_when_tts
+        self.tts_volume_when_mixed = tts_volume_when_mixed
         self._tts_done: Optional[asyncio.Event] = None
 
     def start_tts(self, tts_source: discord.AudioSource) -> asyncio.Event:
@@ -73,8 +115,9 @@ class MixedAudioSource(discord.AudioSource):
             tts_frame = tts_frame.ljust(max_len, b"\x00")
 
         scaled_music = audioop.mul(music_frame, 2, self.music_volume_when_tts)
+        scaled_tts = audioop.mul(tts_frame, 2, self.tts_volume_when_mixed)
 
-        mixed = audioop.add(scaled_music, tts_frame, 2)
+        mixed = audioop.add(scaled_music, scaled_tts, 2)
         return mixed
 
     def read(self) -> bytes:
@@ -103,31 +146,10 @@ class MixedAudioSource(discord.AudioSource):
             self.tts_source.cleanup()
 
 class YTDLSource(discord.PCMVolumeTransformer):
-    YTDL_OPTIONS = {
-        'format': 'bestaudio[ext=m4a]/bestaudio/best',
-        'extractaudio': True,
-        'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
-        'restrictfilenames': True,
-        'noplaylist': True,
-        'nocheckcertificate': True,
-        'ignoreerrors': False,
-        'logtostderr': False,
-        'quiet': True,
-        'no_warnings': True,
-        'default_search': 'auto',
-        'source_address': '0.0.0.0',
-        'cookiesfrombrowser': ('firefox', )
-        # change the browser if you want to test,
-        # but then change back to firefox once finished testing as that is the browser neel's server relies on.
-        # MAKE SURE YOU ARE SIGNED INTO YOUTUBE ON YOUR BROWSER WITH THE ASSOCIATED COOKIES!
-    }
-
-    FFMPEG_OPTIONS = {
-        'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-        'options': '-vn',
-    }
-
-    ytdl = youtube_dl.YoutubeDL(YTDL_OPTIONS)
+    YTDLP_COOKIES_BROWSER = 'firefox'
+    # change the browser if you want to test,
+    # but then change back to firefox once finished testing as that is the browser neel's server relies on.
+    # MAKE SURE YOU ARE SIGNED INTO YOUTUBE ON YOUR BROWSER WITH THE ASSOCIATED COOKIES!
 
     def __init__(self, ctx: commands.Context, source: discord.FFmpegPCMAudio, *, data: dict, volume: float = 1.0):
         super().__init__(source, volume)
@@ -144,42 +166,64 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return f'**{self.title}**'
 
     @classmethod
-    async def create_source(cls, ctx: commands.Context, search: str, *, loop: asyncio.BaseEventLoop = None):
-        loop = loop or asyncio.get_event_loop()
-        partial = functools.partial(cls.ytdl.extract_info, search, download=False, process=False)
-        data = await loop.run_in_executor(None, partial)
+    async def _extract_info(cls, search: str):
+        cmd = [
+            'yt-dlp',
+            '--dump-single-json',
+            '--no-playlist',
+            '--default-search', 'auto',
+            '--no-check-certificate',
+            '--remote-components', 'ejs:github',
+            '-f', 'bestaudio[ext=m4a]/bestaudio/best',
+            '--cookies-from-browser', cls.YTDLP_COOKIES_BROWSER,
+            search,
+        ]
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await proc.communicate()
+        if proc.returncode != 0:
+            stderr_str = stderr.decode(errors='replace').strip()
+            raise YTDLError(f'Wups! yt-dlp failed: {stderr_str or "unknown error"}')
 
+        stdout_str = stdout.decode(errors='replace').strip()
+        if not stdout_str:
+            raise YTDLError("Wups! yt-dlp returned no data")
+
+        try:
+            return json.loads(stdout_str)
+        except json.JSONDecodeError:
+            raise YTDLError("Wups! Couldn't parse yt-dlp output")
+
+    @classmethod
+    async def create_source(cls, ctx: commands.Context, search: str, *, loop: asyncio.BaseEventLoop = None):
+        data = await cls._extract_info(search)
         if data is None:
             raise YTDLError(f"Wups! Couldn\'t find anything that matches `{search}`")
-        if 'entries' not in data:
-            process_info = data
-        else:
-            process_info = None
+
+        if 'entries' in data:
+            info = None
             for entry in data['entries']:
                 if entry:
-                    process_info = entry
+                    info = entry
                     break
-            if process_info is None:
-                raise YTDLError(f"Wups! Couldn\'t find anything that matches `{search}`")
-
-        webpage_url = process_info['webpage_url']
-        partial = functools.partial(cls.ytdl.extract_info, webpage_url, download=False)
-        processed_info = await loop.run_in_executor(None, partial)
-
-        if processed_info is None:
-            raise YTDLError(f"Wups! Couldn\'t fetch `{webpage_url}`...")
-
-        if 'entries' not in processed_info:
-            info = processed_info
         else:
-            info = None
-        while info is None:
-            try:
-                info = processed_info['entries'].pop(0)
-            except IndexError:
-                raise YTDLError(f'Wups! Couldn\'t retrieve any matches for `{webpage_url}`')
+            info = data
 
-        return cls(ctx, discord.FFmpegPCMAudio(info['url'], **cls.FFMPEG_OPTIONS), data=info)
+        if not info:
+            raise YTDLError(f"Wups! Couldn\'t find anything that matches `{search}`")
+
+        return cls(
+            ctx,
+            discord.FFmpegPCMAudio(
+                info['url'],
+                before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+                options='-vn',
+            ),
+            data=info,
+        )
 
     @staticmethod
     def parse_duration(duration: int):
