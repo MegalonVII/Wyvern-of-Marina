@@ -47,7 +47,7 @@ class Miscellaneous(commands.Cog):
         if member.display_avatar.url != member.avatar.url:
             e.set_thumbnail(url=member.avatar.url)
         e.set_image(url=member.display_avatar.url)
-        e.set_footer(text=f"Requested by: {ctx.message.author.name}")
+        e.set_footer(text=f"Requested by: {ctx.message.author.name}") if member is not ctx.author else None
         return await ctx.reply(embed=e, mention_author=False)
     
     @commands.command(name='emote')
