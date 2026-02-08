@@ -219,7 +219,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
             ctx,
             discord.FFmpegPCMAudio(
                 info['url'],
-                before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+                before_options='-re -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
                 options='-vn',
             ),
             data=info,
