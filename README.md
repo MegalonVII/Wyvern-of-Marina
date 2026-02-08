@@ -73,7 +73,8 @@ These are also viewable from the `main.py` file in this repo, and also in our Di
 12. `!w skip` *Skips to next song in queue. DJs, Admins, or song requester only.*
 13. `!w grabber (platform) (query)` *Gets information about a song from that platform. May not be perfect.*
 14. `!w mix (music volume) (TTS volume)` *Allows for users to mix the volume of the two sources while they are both playing simultaneously. DJs or Admins only.*
-15. `!w tts (message)` *Plays the message provided as a text-to-speech for people in voice call. Limited to 200 characters per message.*
+15. `!w voice ([Optional] male/female 1-3)` *Set or show your TTS voice. Ex. `!w voice male 3` or `!w voice female 1`. With no argument, shows your current voice. Options: male 1–3, female 1–3.*
+16. `!w tts (message)` *Plays the message provided as a text-to-speech for people in voice call. Limited to 200 characters per message.*
 
 ## Miscellaneous
 1. `!w ping` *Returns bot response time in milliseconds.*

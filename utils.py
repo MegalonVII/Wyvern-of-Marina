@@ -16,7 +16,7 @@ from typing import Optional
 from colorama import Fore, Style
 
 # global variable declarations, with 1 exception that mix_settings is a function that defines the default global mix settings
-files=["commands", "flairs", "coins", "bank", "voucher", "shell", "bomb", "ticket", "letter", "banana", "karma"]
+files=["commands", "flairs", "coins", "bank", "voucher", "shell", "bomb", "ticket", "letter", "banana", "karma", "voice"]
 file_checks={file:False for file in files}
 lists={file:{} for file in files}
 user_info={}
@@ -30,6 +30,16 @@ starboard_emoji='<:spuperman:670852114070634527>'
 shame_emoji='🪳'
 starboard_count=4
 zenny='<:zenny:1104179194780450906>'
+tts_voice_aliases = {
+    "male1": "en-US-GuyNeural",
+    "male2": "en-US-AndrewMultilingualNeural",
+    "male3": "en-US-BrianMultilingualNeural",
+    "female1": "en-US-JennyNeural",
+    "female2": "en-US-AriaNeural",
+    "female3": "en-US-EmmaMultilingualNeural",
+}
+voice_id_to_alias = {v: f"{k[:-1]} {k[-1]}" for k, v in tts_voice_aliases.items()}
+default_tts_voice = "en-US-JennyNeural"
 
 def mix_settings(music_volume: Optional[float] = None, tts_volume: Optional[float] = None) -> tuple[float, float]:
     global volume_adjustment, tts_volume_adjustment
@@ -480,7 +490,7 @@ class VoiceState:
             self.voice = None
 
 # bot helper functions
-# create_list, update_birthday, create_birthday_list, check_reaction_board, add_to_board, reply, add_coins, subtract_coins, dual_spend, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, in_channels, in_threads, assert_cooldown, capitalize_string, parse_total_duration, shark_react, wups, get_login_time, load_info, load_emulation
+# create_list, update_birthday, create_birthday_list, check_reaction_board, add_to_board, reply, set_voice, add_coins, subtract_coins, dual_spend, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, in_channels, in_threads, assert_cooldown, capitalize_string, parse_total_duration, shark_react, wups, get_login_time, load_info, load_emulation
 def create_list(filename):
     file_checks[filename]=False
     if not os.path.exists(f'csv/{filename}.csv'):
@@ -594,6 +604,30 @@ async def add_to_board(message, board_type):
 
 async def reply(ctx, content: str):
     return await ctx.reply(content, mention_author=False)
+
+def set_voice(userID: int, voice_id: str):
+    fieldnames = ['user_id', 'voice']
+    found = False
+    rows = []
+    if os.path.exists('csv/voice.csv'):
+        with open('csv/voice.csv', 'r', newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if row.get('user_id') == str(userID):
+                    rows.append({'user_id': str(userID), 'voice': voice_id})
+                    found = True
+                else:
+                    rows.append(row)
+    if not found:
+        rows.append({'user_id': str(userID), 'voice': voice_id})
+    os.makedirs('csv', exist_ok=True)
+    with open('csv/voice.csv', 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+    create_list("voice")
+
 
 def add_coins(userID: int, coins: int):
     fieldnames = ['user_id', 'coins']

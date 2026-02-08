@@ -6,14 +6,14 @@ import os
 import re
 from colorama import Fore, Back, Style
 import asyncio
-from gtts import gTTS
+import edge_tts
 import tempfile
 from typing import Optional
 import nacl # necessary for opus
 
 from utils import VoiceState, YTDLSource, YTDLError, Song # utils classes 
-from utils import reply, wups, parse_total_duration, in_channels # utils functions
-from utils import volume_adjustment, tts_volume_adjustment # utils variables
+from utils import reply, set_voice, wups, parse_total_duration, in_channels # utils functions
+from utils import lists, tts_voice_aliases, voice_id_to_alias, default_tts_voice, volume_adjustment, tts_volume_adjustment # utils variables
 
 class Music(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -449,6 +449,22 @@ class Music(commands.Cog):
         await ctx.message.add_reaction('✅')
         return None
 
+    @commands.command(name='voice')
+    async def _voice(self, ctx: commands.Context, *, choice: Optional[str] = None):
+        if choice is None:
+            voice_id = lists["voice"].get(str(ctx.author.id))
+            if voice_id is None:
+                return await reply(ctx, f"Your TTS voice is the default. Set one with `!w voice (male/female) (1/2/3)`.")
+            alias = voice_id_to_alias.get(voice_id, voice_id)
+            return await reply(ctx, f"Your TTS voice is **{alias}**!")
+        key = choice.strip().lower().replace(" ", "")
+        voice_id = tts_voice_aliases.get(key)
+        if voice_id is None:
+            return await wups(ctx, f"Unknown voice. Use one of: `male 1`, `male 2`, `male 3`, `female 1`, `female 2`, `female 3`")
+        set_voice(ctx.author.id, voice_id)
+        alias = voice_id_to_alias[voice_id]
+        return await reply(ctx, f"Your TTS voice is now **{alias}**!")
+
     @commands.command(name='tts')
     async def _tts(self, ctx: commands.Context, *, message: str):
         if not ctx.voice_state.voice: # bot not in vc at all
@@ -469,12 +485,9 @@ class Music(commands.Cog):
             async with ctx.typing():
                 temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
                 temp_file.close()
-                
-                loop = asyncio.get_event_loop()
-                await loop.run_in_executor(
-                    None,
-                    lambda: gTTS(text=tts_text, lang='en', slow=False).save(temp_file.name)
-                )
+                voice_id = lists["voice"].get(str(ctx.author.id)) or DEFAULT_TTS_VOICE
+                communicate = edge_tts.Communicate(tts_text, voice_id)
+                await communicate.save(temp_file.name)
                 
                 was_playing = ctx.voice_state.is_playing and ctx.voice_state.voice.is_playing()
                 was_paused = ctx.voice_state.voice.is_paused() if ctx.voice_state.voice else False

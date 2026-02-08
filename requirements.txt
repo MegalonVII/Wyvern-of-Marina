@@ -11,5 +11,5 @@ pynacl
 spotdl
 scdl
 audioop-lts
-gtts
+edge-tts
 deno
