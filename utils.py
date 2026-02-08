@@ -33,16 +33,23 @@ zenny='<:zenny:1104179194780450906>'
 
 def mix_settings(music_volume: Optional[float] = None, tts_volume: Optional[float] = None) -> tuple[float, float]:
     global volume_adjustment, tts_volume_adjustment
-    file_path = os.path.join(os.path.dirname(__file__), "docs", "mix.txt")
+    file_path = os.path.join(os.path.dirname(__file__), "csv", "mix.csv")
 
     if music_volume is None and tts_volume is None:
         music_volume, tts_volume = 0.2, 1.0
         try:
-            with open(file_path, "r") as mix_file:
-                lines = [line.strip() for line in mix_file if line.strip()]
-            if len(lines) >= 2:
-                music_volume = float(lines[0])
-                tts_volume = float(lines[1])
+            with open(file_path, "r", newline="") as mix_file:
+                reader = csv.DictReader(mix_file)
+                row = next(reader, None)
+            if row:
+                try:
+                    music_volume = float(row.get("music", music_volume))
+                except (TypeError, ValueError):
+                    pass
+                try:
+                    tts_volume = float(row.get("tts", tts_volume))
+                except (TypeError, ValueError):
+                    pass
         except Exception:
             pass
 
@@ -65,8 +72,10 @@ def mix_settings(music_volume: Optional[float] = None, tts_volume: Optional[floa
         tts_volume = 1.0
 
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    with open(file_path, "w") as mix_file:
-        mix_file.write(f"{music_volume:.4f}\n{tts_volume:.4f}\n")
+    with open(file_path, "w", newline="") as mix_file:
+        writer = csv.DictWriter(mix_file, fieldnames=["music", "tts"])
+        writer.writeheader()
+        writer.writerow({"music": f"{music_volume:.3f}", "tts": f"{tts_volume:.3f}"})
 
     volume_adjustment = music_volume
     tts_volume_adjustment = tts_volume

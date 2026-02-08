@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import math
+import csv
 import os
 import re
 from colorama import Fore, Back, Style
@@ -385,15 +386,16 @@ class Music(commands.Cog):
             return await wups(ctx, "You don't have the permissions to use this. Must be either a DJ or administrator")
 
         global volume_adjustment, tts_volume_adjustment
-        mix_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docs", "mix.txt")
+        mix_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "csv", "mix.csv")
         current_music = volume_adjustment
         current_tts = tts_volume_adjustment
         try:
-            with open(mix_path, "r") as mix_file:
-                lines = [line.strip() for line in mix_file if line.strip()]
-            if len(lines) >= 2:
-                current_music = float(lines[0])
-                current_tts = float(lines[1])
+            with open(mix_path, "r", newline="") as mix_file:
+                reader = csv.DictReader(mix_file)
+                row = next(reader, None)
+            if row:
+                current_music = float(row.get("music", current_music))
+                current_tts = float(row.get("tts", current_tts))
         except Exception:
             pass
 
@@ -435,8 +437,10 @@ class Music(commands.Cog):
         volume_adjustment = music_scalar
         tts_volume_adjustment = tts_scalar
         os.makedirs(os.path.dirname(mix_path), exist_ok=True)
-        with open(mix_path, "w") as mix_file:
-            mix_file.write(f"{music_scalar:.4f}\n{tts_scalar:.4f}\n")
+        with open(mix_path, "w", newline="") as mix_file:
+            writer = csv.DictWriter(mix_file, fieldnames=["music", "tts"])
+            writer.writeheader()
+            writer.writerow({"music": f"{music_scalar:.3f}", "tts": f"{tts_scalar:.3f}"})
 
         if ctx.voice_state and getattr(ctx.voice_state, 'mixer', None):
             ctx.voice_state.mixer.music_volume_when_tts = music_scalar
