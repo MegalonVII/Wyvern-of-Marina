@@ -4,10 +4,9 @@ import pandas as pd
 import asyncio
 from pytz import timezone
 from datetime import datetime
-from re import escape, search, compile
-from re import IGNORECASE
-from random import randint, choice
+from random import choice
 
+from utils import MessageHandlers
 from utils import lists, zenny, starboard_emoji, shame_emoji, user_info, snipe_data, editsnipe_data # utils direct values
 from utils import assert_cooldown, shark_react, wups, add_coins, reply, direct_to_bank, check_reaction_board, add_to_board, create_list, create_birthday_list, add_item, load_info # utils functions
 
@@ -27,82 +26,15 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        # variable decs for ping triggers
-        wom = next((member for member in message.guild.members if member.bot and member.name == "Wyvern of Marina"), None)
-        try:
-            the_thing = compile(rf"<@!?{wom.id}>\s+is this true[\s\?\!\.\,]*$", IGNORECASE)
-            the_thing2 = compile(rf"<@!?{wom.id}>\s+.+", IGNORECASE)
-            # this is just so your test bots don't give on you on_message ignorances in console
-        except:
-            pass
-        content = message.content.strip()
-
-        if message.guild: # must be in server
-            if message.author.bot: # must be human
-                return
-            else:
-                 # custom commands
-                if message.content[0:3] == "!w " and message.content.split()[1] in list(lists["commands"].keys()): 
-                    await message.reply(lists["commands"][message.content.split()[1]], mention_author=False)
-
-                # message phrase triggers
-                if content.lower() == "skill issue":
-                    await message.channel.send(file=discord.File("img/skill-issue.gif"))
-                if content.lower() == "me":
-                    await message.channel.send('<:WoM:836128658828558336>')
-                if content.lower() == "which":
-                    if assert_cooldown("which", message.author.id) != 0:
-                        await shark_react(message)
-                    else:
-                        await message.channel.send(choice([member.display_name.lower() for member in message.guild.members if not member.bot]))
-                if content.lower() == "hi guys":
-                    try:
-                        await message.add_reaction("🍅")
-                    except:
-                        pass
-
-                # phrase trigger reactions
-                for trigger, emoji in zip(self.triggers, self.trigger_emojis):
-                    pattern = r'\b' + escape(trigger) + r'\b'
-                    if search(pattern, message.content.lower()):
-                        if trigger == "persona" and message.channel.name == "the-velvet-room":
-                            continue
-                        try:
-                            if not message.channel.name in ['venting', 'serious-talk']:
-                                await message.add_reaction(emoji)
-                        except:
-                            pass
-            
-                # shiny
-                if randint(1,8192) == 1:  
-                    if not message.channel.name in ['venting', 'serious-talk']:
-                        direct_to_bank(message.author.id,500)
-                        with open("img/shiny.png", "rb") as f:
-                            file = discord.File(f)
-                            return await message.channel.send(content=f"{message.author.name} stumbled across 500 {zenny} and a wild Wyvern of Marina! ✨", file=file)
-                        
-                # is this true + react
-                try:
-                    if the_thing.fullmatch(content):
-                        if wom.nick and wom.nick.lower() == "wrok":
-                            if assert_cooldown("itt", message.author.id) != 0:
-                                await shark_react(message)
-                            else:
-                                async with message.channel.typing():
-                                    await asyncio.sleep(1)
-                                    await message.reply(choice(self.reply_choices), mention_author=False)
-                        else:
-                            await shark_react(message)
-                            await message.reply("Wups! I need to be nicknamed \"Wrok\" for this to work...", mention_author=False)
-                    elif the_thing2.fullmatch(content):
-                        if assert_cooldown("react", message.author.id) != 0:
-                            await shark_react(message)
-                        else:
-                            async with message.channel.typing():
-                                await asyncio.sleep(3)
-                                await message.reply(choice(self.reactions), mention_author=False)
-                except:
-                    pass # probably a test bot
+        if not message.guild or message.author.bot:
+            return
+    
+        # Delegate to MessageHandlers class
+        await MessageHandlers.custom_commands(message, lists)
+        await MessageHandlers.phrase_triggers(message)
+        await MessageHandlers.trigger_reactions(message, self.triggers, self.trigger_emojis)
+        await MessageHandlers.shiny_spawn(message, zenny)
+        await MessageHandlers.ping_responses(message, self.reply_choices, self.reactions)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
