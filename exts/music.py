@@ -485,7 +485,7 @@ class Music(commands.Cog):
             async with ctx.typing():
                 temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
                 temp_file.close()
-                voice_id = lists["voice"].get(str(ctx.author.id)) or DEFAULT_TTS_VOICE
+                voice_id = lists["voice"].get(str(ctx.author.id)) or default_tts_voice
                 communicate = edge_tts.Communicate(tts_text, voice_id)
                 await communicate.save(temp_file.name)
                 
