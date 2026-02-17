@@ -26,7 +26,7 @@ async def start_health_server():
         return web.Response(text='Bot down', status=503)
 
     app = web.Application()
-    app.router.add_get('/health', health_handler)
+    app.router.add_route('*', '/health', health_handler)
     runner = web.AppRunner(app)
     await runner.setup()
     await web.TCPSite(runner, '0.0.0.0', HEALTH_PORT).start()
