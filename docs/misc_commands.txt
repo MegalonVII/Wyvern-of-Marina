@@ -1,0 +1,7 @@
+!w ping
+!w whomuted
+!w avatar ([Optional] @member)
+!w emote (emote from this server)
+!w convert (number) (original unit) (new unit)
+!w translate (phrase)
+

@@ -973,3 +973,33 @@ def load_emulation():
             emuDict[key]["instructions"] = file.readline().strip().replace("\\n", "\n")
 
     return emuDict
+
+def load_help():
+    base_dir = os.path.join(os.path.dirname(__file__), "docs")
+
+    pages_path = os.path.join(base_dir, "help_pages.txt")
+    with open(pages_path, "r", encoding="utf-8") as file:
+        pages = [line.strip() for line in file if line.strip()]
+
+    helpDict = {}
+    for page in pages:
+        commands_path = os.path.join(base_dir, f"{page}_commands.txt")
+        descriptions_path = os.path.join(base_dir, f"{page}_descriptions.txt")
+
+        commands = []
+        descriptions = []
+
+        if os.path.exists(commands_path):
+            with open(commands_path, "r", encoding="utf-8") as cfile:
+                commands = [line.strip() for line in cfile if line.strip()]
+
+        if os.path.exists(descriptions_path):
+            with open(descriptions_path, "r", encoding="utf-8") as dfile:
+                descriptions = [line.strip() for line in dfile if line.strip()]
+
+        helpDict[page] = {
+            "commands": commands,
+            "descriptions": descriptions,
+        }
+
+    return helpDict
