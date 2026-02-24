@@ -43,7 +43,6 @@ async def start_health_server():
     runner = web.AppRunner(app)
     await runner.setup()
     await web.TCPSite(runner, '0.0.0.0', HEALTH_PORT).start()
-    print(f"Health server running on port {HEALTH_PORT}.\n")
 
 # bot forced to use in server
 @bot.check
