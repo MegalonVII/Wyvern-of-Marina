@@ -13,3 +13,4 @@ scdl
 audioop-lts
 edge-tts
 deno
+davey
