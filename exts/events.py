@@ -111,7 +111,7 @@ class Events(commands.Cog):
     
     @commands.Cog.listener()
     async def on_member_ban(self, guild, user):
-        return await guild.system_channel.send(f"{user.name} has been banned! Rest in fucking piss, bozo. <:kysNOW:896223569288241175>")
+        return await guild.system_channel.send(f"{user.name} has been banned! Rest in pieces, bozo. <:kysNOW:896223569288241175>")
     
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
