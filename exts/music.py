@@ -14,7 +14,7 @@ from typing import Optional
 
 from utils import VoiceState, YTDLSource, YTDLError, Song, MusicDownloadHandlers, MusicMixHandlers # utils classes 
 from utils import reply, set_voice, wups, parse_total_duration, in_channels # utils functions
-from utils import lists, tts_voice_aliases, voice_id_to_alias, default_tts_voice, volume_adjustment, tts_volume_adjustment # utils variables
+from utils import lists, tts_voice_aliases, voice_id_to_alias, default_tts_voice, volume_adjustment, tts_volume_adjustment, enqueue_tts_message # utils variables
 
 class Music(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -362,39 +362,11 @@ class Music(commands.Cog):
             elif ctx.voice_client.channel != ctx.author.voice.channel: # user in different vc than bot
                 return await wups(ctx, 'I\'m already in a different voice channel')
         
-        # tts text formatting
-        tts_text = f"{ctx.author.display_name or ctx.author.global_name} said {message}"
-        if len(tts_text) > 200:
-            return await wups(ctx, 'Message is too long. Please keep it under 200 characters')
+        success, err = await enqueue_tts_message(ctx, message, self.tts_queue, self.tts_processing, lambda: self.bot.loop.create_task(self.process_tts_queue(ctx.voice_state)))
         
-        # full tts process
-        try:
-            async with ctx.typing():
-                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
-                temp_file.close()
-                voice_id = lists["voice"].get(str(ctx.author.id)) or default_tts_voice
-                communicate = edge_tts.Communicate(tts_text, voice_id)
-                await communicate.save(temp_file.name)
-                
-                was_playing = ctx.voice_state.is_playing and ctx.voice_state.voice.is_playing()
-                was_paused = ctx.voice_state.voice.is_paused() if ctx.voice_state.voice else False
-                current_song = ctx.voice_state.current if was_playing else None
-                
-                await self.tts_queue.put((tts_text, temp_file.name, was_playing, was_paused, current_song))
-                
-                if not self.tts_processing:
-                    self.bot.loop.create_task(self.process_tts_queue(ctx.voice_state))
-                
-                return await ctx.message.add_reaction('✅')
-                
-        except Exception as e:
-            # clean up on error
-            try:
-                if 'temp_file' in locals() and os.path.exists(temp_file.name):
-                    os.remove(temp_file.name)
-            except:
-                pass
-            return await wups(ctx, f'An error occurred while generating TTS: `{str(e)}`')
+        if not success:
+            return await wups(ctx, err)
+        return await ctx.message.add_reaction('✅')
 
 
 async def setup(bot):

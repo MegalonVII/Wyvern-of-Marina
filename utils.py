@@ -9,6 +9,8 @@ import itertools
 import json
 import audioop
 import re
+import tempfile
+import edge_tts
 
 from discord.ext import commands
 from datetime import datetime, timedelta
@@ -1042,6 +1044,39 @@ def set_voice(userID: int, voice_id: str):
             writer.writerow(row)
     create_list("voice")
 
+async def enqueue_tts_message(ctx: commands.Context, raw_message: str, tts_queue, tts_processing: bool, start_processing_fn):
+    tts_text = f"{ctx.author.display_name or ctx.author.global_name} said {raw_message}"
+    if len(tts_text) > 200:
+        return False, 'Message is too long. Please keep it under 200 characters'
+
+    temp_path = None
+    try:
+        async with ctx.typing():
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+            temp_path = temp_file.name
+            temp_file.close()
+
+            voice_id = lists["voice"].get(str(ctx.author.id)) or default_tts_voice
+            communicate = edge_tts.Communicate(tts_text, voice_id)
+            await communicate.save(temp_path)
+
+            was_playing = ctx.voice_state.is_playing and ctx.voice_state.voice.is_playing()
+            was_paused = ctx.voice_state.voice.is_paused() if ctx.voice_state.voice else False
+            current_song = ctx.voice_state.current if was_playing else None
+
+            await tts_queue.put((tts_text, temp_path, was_playing, was_paused, current_song))
+
+            if not tts_processing:
+                start_processing_fn()
+
+        return True, None
+    except Exception as e:
+        try:
+            if temp_path and os.path.exists(temp_path):
+                os.remove(temp_path)
+        except Exception:
+            pass
+        return False, f'An error occurred while generating TTS: `{str(e)}`'
 
 def add_coins(userID: int, coins: int):
     fieldnames = ['user_id', 'coins']
