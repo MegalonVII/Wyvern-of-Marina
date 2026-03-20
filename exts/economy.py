@@ -112,10 +112,8 @@ class Economy(commands.Cog):
                 bailAmt = (int(lists['coins'][str(ctx.author.id)]) + int(lists['bank'][str(ctx.author.id)])) // 5
 
                 if bailAmt == 0: # total balance less than 5
-                    if subtract_coins(ctx.author.id, int(lists['coins'][str(ctx.author.id)])):
-                        pass
-                    if stolen_funds(ctx.author.id, int(lists['bank'][str(ctx.author.id)])):
-                        pass
+                    subtract_coins(ctx.author.id, int(lists['coins'][str(ctx.author.id)]))
+                    stolen_funds(ctx.author.id, int(lists['bank'][str(ctx.author.id)]))
                     return await reply(ctx, "Unsuccessful heist! <:PoM:888677251615449158> arrested you! You couldn't pay a bail, however, so you paid what little you had left and wrote an IOU...") # unsuccessful, clears out what little you have, brokie
 
                 if dual_spend(ctx.author.id, bailAmt):
