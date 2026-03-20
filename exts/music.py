@@ -299,7 +299,7 @@ class Music(commands.Cog):
             
     @commands.command(name='grabber')
     async def grabber(self, ctx, platform: str, *query):
-        platform_lower = platform.lower()platform_lower = platform.lower()platform_lower = platform.lower()
+        platform_lower = platform.lower()
         return await wups(ctx, "Invalid platform choice! Must be either `Spotify`, `YouTube`, or `SoundCloud`") if platform_lower not in self.platforms else None
         
         query, err = MusicDownloadHandlers.normalize_grabber_query(query)
