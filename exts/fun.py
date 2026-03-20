@@ -246,33 +246,22 @@ class Fun(commands.Cog):
                 return await wups(ctx, f"There is currently a fight going on")
             if member.bot:
                 return await wups(ctx, f"You can't fight a bot")
-              
+
             self.currentFight = True
-            players = [ctx.author, member] if random.choice([True, False]) else [member, ctx.author]
-            turn = 0
-            am = discord.AllowedMentions.none()
-            msg = await reply(ctx, f"{ctx.author.name} challenges {member.name} to the death!")
+            actor, target = (ctx.author, member) if random.choice([True, False]) else (member, ctx.author); msg = await reply(ctx, f"{ctx.author.name} challenges {member.name} to the death!")
             await asyncio.sleep(3)
             while True:
-                actor, target = (players[0], players[1]) if turn % 2 == 0 else (players[1], players[0])
                 choiceNum = random.randint(0, len(self.actions) - 1)
-                action = self.actions[choiceNum]
-                await msg.edit(content=action.format(actor.name, target.name), allowed_mentions=am)
+                await msg.edit(content=self.actions[choiceNum].format(actor.name, target.name), allowed_mentions=discord.AllowedMentions.none())
                 await asyncio.sleep(2)
-                determinant = random.randint(1, 5)
-                if determinant == 1:
-                    response = action + f" {self.deaths[choiceNum]}"
-                else:
-                    response = action + f" {self.survivals[choiceNum]}"
-                await msg.edit(content=response.format(actor.name, target.name, target.name), allowed_mentions=am)
+                determinant = random.randint(1, int(lists["karma"][str(target.id)]))
+                response = self.actions[choiceNum] + f" {self.deaths[choiceNum]}" if determinant == 1 else self.actions[choiceNum] + f" {self.survivals[choiceNum]}"
+                await msg.edit(content=response.format(actor.name, target.name, target.name), allowed_mentions=discord.AllowedMentions.none())
                 if determinant == 1:
                     self.currentFight = False
                     break
-                else:
-                    turn += 1
-                    await asyncio.sleep(3)
-            return None
-            
+                actor, target = target, actor
+                await asyncio.sleep(3)
 
     @commands.command(name='ship')
     async def ship(self, ctx: commands.Context, str1: str, str2: str):
