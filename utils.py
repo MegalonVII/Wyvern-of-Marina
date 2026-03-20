@@ -1012,14 +1012,54 @@ async def build_mute_duration(ctx: commands.Context, time_unit: int, time_limit:
 
     return timedelta(**{attribute: time_unit})
 
-async def prompt_for_message(bot: commands.Bot, ctx: commands.Context, prompt_text: str, timeout: float, timeout_text: str):
+async def prompt_for_message(bot: commands.Bot, ctx: commands.Context, prompt_text: str, timeout: float, timeout_text: str, timeout_wups: bool = True) -> Optional[tuple[discord.Message, discord.Message]]:
     prompt = await reply(ctx, prompt_text)
     try:
         message = await bot.wait_for("message", check=lambda m: m.author == ctx.author and m.channel == ctx.channel, timeout=timeout)
     except asyncio.TimeoutError:
         await prompt.delete()
-        return await wups(ctx, timeout_text)
+        if timeout_wups:
+            await wups(ctx, timeout_text)
+        return None
     return prompt, message
+
+async def collect_birthday_and_timezone(bot: commands.Bot, ctx: commands.Context) -> tuple[Optional[str], Optional[object], Optional[str]]:
+    # birthday
+    bday_timeout_text = "Time's up! You didn't provide me with your birthday in time..."
+    prompt_data = await prompt_for_message(bot, ctx, 'In the next 30 seconds, give me your birthday in the format "MM-DD"!', 30, bday_timeout_text, timeout_wups=False)
+    if prompt_data is None:
+        return None, None, bday_timeout_text
+    prompt1, bday_message = prompt_data
+
+    try:
+        bday = datetime.strptime(bday_message.content, "%m-%d").date().strftime("%m-%d")
+    except Exception:
+        await bday_message.delete()
+        await prompt1.delete()
+        return None, None, "Invalid birthday input"
+    await bday_message.delete()
+    await prompt1.delete()
+
+    # timezone
+    tz_timeout_text = "Time's up! You didn't provide me with your timezone in time..."
+    prompt_data = await prompt_for_message(bot, ctx, "Now, you have 5 minutes to give me the timezone you are based in. Make sure it is one from [this list](<https://gist.githubusercontent.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568/raw/daacf0e4496ccc60a36e493f0252b7988bceb143/pytz-time-zones.py>)!", 300, tz_timeout_text, timeout_wups=False)
+    if prompt_data is None:
+        return None, None, tz_timeout_text
+    prompt2, tz_message = prompt_data
+
+    try:
+        tz_obj = timezone(tz_message.content)
+    except Exception:
+        await tz_message.delete()
+        await prompt2.delete()
+        return None, None, "Invalid timezone. Refer to [this list](<https://gist.githubusercontent.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568/raw/daacf0e4496ccc60a36e493f0252b7988bceb143/pytz-time-zones.py>)"
+
+    await tz_message.delete()
+    await prompt2.delete()
+
+    # update the birthday in the csv file
+    update_birthday(ctx.author.id, bday, tz_message.content)
+    return bday, tz_obj, None
 
 def set_voice(userID: int, voice_id: str):
     fieldnames = ['user_id', 'voice']

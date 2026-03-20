@@ -2,10 +2,9 @@ import discord
 
 from discord.ext import commands
 from datetime import datetime
-from pytz import timezone
 
 from utils import user_info # utils direct values
-from utils import in_wom_shenanigans, update_birthday, reply, wups, prompt_for_message # utils functions
+from utils import in_wom_shenanigans, collect_birthday_and_timezone, reply, wups # utils functions
 
 # birthday commands start here
 # birthday, bdl
@@ -16,35 +15,10 @@ class Birthday(commands.Cog):
     @commands.command(name='birthday')
     async def birthday(self, ctx):
         if await in_wom_shenanigans(ctx):
-            prompt_data = await prompt_for_message(self.bot, ctx, 'In the next 30 seconds, give me your birthday in the format "MM-DD"!', 30, "Time's up! You didn't provide me with your birthday in time...")
-            if prompt_data is None:
-                return
-            prompt, bday_message = prompt_data
-
-            try:
-                bday = datetime.strptime(bday_message.content, '%m-%d').date().strftime('%m-%d')
-                await bday_message.delete()
-            except Exception:
-                await bday_message.delete()
-                await prompt.delete()
-                return await wups(ctx, 'Invalid birthday input')
-            
-            await prompt.delete()
-            prompt_data = await prompt_for_message(self.bot, ctx, 'Now, you have 5 minutes to give me the timezone you are based in. Make sure it is one from [this list](<https://gist.githubusercontent.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568/raw/daacf0e4496ccc60a36e493f0252b7988bceb143/pytz-time-zones.py>)!', 300, "Time's up! You didn't provide me with your timezone in time...")
-            if prompt_data is None:
-                return
-            prompt, tz_message = prompt_data
-            try:
-                tz = timezone(tz_message.content)
-            except Exception:
-                await tz_message.delete()
-                await prompt.delete()
-                return await wups(ctx, 'Invalid timezone. Refer to [this list](<https://gist.githubusercontent.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568/raw/daacf0e4496ccc60a36e493f0252b7988bceb143/pytz-time-zones.py>)')
-            await tz_message.delete()
-            await prompt.delete()
-            
-            update_birthday(ctx.author.id, bday, tz_message.content)
-            return await reply(ctx, f'Birthday set for {bday} in {tz}!')
+            bday, tz_obj, err = await collect_birthday_and_timezone(self.bot, ctx)
+            if err:
+                return await wups(ctx, err)
+            return await reply(ctx, f'Birthday set for {bday} in {tz_obj}!')
             
     @commands.command(name='birthdaylist', aliases=['bdaylist', 'bdl'])
     async def birthday_list(self, ctx):
