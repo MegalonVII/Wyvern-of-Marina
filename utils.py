@@ -1247,6 +1247,24 @@ def stolen_funds(userID: int, coins: int) -> bool:
     return True
 
 
+def steal_target_tracking(author_id: int, target, update_counts: bool = True) -> bool:
+    prev_target = prev_steal_targets.get(author_id)
+    prev_count = target_counts.get(author_id, 0)
+
+    if prev_target == target and prev_count <= 2:
+        return False
+
+    if not update_counts:
+        return True
+
+    if prev_target != target:
+        target_counts[author_id] = prev_count + 1
+        prev_steal_targets[author_id] = target
+
+    # clamp so it never sticks at 2+ across attempts
+    target_counts[author_id] = 0 if target_counts.get(author_id, 0) >= 2 else target_counts.get(author_id, 0)
+    return True
+
 def slots_tally_and_payout(userID: int, reels: list) -> str:
     count7 = reels.count("7️⃣")
     unique = len(set(reels))

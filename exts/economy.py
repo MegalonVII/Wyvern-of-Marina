@@ -7,7 +7,7 @@ from math import ceil
 
 from utils import EconomyUseHandlers # utils classes
 from utils import zenny, prev_steal_targets, target_counts, lists # utils direct values
-from utils import in_wom_shenanigans, assert_cooldown, cooldown_remaining, wups, reply, subtract_coins, add_coins, dual_spend, stolen_funds, dep, wd, add_item, subtract_item, direct_to_bank, load_info, slots_tally_and_payout # utils functions
+from utils import in_wom_shenanigans, assert_cooldown, cooldown_remaining, wups, reply, subtract_coins, add_coins, dual_spend, stolen_funds, dep, wd, add_item, subtract_item, direct_to_bank, load_info, slots_tally_and_payout, steal_target_tracking # utils functions
 
 # economy commands
 # slots, bet, steal, heist, dep, wd, bal, bankbal, paypal, mp, buy, sell, inv, use
@@ -32,7 +32,8 @@ class Economy(commands.Cog):
             msg = await ctx.reply(f"{reels[0]} | {reels[1]} | {reels[2]}", mention_author=False)
 
             for i in range(3):
-                await sleep(1); reels[i] = random.choice(emojis)
+                await sleep(1)
+                reels[i] = random.choice(emojis)
                 await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}", allowed_mentions=discord.AllowedMentions.none())
 
             return await msg.edit(content=slots_tally_and_payout(ctx.author.id, reels), allowed_mentions=discord.AllowedMentions.none())
@@ -57,32 +58,26 @@ class Economy(commands.Cog):
         if await in_wom_shenanigans(ctx):
             if target.bot or target == ctx.author:
                 return await wups(ctx, "You can't steal from a bot or from yourself")
-            if prev_steal_targets.get(ctx.author.id) == target and target_counts.get(ctx.author.id, 0) <= 2:
+            if not steal_target_tracking(ctx.author.id, target, update_counts=False):
                 return await wups(ctx, "You can't target this person again so soon. Choose a different target")
             if assert_cooldown('steal', ctx.author.id) != 0:
                 return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {cooldown_remaining('steal', ctx.author.id)} seconds")
-        
-            if prev_steal_targets.get(ctx.author.id) != target:
-                target_counts[ctx.author.id] = target_counts.get(ctx.author.id, 0) + 1
-                prev_steal_targets[ctx.author.id] = target
-            if target_counts.get(ctx.author.id, 0) >= 2:
-                target_counts[ctx.author.id] = 0
-            
-            if random.randint(1,10) <= 5:
-                random_steal = random.randint(1,100)
+
+            # tracks if someone is specifiically targetting another person
+            steal_target_tracking(ctx.author.id, target, update_counts=True)
+
+            if random.randint(1, 10) <= 5:
+                random_steal = random.randint(1, 100)
                 if subtract_coins(target.id, random_steal):
                     add_coins(ctx.author.id, random_steal) # successful steal
                     return await reply(ctx, f"You successfully stole {random_steal} {zenny} from {target.name}!")
-                else:
-                    return await reply(ctx, f"You tried stealing {random_steal} {zenny} from {target.name}, but they don't have enough {zenny} on hand...") # successful steal, but couldn't do it
-            
-            else: 
-                lost_coins = random.randint(1, 100)
-                if dual_spend(ctx.author.id, lost_coins): # unsuccessful steal
-                    add_coins(target.id, lost_coins)
-                    return await reply(ctx, f"You got caught trying to steal {lost_coins} {zenny} from {target.name}! You were forced to pay them back instead...")
-                else:
-                    return await reply(ctx, f"You got caught trying to steal {lost_coins} {zenny} from {target.name}! However, you weren't able to pay them back...") # successful steal, couldn't pay back
+                return await reply(ctx, f"You tried stealing {random_steal} {zenny} from {target.name}, but they don't have enough {zenny} on hand...") # successful steal, but couldn't do it
+
+            lost_coins = random.randint(1, 100)
+            if dual_spend(ctx.author.id, lost_coins): # unsuccessful steal
+                add_coins(target.id, lost_coins)
+                return await reply(ctx, f"You got caught trying to steal {lost_coins} {zenny} from {target.name}! You were forced to pay them back instead...")
+            return await reply(ctx, f"You got caught trying to steal {lost_coins} {zenny} from {target.name}! However, you weren't able to pay them back...") # successful steal, couldn't pay back
 
     @commands.command(name='heist')
     async def heist(self, ctx):
