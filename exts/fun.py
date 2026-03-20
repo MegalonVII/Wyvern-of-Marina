@@ -280,31 +280,16 @@ class Fun(commands.Cog):
             half_str1 = str1[:len(str1) // 2 + 1] if len(str1) % 2 == 1 else str1[:len(str1) // 2]
             half_str2 = str2[len(str2) // 2 + 1:] if len(str2) % 2 == 1 else str2[len(str2) // 2:]
             merged_string = half_str1 + half_str2
-
-            embed = discord.Embed()
-            bar = [':black_medium_square:' for _ in range(10)]
             shipPercent = random.randint(0, 100)
             shipBar = shipPercent // 10
+            bar = [':red_square:' if i < shipBar else ':black_medium_square:' for i in range(10)]
 
-            for i in range(shipBar):
-                bar[i] = ':red_square:'
-
-            finalStr = (
-                f":heartpulse: **MATCHMAKING** :heartpulse:\n"
-                f":small_red_triangle_down: `{str1}`\n"
-                f":small_red_triangle: `{str2}`"
+            finalStr = f":heartpulse: **MATCHMAKING** :heartpulse:\n:small_red_triangle_down: `{str1}`\n:small_red_triangle: `{str2}`"
+            embed = discord.Embed(
+                color=discord.Color.pink(),
+                title=f"**{merged_string}**",
+                description=f"**{shipPercent}%** {''.join(bar)}{' PERFECT! ❤' if shipPercent == 100 else ''}",
             )
-
-            embed.color = discord.Color.pink()
-            embed.title = f"**{merged_string}**"
-
-            # Fixed f-string quotes and simplified string join
-            embed.description = (
-                f"**{shipPercent}%** "
-                f"{''.join(bar)}"
-                f"{' PERFECT! ❤' if shipPercent == 100 else ''}"
-            )
-
             embed.set_footer(text=f"*{self.shipNotes[shipBar]}*")
             return await ctx.reply(finalStr, embed=embed, mention_author=False)
 
