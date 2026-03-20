@@ -7,9 +7,7 @@ from pytz import timezone
 from datetime import datetime
 from random import choice
 
-from utils import MessageHandlers
-from utils import lists, zenny, starboard_emoji, shame_emoji, user_info, snipe_data, editsnipe_data # utils direct values
-from utils import assert_cooldown, shark_react, wups, add_coins, reply, direct_to_bank, check_reaction_board, add_to_board, create_list, create_birthday_list, add_item, load_info # utils functions
+from utils import *
 
 # bot events start here
 # on_message, on_command_error, on_message_delete, on_message_edit, on_member_join, on_member_update, on_member_ban, on_reaction_add, on_member_remove, wish_birthday

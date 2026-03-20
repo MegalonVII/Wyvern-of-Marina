@@ -9,9 +9,7 @@ import pypokedex as dex
 from discord.ext import commands
 from datetime import timedelta
 
-from utils import TriviaHandlers # utils classes
-from utils import lists, snipe_data, editsnipe_data, zenny # utils direct values
-from utils import shark_react, reply, wups, assert_cooldown, cooldown_remaining, in_wom_shenanigans, add_coins, roulette_spin, in_channels, in_threads, load_info, load_emulation, build_pokedex_embed # utils functions
+from utils import *
 
 # fun commands start here
 # say, custc, snipe, esnipe, choose, pokedex, who, howgay, rps, 8ball, roulette, trivia, emulation, deathbattle, ship

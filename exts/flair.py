@@ -5,8 +5,7 @@ import pandas as pd
 from discord.ext import commands
 from asyncio import sleep
 
-from utils import lists, file_checks # utils direct values
-from utils import wups, create_list, in_wom_shenanigans # utils functions
+from utils import *
 
 # flair commands start here
 # addf, delf, lf, im

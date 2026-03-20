@@ -8,8 +8,7 @@ from aiohttp import web
 from dotenv import load_dotenv
 from sys import exit
 
-from utils import files, lists # utils direct values
-from utils import create_list, create_birthday_list, get_login_time, wups, add_item, add_coins, direct_to_bank, load_help # utils functions
+from utils import *
 
 # token instantiation
 load_dotenv()

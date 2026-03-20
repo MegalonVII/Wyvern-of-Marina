@@ -5,9 +5,7 @@ from discord.ext import commands
 from asyncio import sleep
 from math import ceil
 
-from utils import EconomyUseHandlers # utils classes
-from utils import zenny, prev_steal_targets, target_counts, lists # utils direct values
-from utils import in_wom_shenanigans, assert_cooldown, cooldown_remaining, wups, reply, subtract_coins, add_coins, dual_spend, stolen_funds, dep, wd, add_item, subtract_item, direct_to_bank, load_info, slots_tally_and_payout, steal_target_tracking # utils functions
+from utils import *
 
 # economy commands
 # slots, bet, steal, heist, dep, wd, bal, bankbal, paypal, mp, buy, sell, inv, use

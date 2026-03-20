@@ -5,8 +5,7 @@ import pandas as pd
 from discord.ext import commands
 from datetime import timedelta
 
-from utils import lists, file_checks # utils direct values
-from utils import wups, reply, assert_cooldown, create_list, parse_mute_args, build_mute_duration, cooldown_remaining # utils functions
+from utils import *
 
 # administrative commands start here
 # cc, dc, clear, kick, ban, mute, unmute, addf, delf

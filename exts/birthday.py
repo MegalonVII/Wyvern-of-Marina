@@ -3,8 +3,7 @@ import discord
 from discord.ext import commands
 from datetime import datetime
 
-from utils import user_info # utils direct values
-from utils import in_wom_shenanigans, collect_birthday_and_timezone, reply, wups # utils functions
+from utils import *
 
 # birthday commands start here
 # birthday, bdl

@@ -3,8 +3,7 @@ import discord
 from discord.ext import commands
 from asyncio import subprocess, create_subprocess_shell
 
-from utils import files
-from utils import create_list, create_birthday_list, wups, reply # utils functions
+from utils import *
 
 # misc commands start here
 # ping, whomuted, avi, emote, convert, translate
