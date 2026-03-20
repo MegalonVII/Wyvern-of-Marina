@@ -247,35 +247,27 @@ class Music(commands.Cog):
 
     @commands.command(name='moveto')
     async def _moveto(self, ctx: commands.Context, from_index: int, to_index: int):
-        author = ctx.message.author
-        djRole = discord.utils.get(ctx.guild.roles, name="DJ")
-        
         queue = ctx.voice_state.songs
-        if ctx.voice_client:
-            if ctx.author.voice is None or ctx.voice_client.channel != ctx.author.voice.channel:
-                return await wups(ctx, 'You\'re not in my voice channel')
-        if author.guild_permissions.administrator or djRole in author.roles:
-            if len(queue) == 0:
-                return await wups(ctx, 'Queue is empty')
-            if from_index < 1 or from_index > len(queue):
-                return await wups(ctx, f'Source index out of bounds (must be between 1 and {len(queue)})')
-            if to_index < 1 or to_index > len(queue):
-                return await wups(ctx, f'Destination index out of bounds (must be between 1 and {len(queue)})')
-            if from_index == to_index:
-                return await wups(ctx, 'Source and destination positions are the same')
-            
-            # convert to 0-based indexing
-            from_pos = from_index - 1
-            to_pos = to_index - 1
-            
-            # move the song
-            song = queue._queue[from_pos]
-            del queue._queue[from_pos]
-            queue._queue.insert(to_pos, song)
-            
-            return await ctx.message.add_reaction('✅')
-        else:
+        djRole = discord.utils.get(ctx.guild.roles, name="DJ")
+
+        if ctx.voice_client and (ctx.author.voice is None or ctx.voice_client.channel != ctx.author.voice.channel):
+            return await wups(ctx, 'You\'re not in my voice channel')
+        if not (ctx.author.guild_permissions.administrator or (djRole and djRole in ctx.author.roles)):
             return await wups(ctx, 'You don\'t have the permissions to use this. Must be either a DJ or administrator')
+
+        q_len = len(queue)
+        if q_len == 0:
+            return await wups(ctx, 'Queue is empty')
+        if from_index < 1 or from_index > q_len:
+            return await wups(ctx, f'Source index out of bounds (must be between 1 and {q_len})')
+        if to_index < 1 or to_index > q_len:
+            return await wups(ctx, f'Destination index out of bounds (must be between 1 and {q_len})')
+        if from_index == to_index:
+            return await wups(ctx, 'Source and destination positions are the same')
+
+        from_pos, to_pos = from_index - 1, to_index - 1
+        queue._queue.insert(to_pos, queue._queue.pop(from_pos))
+        return await ctx.message.add_reaction('✅')
 
     @commands.command(name='play')
     async def _play(self, ctx: commands.Context, *, search: str):
