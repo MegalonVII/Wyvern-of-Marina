@@ -11,7 +11,7 @@ from datetime import timedelta
 
 from utils import TriviaHandlers # utils classes
 from utils import lists, snipe_data, editsnipe_data, zenny # utils direct values
-from utils import shark_react, reply, wups, assert_cooldown, cooldown_remaining, in_wom_shenanigans, add_coins, in_channels, in_threads, load_info, load_emulation, build_pokedex_embed # utils functions
+from utils import shark_react, reply, wups, assert_cooldown, cooldown_remaining, in_wom_shenanigans, add_coins, roulette_spin, in_channels, in_threads, load_info, load_emulation, build_pokedex_embed # utils functions
 
 # fun commands start here
 # say, custc, snipe, esnipe, choose, pokedex, who, howgay, rps, 8ball, roulette, trivia, emulation, deathbattle, ship
@@ -155,40 +155,26 @@ class Fun(commands.Cog):
         if assert_cooldown("roulette", ctx.author.id) != 0:
             return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {cooldown_remaining('roulette', ctx.author.id)} seconds")
 
-        # variable initializations
         target = member or ctx.author
         if target.bot:
             return await wups(ctx, "❌🔫 You can\'t shoot the one with the bullets")
-        shooter = ctx.author
-        shooter_is_admin = shooter.guild_permissions.administrator
-        target_is_admin = target.guild_permissions.administrator
-        is_self = shooter == target
+
         chance = int(lists["karma"][str(target.id)])
+        is_self = target == ctx.author
 
-        # backend logic
-        async def spin(ctx, self_fired:bool):
-            if random.randint(1, chance) == 1:
-                await target.edit(timed_out_until=discord.utils.utcnow() + timedelta(hours=1), reason='roulette')
-                return await reply(ctx, f"🔥🔫 {'You' if self_fired else 'This user'} died! (muted for 1 hour)")
-            add_coins(target.id, 1)
-            return await reply(ctx, f"🚬🔫 Looks like {'you' if self_fired else 'they'}\'re safe, for now... {"Here\'s" if self_fired else "I gave them"} 1 {zenny} as a pity prize...")
-
-        # main intention
         if is_self:
-            if target_is_admin:
+            if target.guild_permissions.administrator:
                 return await wups(ctx, "❌🔫 Looks like you\'re safe, you filthy admin...")
-            return await spin(ctx, True)
+            return await roulette_spin(ctx, target, True, chance)
 
-        # error checks
-        if not shooter_is_admin:
+        if not ctx.author.guild_permissions.administrator:
             return await wups(ctx, "❌🔫 A lowlife like you can\'t possibly fire the gun at someone else...")
-        if target_is_admin:
+        if target.guild_permissions.administrator:
             return await wups(ctx, "❌🔫 Looks like they\'re safe, that filthy admin...")
         if target.is_timed_out():
             return await wups(ctx, "❌🔫 Don\'t you think it\'d be overkill to shoot a dead body?")
-        
-        # admin power abuse
-        return await spin(ctx, False)
+
+        return await roulette_spin(ctx, target, False, chance)
 
     @commands.command(name='trivia')
     async def trivia(self, ctx, type:str = None):

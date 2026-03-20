@@ -1552,6 +1552,20 @@ async def wups(ctx, content: str):
     await shark_react(ctx.message)
     return await reply(ctx, content=f"Wups! {content}...")
 
+
+async def roulette_spin(ctx: commands.Context, target: discord.Member, self_fired: bool, chance: int):
+    if random.randint(1, chance) == 1:
+        await target.edit(
+            timed_out_until=discord.utils.utcnow() + timedelta(hours=1),
+            reason="roulette",
+        )
+        return await reply(ctx, f"🔥🔫 {'You' if self_fired else 'This user'} died! (muted for 1 hour)")
+
+    add_coins(target.id, 1)
+    who = "you" if self_fired else "they"
+    give = "Here's" if self_fired else "I gave them"
+    return await reply(ctx, f"🚬🔫 Looks like {who}'re safe, for now... {give} 1 {zenny} as a pity prize...")
+
 def get_login_time(tz: str) -> str:
     return f"Time: {datetime.now(timezone(tz)).strftime('%m/%d/%Y, %I:%M:%S %p')}\nTimezone: {tz}\n"
 
