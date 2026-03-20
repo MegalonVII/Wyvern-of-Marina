@@ -171,39 +171,6 @@ async def build_mute_duration(ctx: commands.Context, time_unit: int, time_limit:
 
 # birthday.py
 # birthday()
-def update_birthday(user_id: int, birthdate: str, tz: str):
-    fieldnames = ['user_id', 'birthdate', 'timezone']
-    found = False
-    rows = []
-    with open('csv/birthdays.csv', 'r', newline='') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            if row['user_id'] == str(user_id):
-                row = {'user_id': row['user_id'], 'birthdate': birthdate, 'timezone': tz}
-                found = True
-            rows.append(row)
-    if not found:
-        rows.append({'user_id': str(user_id), 'birthdate': birthdate, 'timezone': tz})
-    with open('csv/birthdays.csv', 'w', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(row)
-    create_birthday_list()
-
-def create_birthday_list():
-    if not os.path.exists('csv/birthdays.csv'):
-        with open(f'csv/birthdays.csv', 'w'):
-            pass # creates csv file
-    with open(f'csv/birthdays.csv', mode='r') as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        rows = list(csv_reader)
-        for row in rows:
-            user_id = int(row['user_id'])
-            birthdate = row['birthdate']
-            timezone = row['timezone']
-            user_info[user_id] = {'birthdate': birthdate, 'timezone': timezone}
-
 async def collect_birthday_and_timezone(bot: commands.Bot, ctx: commands.Context) -> tuple[Optional[str], Optional[object], Optional[str]]:
     # birthday
     bday_timeout_text = "Time's up! You didn't provide me with your birthday in time..."
@@ -1270,6 +1237,39 @@ def create_list(filename):
             for row in rows:
                 dict = list(row.values())
                 lists[filename][dict[0]]=dict[1]
+
+def create_birthday_list():
+    if not os.path.exists('csv/birthdays.csv'):
+        with open(f'csv/birthdays.csv', 'w'):
+            pass # creates csv file
+    with open(f'csv/birthdays.csv', mode='r') as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        rows = list(csv_reader)
+        for row in rows:
+            user_id = int(row['user_id'])
+            birthdate = row['birthdate']
+            timezone = row['timezone']
+            user_info[user_id] = {'birthdate': birthdate, 'timezone': timezone}
+
+def update_birthday(user_id: int, birthdate: str, tz: str):
+    fieldnames = ['user_id', 'birthdate', 'timezone']
+    found = False
+    rows = []
+    with open('csv/birthdays.csv', 'r', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if row['user_id'] == str(user_id):
+                row = {'user_id': row['user_id'], 'birthdate': birthdate, 'timezone': tz}
+                found = True
+            rows.append(row)
+    if not found:
+        rows.append({'user_id': str(user_id), 'birthdate': birthdate, 'timezone': tz})
+    with open('csv/birthdays.csv', 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+    create_birthday_list()
 
 async def check_reaction_board(message, reaction_type):
     emoji, count = None, None
