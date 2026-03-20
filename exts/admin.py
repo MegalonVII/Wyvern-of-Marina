@@ -3,10 +3,9 @@ import csv
 from discord.ext import commands
 import pandas as pd
 from datetime import timedelta
-import re
 
 from utils import lists, file_checks # utils direct values
-from utils import wups, reply, assert_cooldown, create_list # utils functions
+from utils import wups, reply, assert_cooldown, create_list, parse_mute_args, build_mute_duration, cooldown_remaining # utils functions
 
 # administrative commands start here
 # cc, dc, clear, kick, ban, mute, unmute, addf, delf
@@ -58,7 +57,7 @@ class Admin(commands.Cog):
         if num is None or num < 1 or num > 10:
             return await wups(ctx, "Please enter a number between 1 and 10")
         if assert_cooldown("clear", ctx.author.id) != 0:
-            return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('clear', ctx.author.id)} seconds")
+            return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {cooldown_remaining('clear', ctx.author.id)} seconds")
 
         await ctx.message.add_reaction('✅')
         return await ctx.message.channel.purge(limit=num+1)
@@ -86,47 +85,17 @@ class Admin(commands.Cog):
 
     @commands.command(name='mute')
     async def mute(self, ctx, member:discord.Member, *, args: str = " "):
-        # static variables
-        timepossibilities = ['s', 'm', 'h', 'd', 'w']
-    
-        # default modifiable variable declarations
-        timeunit = 1
-        timelimit = 'h'
-    
-        # regex parsing
-        match = re.match(r'^\s*(\d+)\s*([smhdw])\s*(.*)$', args, re.IGNORECASE)
-        if match:
-            timeunit = int(match.group(1))
-            timelimit = match.group(2).lower()
-            reason = match.group(3).strip() or "No reason provided"
-        else:
-            reason = args.strip() or "No reason provided"
-    
-        # validity checks
-        if timeunit <= 0:
-            return await wups(ctx, "Time duration has to be 1 or higher")
-        if timelimit not in timepossibilities:
-            return await wups(ctx, f"Invalid measure of time. Has to be one of the following: `{", ".join(timepossibilities)}`")
+        timeunit, timelimit, reason = parse_mute_args(args)
+
         if not ctx.author.guild_permissions.administrator:
             return await wups(ctx, "Only administrators are allowed to use this command")
         if member.guild_permissions.administrator:
             return await wups(ctx, "Administrators can\'t be muted")
-    
-        # discord api limits for muting people
-        time_units = {
-            's': (timedelta, 'seconds', 2419200),
-            'm': (timedelta, 'minutes', 40320),
-            'h': (timedelta, 'hours', 672),
-            'd': (timedelta, 'days', 28),
-            'w': (timedelta, 'weeks', 4)
-        }
-    
-        # logic for muting
-        timedelta_type, attribute, limit = time_units[timelimit]
-        if timeunit > limit:
-            return await wups(ctx, "Cannot mute member for more than 4 weeks")
-        newtime = timedelta_type(**{attribute: timeunit})
-    
+
+        newtime = await build_mute_duration(ctx, timeunit, timelimit)
+        if not isinstance(newtime, timedelta):
+            return # fails to mute due to invalid time duration
+
         await member.edit(timed_out_until=discord.utils.utcnow() + newtime, reason=reason)
         return await ctx.message.delete()
 

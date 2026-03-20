@@ -1,11 +1,10 @@
 import discord
 from discord.ext import commands
-from asyncio import TimeoutError
 from datetime import datetime
 from pytz import timezone
 
 from utils import user_info # utils direct values
-from utils import in_wom_shenanigans, update_birthday, reply, wups # utils functions
+from utils import in_wom_shenanigans, update_birthday, reply, wups, prompt_for_message # utils functions
 
 # birthday commands start here
 # birthday, bdl
@@ -16,39 +15,33 @@ class Birthday(commands.Cog):
     @commands.command(name='birthday')
     async def birthday(self, ctx):
         if await in_wom_shenanigans(ctx):
-            def check(m):
-                return m.author == ctx.author and m.channel == ctx.channel
+            prompt_data = await prompt_for_message(self.bot, ctx, 'In the next 30 seconds, give me your birthday in the format "MM-DD"!', 30, "Time's up! You didn't provide me with your birthday in time...")
+            if prompt_data is None:
+                return
+            prompt, bday_message = prompt_data
 
-            # ask for birthdate
-            prompt = await ctx.reply('In the next 30 seconds, give me your birthday in the format \"MM-DD\"!', mention_author=False)
-            try:
-                bday_message = await self.bot.wait_for('message', check=check, timeout=30)
-            except TimeoutError:
-                await prompt.delete()
-                return await reply(ctx, "Time's up! You didn't provide me with your birthday in time...")
             try:
                 bday = datetime.strptime(bday_message.content, '%m-%d').date().strftime('%m-%d')
                 await bday_message.delete()
-            except:
+            except Exception:
                 await bday_message.delete()
                 await prompt.delete()
                 return await wups(ctx, 'Invalid birthday input')
             
-            # ask for timezone
-            prompt = await prompt.edit(content='Now, you have 5 minutes to give me the timezone you are based in. Make sure it is one from [this list](<https://gist.githubusercontent.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568/raw/daacf0e4496ccc60a36e493f0252b7988bceb143/pytz-time-zones.py>)!', allowed_mentions=discord.AllowedMentions.none())
-            try:
-                tz_message = await self.bot.wait_for('message', check=check, timeout=300)
-            except TimeoutError:
-                await prompt.delete()
-                return await reply(ctx, "Time's up! You didn't provide me with your timezone in time...")
+            await prompt.delete()
+            prompt_data = await prompt_for_message(self.bot, ctx, 'Now, you have 5 minutes to give me the timezone you are based in. Make sure it is one from [this list](<https://gist.githubusercontent.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568/raw/daacf0e4496ccc60a36e493f0252b7988bceb143/pytz-time-zones.py>)!', 300, "Time's up! You didn't provide me with your timezone in time...")
+            if prompt_data is None:
+                return
+            prompt, tz_message = prompt_data
             try:
                 tz = timezone(tz_message.content)
-            except:
+            except Exception:
                 await tz_message.delete()
                 await prompt.delete()
                 return await wups(ctx, 'Invalid timezone. Refer to [this list](<https://gist.githubusercontent.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568/raw/daacf0e4496ccc60a36e493f0252b7988bceb143/pytz-time-zones.py>)')
             await tz_message.delete()
             await prompt.delete()
+            
             update_birthday(ctx.author.id, bday, tz_message.content)
             return await reply(ctx, f'Birthday set for {bday} in {tz}!')
             

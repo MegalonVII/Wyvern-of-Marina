@@ -1,11 +1,12 @@
 import discord
 from discord.ext import commands
 import random
-from asyncio import sleep, TimeoutError
+from asyncio import sleep
 from math import ceil
 
+from utils import EconomyUseHandlers # utils classes
 from utils import zenny, prev_steal_targets, target_counts, lists # utils direct values
-from utils import in_wom_shenanigans, assert_cooldown, wups, reply, subtract_coins, add_coins, dual_spend, stolen_funds, dep, wd, add_item, subtract_item, direct_to_bank, load_info # utils functions
+from utils import in_wom_shenanigans, assert_cooldown, cooldown_remaining, wups, reply, subtract_coins, add_coins, dual_spend, stolen_funds, dep, wd, add_item, subtract_item, direct_to_bank, load_info # utils functions
 
 # economy commands
 # slots, bet, steal, heist, dep, wd, bal, bankbal, paypal, mp, buy, sell, inv, use
@@ -21,7 +22,7 @@ class Economy(commands.Cog):
     async def slots(self, ctx):
         if await in_wom_shenanigans(ctx):
             if assert_cooldown('slots', ctx.author.id) != 0:
-                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('slots', ctx.author.id)} seconds")
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {cooldown_remaining('slots', ctx.author.id)} seconds")
             if not subtract_coins(ctx.author.id, 10):
                 return await wups(ctx, f"You don't have enough {zenny} to play")
         
@@ -50,7 +51,7 @@ class Economy(commands.Cog):
     async def bet(self, ctx, amount:int):
         if await in_wom_shenanigans(ctx):
             if assert_cooldown('bet', ctx.author.id) != 0:
-                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('bet', ctx.author.id)} seconds")
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {cooldown_remaining('bet', ctx.author.id)} seconds")
             if subtract_coins(ctx.author.id, amount):
                 roll = random.randint(1,6)
                 roll2 = random.randint(1,6)
@@ -69,7 +70,7 @@ class Economy(commands.Cog):
             if prev_steal_targets.get(ctx.author.id) == target and target_counts.get(ctx.author.id, 0) <= 2:
                 return await wups(ctx, "You can't target this person again so soon. Choose a different target")
             if assert_cooldown('steal', ctx.author.id) != 0:
-                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('steal', ctx.author.id)} seconds")
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {cooldown_remaining('steal', ctx.author.id)} seconds")
         
             if prev_steal_targets.get(ctx.author.id) != target:
                 target_counts[ctx.author.id] = target_counts.get(ctx.author.id, 0) + 1
@@ -97,7 +98,7 @@ class Economy(commands.Cog):
     async def heist(self, ctx):
         if await in_wom_shenanigans(ctx):
             if assert_cooldown("heist", ctx.author.id) != 0:
-                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('heist', ctx.author.id)} seconds")
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {cooldown_remaining('heist', ctx.author.id)} seconds")
             if random.randint(1, 100) == 1: # successful heist
                 total = 0
                 for key in lists['bank'].keys():
@@ -222,96 +223,7 @@ class Economy(commands.Cog):
             item = item.lower()
             if item not in self.items:
                 return await wups(ctx, "Invalid item")
-
-            if item == 'voucher':
-                if subtract_item(item, ctx.author.id, 1):
-                    neel = discord.utils.get(ctx.guild.members, name='megalonvii')
-                    if not ctx.author.id == neel.id:
-                        moddery = discord.utils.get(ctx.guild.channels, name='moddery')
-                        await moddery.send(f"<@{neel.id}>, {ctx.author.name} has purchased a delivery. You are now obligated to personally gift them whatever! Don't back out of it now...")
-                        return await reply(ctx, "Neel has been notified, you gambling addicted bastard...")
-                    else:
-                        add_coins(ctx.author.id, 100000)
-                        return await wups(ctx, "You're Neel. If you want to gift yourself something just go out and do it")
-
-            elif item == 'bomb':
-                if subtract_item(item, ctx.author.id, 1):
-                    id = random.choice([key for key in lists['bank'].keys() if not key == str(ctx.author.id)])
-                    balance = int(lists['bank'][id])
-                    id = int(id)
-                    stolen = balance // 2
-                    member = discord.utils.get(ctx.guild.members, id=id)
-                    if stolen_funds(id, stolen):
-                        direct_to_bank(ctx.author.id, stolen)
-                        return await reply(ctx, f"Stole {stolen} {zenny} from {member.name}'s bank account! That {zenny} has been deposited into your bank account!")
-                return await wups(ctx, f"You don't have a {item}")
-
-            elif item == 'ticket':
-                def check(m):
-                    return m.author == ctx.author and m.channel == ctx.channel
-                if subtract_item(item, ctx.author.id, 1):
-                    await reply(ctx, "You have 60 seconds to name your new custom role! This can be done by simply sending the name of that role in this channel. Be aware, however, that the next message you send will be the role name...")
-                    try:
-                        msg = await self.bot.wait_for('message', check=check, timeout=60)
-                    except TimeoutError:
-                        add_item(item, ctx.author.id, 1)
-                        return await reply(ctx, "Time's up! You didn't provide me with a role name, so I've given you your ticket back. Try again later...")
-                    name = msg.content
-                    role = await ctx.guild.create_role(name=name)
-                    await ctx.author.add_roles(role)
-                    return await msg.reply("Congrats on your new role!")
-                return await wups(ctx, f"You don't have a {item}")
-
-            elif item == 'letter':
-                def check(m):
-                    return m.author == ctx.author and m.channel == ctx.channel
-                if subtract_item(item, ctx.author.id, 1):
-                    await ctx.reply('You have 30 seconds to give me the name of a member you want to send a letter to! Your next message in this channel is what I will use to find the member\'s name!')
-                    try:
-                        msg = await self.bot.wait_for('message', check=check, timeout=30)
-                    except TimeoutError:
-                        add_item(item, ctx.author.id, 1)
-                        return await reply(ctx, f"Time's up! You didn't provide me with anyone's name, so I've given you back your {item}...")
-                    recipient = discord.utils.get(ctx.guild.members, name=str(msg.content))
-                    if recipient is None or recipient.bot or recipient == ctx.author:
-                        add_item(item, ctx.author.id, 1)
-                        await msg.delete()
-                        return await wups(ctx, f"Invalid member name. I've refunded you your {item}")
-                        
-                    await msg.reply("Great! Now you have 2 minutes to cook up your letter to this person. Your next message in this channel will dictate that!")
-                    try:
-                        content = await self.bot.wait_for('message', check=check, timeout=120)
-                    except TimeoutError:
-                        add_item(item, ctx.author.id, 1)
-                        await msg.reply(f"Time's up! You didn't provide me with any content, so I've given you back your {item}...")
-                        return await msg.delete()
-                    contentReplaced = str(content.content).replace("'", "\'").replace('"','\"')
-                    
-                    await msg.delete()
-                    try:
-                        await recipient.send(f"__{ctx.author.name} sent you the following letter!__\n'{contentReplaced}'")
-                    except:
-                        await ctx.guild.system_channel.send(f"Since {recipient.mention} won't allow me to DM them, I guess I'll just have to air out to the entire world their letter from {ctx.author.name}...\n\n'{contentReplaced}'")
-                    await content.reply("Message sent!")
-                    return await content.delete()
-
-            elif item == 'shell':
-                if subtract_item(item, ctx.author.id, 1):
-                    target = random.choice([member for member in ctx.guild.members if not member.bot and not member == ctx.author])
-                    balance = int(lists['coins'][str(target.id)])
-                    if balance % 2 == 1:
-                        add_coins(target.id, 1)
-                        balance = int(lists['coins'][str(target.id)])
-                    if subtract_coins(target.id, int(balance // 2)):
-                        add_coins(ctx.author.id, int(balance // 2))
-                        return await reply(ctx, f"{target.name} got hit by a {item}! You received {balance // 2} {zenny} from them!")
-                return await wups(ctx, f"You don't have a {item}")
-
-            elif item == 'banana':
-                if subtract_item(item, ctx.author.id, 1):
-                    msg = await ctx.reply("You ate a banana! You feel something funny inside your body...")
-                    await sleep(3)
-                    return await msg.edit(content="Turns out that was just your stomach growling. The banana you just ate was a regular old banana...", allowed_mentions=discord.AllowedMentions.none())
+            return await EconomyUseHandlers.handle(self.bot, ctx, item)
 
 async def setup(bot):
     await bot.add_cog(Economy(bot))

@@ -9,7 +9,7 @@ import urllib.parse
 import pypokedex as dex
 
 from utils import lists, snipe_data, editsnipe_data, zenny # utils direct values
-from utils import shark_react, reply, wups, capitalize_string, assert_cooldown, in_wom_shenanigans, add_coins, in_channels, in_threads, load_info, load_emulation # utils functions
+from utils import shark_react, reply, wups, assert_cooldown, cooldown_remaining, in_wom_shenanigans, add_coins, in_channels, in_threads, load_info, load_emulation, build_pokedex_embed # utils functions
 
 # fun commands start here
 # say, custc, snipe, esnipe, choose, pokedex, who, howgay, rps, 8ball, roulette, trivia, emulation, deathbattle, ship
@@ -86,64 +86,11 @@ class Fun(commands.Cog):
             encData = encRes.json()
             pokData = pokRes.json()
 
-            # random vars
-            shinyInt = random.randint(1,512)
-            name = [entry for entry in data["names"] if entry["language"]["name"] == "en"][0]["name"]
-
-            # gender ratio calc
-            if data['gender_rate'] == -1:
-                gender_ratio = "Genderless"
-            elif data['gender_rate'] == 8:
-                gender_ratio = "100% Female"
-            else:
-                female_percentage = (data['gender_rate'] / 8) * 100
-                male_percentage = 100 - female_percentage
-                gender_ratio = f"{male_percentage}% Male / {female_percentage}% Female"
-
-            # location data calc
-            locations = []
-            for entry in encData:
-                locations.append(capitalize_string(entry['location_area']['name']))
-
-            # moves data calc
-            moves = []
-            for entry in pokData['moves']:
-                moves.append(capitalize_string(entry['move']['name']))
-
-            # make embed
-            embed = discord.Embed(title=f'{name}, #{index}', color=discord.Color.red())
-            embed.description = ''
-            for i, type in enumerate(pokemon.types, 1):
-                embed.description += f'**Type {i}**: {capitalize_string(type)}\n'
-            embed.description += '\n'
-            for i, ability in enumerate(pokemon.abilities, 1):
-                embed.description += f'**Ability {i}**: {capitalize_string(ability.name)}{" *(Hidden)*" if ability.is_hidden else ""}\n'
-            embed.description += '\n'
-            embed.description += f'**Base HP**: {pokemon.base_stats.hp}\n'
-            embed.description += f'**Base Attack**: {pokemon.base_stats.attack}\n'
-            embed.description += f'**Base Defense**: {pokemon.base_stats.defense}\n'
-            embed.description += f'**Base Special Attack**: {pokemon.base_stats.sp_atk}\n'
-            embed.description += f'**Base Special Defense**: {pokemon.base_stats.sp_def}\n'
-            embed.description += f'**Base Speed**: {pokemon.base_stats.speed}\n'
-            embed.description += f'**Base Stat Total**: {pokemon.base_stats.hp + pokemon.base_stats.attack + pokemon.base_stats.defense + pokemon.base_stats.sp_atk + pokemon.base_stats.sp_def + pokemon.base_stats.speed}\n\n'
-            embed.description += f'**Base Experience**: {pokemon.base_experience if pokemon.base_experience is not None else 0}\n'
-            embed.description += f'**Base Happiness**: {data["base_happiness"]}\n'
-            embed.description += f'**Capture Rate**: {data["capture_rate"]}\n\n'
-            embed.description += f"**Egg Groups**: {', '.join(capitalize_string(name['name']) for name in [entry for entry in data['egg_groups']])}\n"
-            embed.description += f"**Gender Ratio**: {gender_ratio}\n\n"
-            embed.description += f"**Found At**: {', '.join(str(location) for location in locations) if len(locations) != 0 else 'No Location Data'}\n"
-            embed.description += f"**Moves Learned**: {', '.join(str(move) for move in moves) if index != 151 else 'Every Move'}"
-
-            try:
-                embed.set_thumbnail(url=pokemon.sprites.front.get('shiny')) if shinyInt == 1 else embed.set_thumbnail(url=pokemon.sprites.front.get('default'))
-                embed.set_footer(text=[entry for entry in data['flavor_text_entries'] if entry['language']['name'] == 'en'][0]['flavor_text'])
-            except:
-                pass
-
-            if shinyInt != 1:
-                return await ctx.reply(embed=embed, mention_author=False)
-            else:
-                return await ctx.reply(content=f'Woah! A Shiny {name}! ✨', embed=embed, mention_author=False)
+            shinyInt = random.randint(1, 512)
+            embed, shiny = build_pokedex_embed(pokemon, data, encData, pokData, index, shinyInt)
+            if shiny:
+                return await ctx.reply(content=shiny_content, embed=embed, mention_author=False)
+            return await ctx.reply(embed=embed, mention_author=False)
 
     @commands.command(name='who')
     async def who(self, ctx):
@@ -152,7 +99,7 @@ class Fun(commands.Cog):
     @commands.command(name='howgay')
     async def howgay(self, ctx, member:discord.Member=None):
         if assert_cooldown("howgay", ctx.author.id) != 0:
-            return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('howgay', ctx.author.id)} seconds")
+            return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {cooldown_remaining('howgay', ctx.author.id)} seconds")
     
         member = member or ctx.author
         percent = random.randint(0,100)
@@ -172,7 +119,7 @@ class Fun(commands.Cog):
     async def rps(self, ctx, playerChoice: str=None):
         if await in_wom_shenanigans(ctx):
             if assert_cooldown("rps", ctx.author.id) != 0 :
-                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('rps', ctx.author.id)} seconds")
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {cooldown_remaining('rps', ctx.author.id)} seconds")
             if playerChoice is None:
                 return await wups(ctx, "You need to give me your choice")
             
@@ -194,7 +141,7 @@ class Fun(commands.Cog):
     @commands.command(name='8ball')
     async def eightball(self, ctx):
         if assert_cooldown("8ball", ctx.author.id) != 0 :
-            return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('8ball', ctx.author.id)} seconds")
+            return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {cooldown_remaining('8ball', ctx.author.id)} seconds")
         if len(ctx.message.content) < 9:
             return await wups(ctx, "You need to give me a question to respond to")
         
@@ -204,7 +151,7 @@ class Fun(commands.Cog):
     @commands.command(name='roulette')
     async def roulette(self, ctx, member:discord.Member=None):
         if assert_cooldown("roulette", ctx.author.id) != 0:
-            return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('roulette', ctx.author.id)} seconds")
+            return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {cooldown_remaining('roulette', ctx.author.id)} seconds")
 
         # variable initializations
         target = member or ctx.author
@@ -247,7 +194,7 @@ class Fun(commands.Cog):
             types = ['general', 'film', 'music', 'tv', 'games', 'anime']
             categories = [9, 11, 12, 14, 15, 31]
             if assert_cooldown('trivia', ctx.author.id) != 0:
-                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {assert_cooldown('trivia', ctx.author.id)} seconds")
+                return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {cooldown_remaining('trivia', ctx.author.id)} seconds")
             if not type is None and type.lower() not in types:
                 return await wups(ctx, "Invalid trivia type")
             

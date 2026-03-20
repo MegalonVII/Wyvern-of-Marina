@@ -446,8 +446,7 @@ class Music(commands.Cog):
             ctx.voice_state.mixer.music_volume_when_tts = music_scalar
             ctx.voice_state.mixer.tts_volume_when_mixed = tts_scalar
 
-        await ctx.message.add_reaction('✅')
-        return None
+        return await ctx.message.add_reaction('✅')
 
     @commands.command(name='voice')
     async def _voice(self, ctx: commands.Context, *, choice: Optional[str] = None):

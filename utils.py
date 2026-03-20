@@ -9,11 +9,13 @@ import functools
 import itertools
 import json
 import audioop
+import re
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from pytz import timezone
 from typing import Optional
 from colorama import Fore, Style
+
 
 # global variable declarations, with 1 exception that mix_settings is a function that defines the default global mix settings
 files=["commands", "flairs", "coins", "bank", "voucher", "shell", "bomb", "ticket", "letter", "banana", "karma", "voice"]
@@ -40,6 +42,13 @@ tts_voice_aliases = {
 }
 voice_id_to_alias = {v: f"{k[:-1]} {k[-1]}" for k, v in tts_voice_aliases.items()}
 default_tts_voice = "en-US-JennyNeural"
+MUTE_TIME_LIMITS = {
+    "s": ("seconds", 2419200),
+    "m": ("minutes", 40320),
+    "h": ("hours", 672),
+    "d": ("days", 28),
+    "w": ("weeks", 4),
+}
 
 def mix_settings(music_volume: Optional[float] = None, tts_volume: Optional[float] = None) -> tuple[float, float]:
     global volume_adjustment, tts_volume_adjustment
@@ -92,6 +101,7 @@ def mix_settings(music_volume: Optional[float] = None, tts_volume: Optional[floa
     return music_volume, tts_volume
 
 volume_adjustment, tts_volume_adjustment = mix_settings()
+
 
 # on_message event handler class
 # just because i didn't think these functions would be necessary elsewhere
@@ -202,6 +212,124 @@ class MessageHandlers:
             else:
                 await shark_react(message)
 
+
+# use command handlers
+# i just thought the use command was a bit too long to handle, so i made this class
+class EconomyUseHandlers:
+    @staticmethod
+    async def handle(bot: commands.Bot, ctx: commands.Context, item: str):
+        if item == "voucher":
+            return await EconomyUseHandlers._use_voucher(ctx, item)
+        if item == "bomb":
+            return await EconomyUseHandlers._use_bomb(ctx, item)
+        if item == "ticket":
+            return await EconomyUseHandlers._use_ticket(bot, ctx, item)
+        if item == "letter":
+            return await EconomyUseHandlers._use_letter(bot, ctx, item)
+        if item == "shell":
+            return await EconomyUseHandlers._use_shell(ctx, item)
+        if item == "banana":
+            return await EconomyUseHandlers._use_banana(ctx, item)
+        return await wups(ctx, "Invalid item")
+
+    @staticmethod
+    async def _use_voucher(ctx: commands.Context, item: str):
+        try:
+            if subtract_item(item, ctx.author.id, 1):
+                neel = discord.utils.get(ctx.guild.members, name="megalonvii")
+                if not ctx.author.id == neel.id:
+                    moddery = discord.utils.get(ctx.guild.channels, name="moddery")
+                    await moddery.send(f"<@{neel.id}>, {ctx.author.name} has purchased a delivery. You are now obligated to personally gift them whatever! Don't back out of it now...")
+                    return await reply(ctx, "Neel has been notified, you gambling addicted bastard...")
+                add_coins(ctx.author.id, 100000)
+                return await wups(ctx, "You're Neel. If you want to gift yourself something just go out and do it")
+            return None
+        except:
+            return await wups(ctx, "Neel is not in the server")
+
+    @staticmethod
+    async def _use_bomb(ctx: commands.Context, item: str):
+        if subtract_item(item, ctx.author.id, 1):
+            target_id = random.choice([key for key in lists["bank"].keys() if not key == str(ctx.author.id)])
+            balance = int(lists["bank"][target_id])
+            target_id = int(target_id)
+            stolen = balance // 2
+            member = discord.utils.get(ctx.guild.members, id=target_id)
+            if stolen_funds(target_id, stolen):
+                direct_to_bank(ctx.author.id, stolen)
+                return await reply(ctx, f"Stole {stolen} {zenny} from {member.name}'s bank account! That {zenny} has been deposited into your bank account!")
+        return await wups(ctx, f"You don't have a {item}")
+
+    @staticmethod
+    async def _use_ticket(bot: commands.Bot, ctx: commands.Context, item: str):
+        if subtract_item(item, ctx.author.id, 1):
+            prompt_data = await prompt_for_message(bot, ctx, "You have 60 seconds to name your new custom role! This can be done by simply sending the name of that role in this channel. Be aware, however, that the next message you send will be the role name...", 60, "Time's up! You didn't provide me with a role name, so I've given you your ticket back. Try again later...")
+            if prompt_data is None:
+                add_item(item, ctx.author.id, 1)
+                return None
+            _, msg = prompt_data
+            name = msg.content
+            role = await ctx.guild.create_role(name=name)
+            await ctx.author.add_roles(role)
+            return await msg.reply("Congrats on your new role!")
+        return await wups(ctx, f"You don't have a {item}")
+
+    @staticmethod
+    async def _use_letter(bot: commands.Bot, ctx: commands.Context, item: str):
+        if subtract_item(item, ctx.author.id, 1):
+            prompt_data = await prompt_for_message(bot, ctx, "You have 30 seconds to give me the name of a member you want to send a letter to! Your next message in this channel is what I will use to find the member's name!", 30, f"Time's up! You didn't provide me with anyone's name, so I've given you back your {item}...")
+            if prompt_data is None:
+                add_item(item, ctx.author.id, 1)
+                return
+            _, msg = prompt_data
+            recipient = discord.utils.get(ctx.guild.members, name=str(msg.content).strip())
+            try:
+                recipient = await commands.MemberConverter().convert(ctx, str(msg.content).strip())
+            except commands.BadArgument:
+                pass
+            if recipient is None or recipient.bot or recipient == ctx.author:
+                add_item(item, ctx.author.id, 1)
+                await msg.delete()
+                return await wups(ctx, f"Invalid member name. I've refunded you your {item}")
+
+            prompt_data = await prompt_for_message(bot, ctx, "Great! Now you have 2 minutes to cook up your letter to this person. Your next message in this channel will dictate that!", 120, f"Time's up! You didn't provide me with any content, so I've given you back your {item}...")
+            if prompt_data is None:
+                add_item(item, ctx.author.id, 1)
+                return await msg.delete()
+            _, content = prompt_data
+            content_replaced = str(content.content).replace("'", "\\'").replace('"', '\\"')
+
+            await msg.delete()
+            try:
+                await recipient.send(f"__{ctx.author.name} sent you the following letter!__\n'{content_replaced}'")
+            except Exception:
+                await ctx.guild.system_channel.send(f"Since {recipient.mention} won't allow me to DM them, I guess I'll just have to air out to the entire world their letter from {ctx.author.name}...\n\n'{content_replaced}'")
+            await content.reply("Message sent!")
+            return await content.delete()
+        return await wups(ctx, f"You don't have a {item}")
+
+    @staticmethod
+    async def _use_shell(ctx: commands.Context, item: str):
+        if subtract_item(item, ctx.author.id, 1):
+            target = random.choice([member for member in ctx.guild.members if not member.bot and not member == ctx.author])
+            balance = int(lists["coins"][str(target.id)])
+            if balance % 2 == 1:
+                add_coins(target.id, 1)
+                balance = int(lists["coins"][str(target.id)])
+            if subtract_coins(target.id, int(balance // 2)):
+                add_coins(ctx.author.id, int(balance // 2))
+                return await reply(ctx, f"{target.name} got hit by a {item}! You received {balance // 2} {zenny} from them!")
+        return await wups(ctx, f"You don't have a {item}")
+
+    @staticmethod
+    async def _use_banana(ctx: commands.Context, item: str):
+        if subtract_item(item, ctx.author.id, 1):
+            msg = await ctx.reply("You ate a banana! You feel something funny inside your body...")
+            await asyncio.sleep(3)
+            return await msg.edit(content="Turns out that was just your stomach growling. The banana you just ate was a regular old banana...", allowed_mentions=discord.AllowedMentions.none())
+        return await wups(ctx, f"You don't have a {item}")
+
+
 # music functionality
 # all sorts of classes for playing songs in vc. you may mostly ignore these since vc implementation is mostly complete.
 class VoiceError(Exception):
@@ -306,11 +434,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
             '--cookies-from-browser', cls.YTDLP_COOKIES_BROWSER,
             search,
         ]
-        proc = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
+        proc = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         stdout, stderr = await proc.communicate()
         if proc.returncode != 0:
             stderr_str = stderr.decode(errors='replace').strip()
@@ -489,8 +613,9 @@ class VoiceState:
             await self.voice.disconnect()
             self.voice = None
 
+
 # bot helper functions
-# create_list, update_birthday, create_birthday_list, check_reaction_board, add_to_board, reply, set_voice, add_coins, subtract_coins, dual_spend, add_item, subtract_item, dep, wd, direct_to_bank, stolen_funds, in_wom_shenanigans, in_channels, in_threads, assert_cooldown, capitalize_string, parse_total_duration, shark_react, wups, get_login_time, load_info, load_emulation
+# check documentation rentry for more information
 def create_list(filename):
     file_checks[filename]=False
     if not os.path.exists(f'csv/{filename}.csv'):
@@ -604,6 +729,46 @@ async def add_to_board(message, board_type):
 
 async def reply(ctx, content: str):
     return await ctx.reply(content, mention_author=False)
+
+def parse_mute_args(args: str) -> tuple[int, str, str]:
+    time_unit = 1
+    time_limit = "h"
+    reason = args.strip() or "No reason provided"
+
+    match = re.match(r"^\s*(\d+)\s*([smhdw])\s*(.*)$", args or "", re.IGNORECASE)
+    if match:
+        time_unit = int(match.group(1))
+        time_limit = match.group(2).lower()
+        reason = match.group(3).strip() or "No reason provided"
+
+    return time_unit, time_limit, reason
+
+async def build_mute_duration(ctx: commands.Context, time_unit: int, time_limit: str) -> Optional[timedelta]:
+    if time_unit <= 0:
+        return await wups(ctx, "Time duration has to be 1 or higher")
+    if time_limit not in MUTE_TIME_LIMITS:
+        return await wups(ctx, f"Invalid measure of time. Has to be one of the following: `{', '.join(MUTE_TIME_LIMITS.keys())}`")
+
+    attribute, limit = MUTE_TIME_LIMITS[time_limit]
+    if time_unit > limit:
+        return await wups(ctx, "Cannot mute member for more than 4 weeks")
+
+    return timedelta(**{attribute: time_unit})
+
+def make_author_channel_check(ctx):
+    def check(message: discord.Message):
+        return message.author == ctx.author and message.channel == ctx.channel
+
+    return check
+
+async def prompt_for_message(bot: commands.Bot, ctx: commands.Context, prompt_text: str, timeout: float, timeout_text: str):
+    prompt = await reply(ctx, prompt_text)
+    try:
+        message = await bot.wait_for("message", check=make_author_channel_check(ctx), timeout=timeout)
+    except asyncio.TimeoutError:
+        await prompt.delete()
+        return await wups(ctx, timeout_text)
+    return prompt, message
 
 def set_voice(userID: int, voice_id: str):
     fieldnames = ['user_id', 'voice']
@@ -886,8 +1051,87 @@ def assert_cooldown(command, user_id):
         return 0
     return round(last_executed[command][user_id] + cooldowns[command] - time.time())
 
+def cooldown_remaining(command, user_id) -> int:
+    if command not in cooldowns or command not in last_executed:
+        return 0
+
+    current_time = time.time()
+    last_time = last_executed[command].get(user_id)
+    if last_time is None:
+        return 0
+
+    # clean up old cooldowns
+    if current_time - last_time > 3600:
+        return 0
+
+    remaining = last_time + cooldowns[command] - current_time
+    return max(0, round(remaining))
+
 def capitalize_string(string: str) -> str:
     return ' '.join(word.capitalize() for word in string.split('-'))
+
+def build_pokedex_embed(pokemon, data: dict, enc_data: dict, pok_data: dict, index: int, shiny_int: int):
+    name = [entry for entry in data["names"] if entry["language"]["name"] == "en"][0]["name"]
+
+    if data["gender_rate"] == -1:
+        gender_ratio = "Genderless"
+    elif data["gender_rate"] == 8:
+        gender_ratio = "100% Female"
+    else:
+        female_percentage = (data["gender_rate"] / 8) * 100
+        male_percentage = 100 - female_percentage
+        gender_ratio = f"{male_percentage}% Male / {female_percentage}% Female"
+
+    locations = []
+    for entry in enc_data:
+        loc = capitalize_string(entry["location_area"]["name"])
+        if loc.endswith(" Area"):
+            loc = loc[: -len(" Area")]
+        locations.append(loc)
+
+    moves = [capitalize_string(entry["move"]["name"]) for entry in pok_data["moves"]]
+
+    embed = discord.Embed(title=f"{name}, #{index}", color=discord.Color.red())
+    embed.description = ""
+
+    for i, type_ in enumerate(pokemon.types, 1):
+        embed.description += f"**Type {i}**: {capitalize_string(type_)}\n"
+    embed.description += "\n"
+
+    for i, ability in enumerate(pokemon.abilities, 1):
+        embed.description += (
+            f"**Ability {i}**: {capitalize_string(ability.name)}"
+            f'{" *(Hidden)*" if ability.is_hidden else ""}\n'
+        )
+    embed.description += "\n"
+
+    embed.description += f"**Base HP**: {pokemon.base_stats.hp}\n"
+    embed.description += f"**Base Attack**: {pokemon.base_stats.attack}\n"
+    embed.description += f"**Base Defense**: {pokemon.base_stats.defense}\n"
+    embed.description += f"**Base Special Attack**: {pokemon.base_stats.sp_atk}\n"
+    embed.description += f"**Base Special Defense**: {pokemon.base_stats.sp_def}\n"
+    embed.description += f"**Base Speed**: {pokemon.base_stats.speed}\n"
+    embed.description += (f"**Base Stat Total**: {pokemon.base_stats.hp + pokemon.base_stats.attack + pokemon.base_stats.defense + pokemon.base_stats.sp_atk + pokemon.base_stats.sp_def + pokemon.base_stats.speed}\n\n")
+    embed.description += (f"**Base Experience**: {pokemon.base_experience if pokemon.base_experience is not None else 0}\n")
+    embed.description += f"**Base Happiness**: {data['base_happiness']}\n"
+    embed.description += f"**Capture Rate**: {data['capture_rate']}\n\n"
+    embed.description += (f"**Egg Groups**: {', '.join(capitalize_string(g['name']) for g in [e for e in data['egg_groups']])}\n")
+    embed.description += f"**Gender Ratio**: {gender_ratio}\n\n"
+
+    embed.description += (f"**Found At**: {', '.join(str(location) for location in locations) if len(locations) != 0 else 'No Location Data'}\n")
+    embed.description += (f"**Moves Learned**: {', '.join(str(move) for move in moves) if index != 151 else 'Every Move'}")
+
+    try:
+        embed.set_thumbnail(url=pokemon.sprites.front.get("shiny")) if shiny_int == 1 else embed.set_thumbnail(url=pokemon.sprites.front.get("default"))
+        footer_text = [entry for entry in data["flavor_text_entries"] if entry["language"]["name"] == "en"][0]["flavor_text"]
+        footer_text = " ".join(str(footer_text).split())
+        embed.set_footer(text=footer_text)
+    except Exception:
+        pass
+
+    if shiny_int != 1:
+        return embed, None
+    return embed, f"Woah! A Shiny {name}! ✨"
 
 def parse_total_duration(total_duration: list) -> str:
     all_seconds = 0
