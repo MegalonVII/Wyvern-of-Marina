@@ -12,7 +12,7 @@ from discord.ext import commands
 from colorama import Fore, Back, Style
 from typing import Optional
 
-from utils import VoiceState, YTDLSource, YTDLError, Song, MusicDownloadHandlers # utils classes 
+from utils import VoiceState, YTDLSource, YTDLError, Song, MusicDownloadHandlers, MusicMixHandlers # utils classes 
 from utils import reply, set_voice, wups, parse_total_duration, in_channels # utils functions
 from utils import lists, tts_voice_aliases, voice_id_to_alias, default_tts_voice, volume_adjustment, tts_volume_adjustment # utils variables
 
@@ -298,7 +298,7 @@ class Music(commands.Cog):
                 return await reply(ctx, f'Queued {str(source)}')
             
     @commands.command(name='grabber')
-    async def grabber(self, ctx, platform: str, *query):
+    async def _grabber(self, ctx, platform: str, *query):
         platform_lower = platform.lower()
         if platform_lower not in self.platforms:
             return await wups(ctx, "Invalid platform choice! Must be either `Spotify`, `YouTube`, or `SoundCloud`")
@@ -331,67 +331,15 @@ class Music(commands.Cog):
         if not (ctx.author.guild_permissions.administrator or (djRole and djRole in ctx.author.roles)):
             return await wups(ctx, "You don't have the permissions to use this. Must be either a DJ or administrator")
 
-        global volume_adjustment, tts_volume_adjustment
-        mix_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "csv", "mix.csv")
-        current_music = volume_adjustment
-        current_tts = tts_volume_adjustment
-        try:
-            with open(mix_path, "r", newline="") as mix_file:
-                reader = csv.DictReader(mix_file)
-                row = next(reader, None)
-            if row:
-                current_music = float(row.get("music", current_music))
-                current_tts = float(row.get("tts", current_tts))
-        except Exception:
-            pass
-
-        if music_volume is None and tts_volume is None:
+        current_music, current_tts = MusicMixHandlers.load_current_mix_levels()
+        mode, music_scalar, tts_scalar, error = MusicMixHandlers.resolve_mix_inputs(music_volume, tts_volume, current_music, current_tts)
+        if mode == "current":
             return await reply(ctx, f'Current mix levels — Music: `{int(current_music * 100)}%`, TTS: `{int(current_tts * 100)}%`')
+        if mode == "error":
+            return await wups(ctx, error)
 
-        if (music_volume is None) != (tts_volume is None):
-            return await wups(ctx, 'Please specify two different volume percentages, e.g. `!w mix 35 100`')
-
-        current_music_percent = int(current_music * 100)
-        current_tts_percent = int(current_tts * 100)
-
-        if music_volume is None:
-            music_volume = current_music_percent
-        if tts_volume is None:
-            tts_volume = current_tts_percent
-
-        try:
-            music_volume = int(music_volume)
-            tts_volume = int(tts_volume)
-        except (TypeError, ValueError):
-            return await wups(ctx, 'Please provide whole numbers between 0 and 100 for both values')
-
-        if not (0 <= music_volume <= 100) or not (0 <= tts_volume <= 100):
-            return await wups(ctx, 'Please keep both values between 0 and 100')
-
-        music_scalar = music_volume / 100.0
-        tts_scalar = tts_volume / 100.0
-
-        if music_scalar < 0.0:
-            music_scalar = 0.0
-        if music_scalar > 1.0:
-            music_scalar = 1.0
-        if tts_scalar < 0.0:
-            tts_scalar = 0.0
-        if tts_scalar > 1.0:
-            tts_scalar = 1.0
-
-        volume_adjustment = music_scalar
-        tts_volume_adjustment = tts_scalar
-        os.makedirs(os.path.dirname(mix_path), exist_ok=True)
-        with open(mix_path, "w", newline="") as mix_file:
-            writer = csv.DictWriter(mix_file, fieldnames=["music", "tts"])
-            writer.writeheader()
-            writer.writerow({"music": f"{music_scalar:.3f}", "tts": f"{tts_scalar:.3f}"})
-
-        if ctx.voice_state and getattr(ctx.voice_state, 'mixer', None):
-            ctx.voice_state.mixer.music_volume_when_tts = music_scalar
-            ctx.voice_state.mixer.tts_volume_when_mixed = tts_scalar
-
+        MusicMixHandlers.persist_mix_levels(music_scalar, tts_scalar)
+        MusicMixHandlers.apply_mix_to_voice_state(ctx.voice_state, music_scalar, tts_scalar)
         return await ctx.message.add_reaction('✅')
 
     @commands.command(name='voice')

@@ -103,8 +103,8 @@ def mix_settings(music_volume: Optional[float] = None, tts_volume: Optional[floa
 volume_adjustment, tts_volume_adjustment = mix_settings()
 
 
+# all sorts of classes for specific functions already written
 # on_message event handler class
-# just because i didn't think these functions would be necessary elsewhere
 class MessageHandlers:
     @staticmethod
     async def custom_commands(message, lists):
@@ -212,9 +212,7 @@ class MessageHandlers:
             else:
                 await shark_react(message)
 
-
 # use command handlers
-# i just thought the use command was a bit too long to handle, so i made this class
 class EconomyUseHandlers:
     @staticmethod
     async def handle(bot: commands.Bot, ctx: commands.Context, item: str):
@@ -329,8 +327,7 @@ class EconomyUseHandlers:
             return await msg.edit(content="Turns out that was just your stomach growling. The banana you just ate was a regular old banana...", allowed_mentions=discord.AllowedMentions.none())
         return await wups(ctx, f"You don't have a {item}")
 
-# music download handler class
-# for use with grabber command
+# grabber handler class
 class MusicDownloadHandlers:
     @staticmethod
     def spotify(query: str) -> dict:
@@ -434,6 +431,100 @@ class MusicDownloadHandlers:
             return query.rstrip("/"), None
 
         return query, None
+
+# mix handler class
+class MusicMixHandlers:
+    @staticmethod
+    def load_current_mix_levels() -> tuple[float, float]:
+        """Load mix levels from disk or fall back to current in-memory values."""
+        global volume_adjustment, tts_volume_adjustment
+        current_music = volume_adjustment
+        current_tts = tts_volume_adjustment
+
+        mix_path = os.path.join(os.path.dirname(__file__), "csv", "mix.csv")
+        try:
+            with open(mix_path, "r", newline="") as mix_file:
+                reader = csv.DictReader(mix_file)
+                row = next(reader, None)
+                if row:
+                    current_music = float(row.get("music", current_music))
+                    current_tts = float(row.get("tts", current_tts))
+        except Exception:
+            pass
+
+        return current_music, current_tts
+
+    @staticmethod
+    def resolve_mix_inputs(
+        music_volume: Optional[int],
+        tts_volume: Optional[int],
+        current_music: float,
+        current_tts: float,
+    ) -> tuple[str, Optional[float], Optional[float], Optional[str]]:
+        """
+        Returns: (mode, music_scalar, tts_scalar, error_text)
+        mode in {"current", "apply", "error"}.
+        """
+        if music_volume is None and tts_volume is None:
+            return "current", None, None, None
+
+        if (music_volume is None) != (tts_volume is None):
+            return "error", None, None, "Please specify two different volume percentages, e.g. `!w mix 35 100`"
+
+        current_music_percent = int(current_music * 100)
+        current_tts_percent = int(current_tts * 100)
+
+        if music_volume is None:
+            music_volume = current_music_percent
+        if tts_volume is None:
+            tts_volume = current_tts_percent
+
+        try:
+            music_volume = int(music_volume)
+            tts_volume = int(tts_volume)
+        except (TypeError, ValueError):
+            return "error", None, None, "Please provide whole numbers between 0 and 100 for both values"
+
+        if not (0 <= music_volume <= 100) or not (0 <= tts_volume <= 100):
+            return "error", None, None, "Please keep both values between 0 and 100"
+
+        music_scalar = music_volume / 100.0
+        tts_scalar = tts_volume / 100.0
+
+        # Preserve original clamping behavior.
+        if music_scalar < 0.0:
+            music_scalar = 0.0
+        if music_scalar > 1.0:
+            music_scalar = 1.0
+        if tts_scalar < 0.0:
+            tts_scalar = 0.0
+        if tts_scalar > 1.0:
+            tts_scalar = 1.0
+
+        return "apply", music_scalar, tts_scalar, None
+
+    @staticmethod
+    def persist_mix_levels(music_scalar: float, tts_scalar: float) -> None:
+        """Persist mix levels to disk and update in-memory globals."""
+        global volume_adjustment, tts_volume_adjustment
+
+        mix_path = os.path.join(os.path.dirname(__file__), "csv", "mix.csv")
+        os.makedirs(os.path.dirname(mix_path), exist_ok=True)
+
+        volume_adjustment = music_scalar
+        tts_volume_adjustment = tts_scalar
+
+        with open(mix_path, "w", newline="") as mix_file:
+            writer = csv.DictWriter(mix_file, fieldnames=["music", "tts"])
+            writer.writeheader()
+            writer.writerow({"music": f"{music_scalar:.3f}", "tts": f"{tts_scalar:.3f}"})
+
+    @staticmethod
+    def apply_mix_to_voice_state(voice_state, music_scalar: float, tts_scalar: float) -> None:
+        """Apply mix settings to the currently playing voice mixer (if present)."""
+        if voice_state and getattr(voice_state, "mixer", None):
+            voice_state.mixer.music_volume_when_tts = music_scalar
+            voice_state.mixer.tts_volume_when_mixed = tts_scalar
 
 
 # music functionality
