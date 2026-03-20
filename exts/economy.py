@@ -1,6 +1,7 @@
 import discord
-from discord.ext import commands
 import random
+
+from discord.ext import commands
 from asyncio import sleep
 from math import ceil
 

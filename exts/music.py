@@ -1,15 +1,16 @@
 import discord
-from discord.ext import commands
 import math
 import csv
 import os
 import re
-from colorama import Fore, Back, Style
 import asyncio
 import edge_tts
 import tempfile
-from typing import Optional
 import nacl # necessary for opus
+
+from discord.ext import commands
+from colorama import Fore, Back, Style
+from typing import Optional
 
 from utils import VoiceState, YTDLSource, YTDLError, Song # utils classes 
 from utils import reply, set_voice, wups, parse_total_duration, in_channels # utils functions

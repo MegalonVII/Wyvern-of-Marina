@@ -1,7 +1,8 @@
 import discord
 import csv
-from discord.ext import commands
 import pandas as pd
+
+from discord.ext import commands
 from asyncio import sleep
 
 from utils import lists, file_checks # utils direct values
