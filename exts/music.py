@@ -266,7 +266,9 @@ class Music(commands.Cog):
             return await wups(ctx, 'Source and destination positions are the same')
 
         from_pos, to_pos = from_index - 1, to_index - 1
-        queue._queue.insert(to_pos, queue._queue.pop(from_pos))
+        song = queue._queue[from_pos]
+        del queue._queue[from_pos]
+        queue._queue.insert(to_pos, song)
         return await ctx.message.add_reaction('✅')
 
     @commands.command(name='play')
