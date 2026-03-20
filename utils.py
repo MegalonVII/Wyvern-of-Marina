@@ -584,7 +584,7 @@ class TriviaHandlers:
     @staticmethod
     def letter_to_index(letter: str) -> int:
         return {"a": 0, "b": 1, "c": 2, "d": 3}[letter.lower()]
-        
+
 # music functionality
 # all sorts of classes for playing songs in vc. you may mostly ignore these since vc implementation is mostly complete.
 class VoiceError(Exception):
@@ -1245,6 +1245,28 @@ def stolen_funds(userID: int, coins: int) -> bool:
             writer.writerow(row)
     create_list("bank")
     return True
+
+
+def slots_tally_and_payout(userID: int, reels: list) -> str:
+    count7 = reels.count("7️⃣")
+    unique = len(set(reels))
+    reels_display = f"{reels[0]} | {reels[1]} | {reels[2]}"
+
+    if count7 == 3:
+        add_coins(userID, 500)
+        return f"{reels_display}\n**Jackpot**! 500 {zenny}!"
+
+    if unique == 1 and reels[0] != "7️⃣":
+        add_coins(userID, 100)
+        return f"{reels_display}\nSmall prize! 100 {zenny}!"
+
+    if unique == 2:
+        prize = 50 if count7 == 2 else 25
+        add_coins(userID, prize)
+        prize_msg = f"Two lucky 7's! 50 {zenny}!" if prize == 50 else f"Nice! 25 {zenny}!"
+        return f"{reels_display}\n{prize_msg}"
+
+    return f"{reels_display}\nBetter luck next time..."
 
 async def in_wom_shenanigans(ctx):
     wom_shenanigans = discord.utils.get(ctx.guild.channels, name='wom-shenanigans')

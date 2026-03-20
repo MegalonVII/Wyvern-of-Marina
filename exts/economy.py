@@ -7,7 +7,7 @@ from math import ceil
 
 from utils import EconomyUseHandlers # utils classes
 from utils import zenny, prev_steal_targets, target_counts, lists # utils direct values
-from utils import in_wom_shenanigans, assert_cooldown, cooldown_remaining, wups, reply, subtract_coins, add_coins, dual_spend, stolen_funds, dep, wd, add_item, subtract_item, direct_to_bank, load_info # utils functions
+from utils import in_wom_shenanigans, assert_cooldown, cooldown_remaining, wups, reply, subtract_coins, add_coins, dual_spend, stolen_funds, dep, wd, add_item, subtract_item, direct_to_bank, load_info, slots_tally_and_payout # utils functions
 
 # economy commands
 # slots, bet, steal, heist, dep, wd, bal, bankbal, paypal, mp, buy, sell, inv, use
@@ -27,26 +27,15 @@ class Economy(commands.Cog):
             if not subtract_coins(ctx.author.id, 10):
                 return await wups(ctx, f"You don't have enough {zenny} to play")
         
-            emojis = ["🍒", "🍇", "🍊", "🍋", "🍉","🫐","7️⃣"]
-            reels = ["❓","❓","❓"]
+            emojis = ["🍒", "🍇", "🍊", "🍋", "🍉", "🫐", "7️⃣"]
+            reels = ["❓"] * 3
             msg = await ctx.reply(f"{reels[0]} | {reels[1]} | {reels[2]}", mention_author=False)
-            for i in range(0,3):
-                await sleep(1)
-                reels[i] = random.choice(emojis)
+
+            for i in range(3):
+                await sleep(1); reels[i] = random.choice(emojis)
                 await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}", allowed_mentions=discord.AllowedMentions.none())
-            if all(reel == "7️⃣" for reel in reels):
-                add_coins(ctx.author.id,500)
-                return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\n**Jackpot**! 500 {zenny}!", allowed_mentions=discord.AllowedMentions.none())
-            elif len(set(reels)) == 1 and reels[0] != "7️⃣":
-                add_coins(ctx.author.id,100)
-                return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nSmall prize! 100 {zenny}!", allowed_mentions=discord.AllowedMentions.none())
-            elif len(set(reels)) == 2:
-                if reels.count("7️⃣") == 2:
-                    add_coins(ctx.author.id,50)
-                    return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nTwo lucky 7's! 50 {zenny}!", allowed_mentions=discord.AllowedMentions.none())
-                add_coins(ctx.author.id,25)
-                return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nNice! 25 {zenny}!", allowed_mentions=discord.AllowedMentions.none())
-            return await msg.edit(content=f"{reels[0]} | {reels[1]} | {reels[2]}\nBetter luck next time...", allowed_mentions=discord.AllowedMentions.none())
+
+            return await msg.edit(content=slots_tally_and_payout(ctx.author.id, reels), allowed_mentions=discord.AllowedMentions.none())
 
     @commands.command(name='bet')
     async def bet(self, ctx, amount:int):
