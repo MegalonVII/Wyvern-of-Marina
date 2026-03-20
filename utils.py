@@ -105,8 +105,403 @@ def mix_settings(music_volume: Optional[float] = None, tts_volume: Optional[floa
 volume_adjustment, tts_volume_adjustment = mix_settings()
 
 
-# all sorts of classes for specific functions already written
-# on_message event handler class
+# one-off helpers
+# main.py
+# help()
+def load_help():
+    base_dir = os.path.join(os.path.dirname(__file__), "docs")
+
+    pages_path = os.path.join(base_dir, "help_pages.txt")
+    with open(pages_path, "r", encoding="utf-8") as file:
+        pages = [line.strip() for line in file if line.strip()]
+
+    helpDict = {}
+    for page in pages:
+        commands_path = os.path.join(base_dir, f"{page}_commands.txt")
+        descriptions_path = os.path.join(base_dir, f"{page}_descriptions.txt")
+
+        commands = []
+        descriptions = []
+
+        if os.path.exists(commands_path):
+            with open(commands_path, "r", encoding="utf-8") as cfile:
+                commands = [line.strip() for line in cfile if line.strip()]
+
+        if os.path.exists(descriptions_path):
+            with open(descriptions_path, "r", encoding="utf-8") as dfile:
+                descriptions = [line.strip() for line in dfile if line.strip()]
+
+        helpDict[page] = {
+            "commands": commands,
+            "descriptions": descriptions,
+        }
+
+    return helpDict
+
+# on_ready()
+def get_login_time(tz: str) -> str:
+    return f"Time: {datetime.now(timezone(tz)).strftime('%m/%d/%Y, %I:%M:%S %p')}\nTimezone: {tz}\n"
+
+# admin.py
+# mute()
+def parse_mute_args(args: str) -> tuple[int, str, str]:
+    time_unit = 1
+    time_limit = "h"
+    reason = args.strip() or "No reason provided"
+
+    match = re.match(r"^\s*(\d+)\s*([smhdw])\s*(.*)$", args or "", re.IGNORECASE)
+    if match:
+        time_unit = int(match.group(1))
+        time_limit = match.group(2).lower()
+        reason = match.group(3).strip() or "No reason provided"
+
+    return time_unit, time_limit, reason
+
+async def build_mute_duration(ctx: commands.Context, time_unit: int, time_limit: str) -> Optional[timedelta]:
+    if time_unit <= 0:
+        return await wups(ctx, "Time duration has to be 1 or higher")
+    if time_limit not in MUTE_TIME_LIMITS:
+        return await wups(ctx, f"Invalid measure of time. Has to be one of the following: `{', '.join(MUTE_TIME_LIMITS.keys())}`")
+
+    attribute, limit = MUTE_TIME_LIMITS[time_limit]
+    if time_unit > limit:
+        return await wups(ctx, "Cannot mute member for more than 4 weeks")
+
+    return timedelta(**{attribute: time_unit})
+
+# birthday.py
+# birthday()
+def update_birthday(user_id: int, birthdate: str, tz: str):
+    fieldnames = ['user_id', 'birthdate', 'timezone']
+    found = False
+    rows = []
+    with open('csv/birthdays.csv', 'r', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if row['user_id'] == str(user_id):
+                row = {'user_id': row['user_id'], 'birthdate': birthdate, 'timezone': tz}
+                found = True
+            rows.append(row)
+    if not found:
+        rows.append({'user_id': str(user_id), 'birthdate': birthdate, 'timezone': tz})
+    with open('csv/birthdays.csv', 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+    create_birthday_list()
+
+def create_birthday_list():
+    if not os.path.exists('csv/birthdays.csv'):
+        with open(f'csv/birthdays.csv', 'w'):
+            pass # creates csv file
+    with open(f'csv/birthdays.csv', mode='r') as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        rows = list(csv_reader)
+        for row in rows:
+            user_id = int(row['user_id'])
+            birthdate = row['birthdate']
+            timezone = row['timezone']
+            user_info[user_id] = {'birthdate': birthdate, 'timezone': timezone}
+
+async def collect_birthday_and_timezone(bot: commands.Bot, ctx: commands.Context) -> tuple[Optional[str], Optional[object], Optional[str]]:
+    # birthday
+    bday_timeout_text = "Time's up! You didn't provide me with your birthday in time..."
+    prompt_data = await prompt_for_message(bot, ctx, 'In the next 30 seconds, give me your birthday in the format "MM-DD"!', 30, bday_timeout_text, timeout_wups=False)
+    if prompt_data is None:
+        return None, None, bday_timeout_text
+    prompt1, bday_message = prompt_data
+
+    try:
+        bday = datetime.strptime(bday_message.content, "%m-%d").date().strftime("%m-%d")
+    except Exception:
+        await bday_message.delete()
+        await prompt1.delete()
+        return None, None, "Invalid birthday input"
+    await bday_message.delete()
+    await prompt1.delete()
+
+    # timezone
+    tz_timeout_text = "Time's up! You didn't provide me with your timezone in time..."
+    prompt_data = await prompt_for_message(bot, ctx, "Now, you have 5 minutes to give me the timezone you are based in. Make sure it is one from [this list](<https://gist.githubusercontent.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568/raw/daacf0e4496ccc60a36e493f0252b7988bceb143/pytz-time-zones.py>)!", 300, tz_timeout_text, timeout_wups=False)
+    if prompt_data is None:
+        return None, None, tz_timeout_text
+    prompt2, tz_message = prompt_data
+
+    try:
+        tz_obj = timezone(tz_message.content)
+    except Exception:
+        await tz_message.delete()
+        await prompt2.delete()
+        return None, None, "Invalid timezone. Refer to [this list](<https://gist.githubusercontent.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568/raw/daacf0e4496ccc60a36e493f0252b7988bceb143/pytz-time-zones.py>)"
+
+    await tz_message.delete()
+    await prompt2.delete()
+
+    update_birthday(ctx.author.id, bday, tz_message.content)
+    return bday, tz_obj, None
+
+# music.py
+# voice()
+def set_voice(userID: int, voice_id: str):
+    fieldnames = ['user_id', 'voice']
+    found = False
+    rows = []
+    if os.path.exists('csv/voice.csv'):
+        with open('csv/voice.csv', 'r', newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if row.get('user_id') == str(userID):
+                    rows.append({'user_id': str(userID), 'voice': voice_id})
+                    found = True
+                else:
+                    rows.append(row)
+    if not found:
+        rows.append({'user_id': str(userID), 'voice': voice_id})
+    os.makedirs('csv', exist_ok=True)
+    with open('csv/voice.csv', 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+    create_list("voice")
+
+# queue()
+def parse_total_duration(total_duration: list) -> str:
+    all_seconds = 0
+    conversion_factors = {
+        "second": 1,
+        "minute": 60,
+        "hour": 3600,
+        "day": 86400,
+    }
+
+    for duration in total_duration:
+        if ":" in duration:
+            parts = duration.split(":")
+            if len(parts) == 4:
+                days, hours, minutes, seconds = map(int, parts)
+                all_seconds += days * 86400 + hours * 3600 + minutes * 60 + seconds
+            elif len(parts) == 3:
+                hours, minutes, seconds = map(int, parts)
+                all_seconds += hours * 3600 + minutes * 60 + seconds
+            elif len(parts) == 2:
+                minutes, seconds = map(int, parts)
+                all_seconds += minutes * 60 + seconds
+        else:
+            parts = duration.split(", ")
+            seconds = 0
+            for part in parts:
+                value, unit = part.split(" ")
+                value = int(value)
+                if unit.endswith("s"):
+                    unit = unit[:-1]
+                seconds += value * conversion_factors[unit]
+            all_seconds += seconds
+
+    days, remainder = divmod(all_seconds, 86400)
+    hours, remainder = divmod(remainder, 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    parts = [days, hours, minutes, seconds]
+    start_idx = None
+    for i, part in enumerate(parts):
+        if part != 0:
+            start_idx = i
+            break
+    if start_idx is None or start_idx > 2:
+        start_idx = 2
+
+    formatted_parts = [f"{part:02d}" for part in parts[start_idx:]]
+    return ":".join(formatted_parts)
+
+# tts()
+async def enqueue_tts_message(ctx: commands.Context, raw_message: str, tts_queue, tts_processing: bool, start_processing_fn):
+    tts_text = f"{ctx.author.display_name or ctx.author.global_name} said {raw_message}"
+    if len(tts_text) > 200:
+        return False, 'Message is too long. Please keep it under 200 characters'
+
+    temp_path = None
+    try:
+        async with ctx.typing():
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+            temp_path = temp_file.name
+            temp_file.close()
+
+            voice_id = lists["voice"].get(str(ctx.author.id)) or default_tts_voice
+            communicate = edge_tts.Communicate(tts_text, voice_id)
+            await communicate.save(temp_path)
+
+            was_playing = ctx.voice_state.is_playing and ctx.voice_state.voice.is_playing()
+            was_paused = ctx.voice_state.voice.is_paused() if ctx.voice_state.voice else False
+            current_song = ctx.voice_state.current if was_playing else None
+
+            await tts_queue.put((tts_text, temp_path, was_playing, was_paused, current_song))
+
+            if not tts_processing:
+                start_processing_fn()
+
+        return True, None
+    except Exception as e:
+        try:
+            if temp_path and os.path.exists(temp_path):
+                os.remove(temp_path)
+        except Exception:
+            pass
+        return False, f'An error occurred while generating TTS: `{str(e)}`'
+
+# economy.py
+# steal()
+def steal_target_tracking(author_id: int, target, update_counts: bool = True) -> bool:
+    prev_target = prev_steal_targets.get(author_id)
+    prev_count = target_counts.get(author_id, 0)
+
+    if prev_target == target and prev_count <= 2:
+        return False
+
+    if not update_counts:
+        return True
+
+    if prev_target != target:
+        target_counts[author_id] = prev_count + 1
+        prev_steal_targets[author_id] = target
+
+    # clamp so it never sticks at 2+ across attempts
+    target_counts[author_id] = 0 if target_counts.get(author_id, 0) >= 2 else target_counts.get(author_id, 0)
+    return True
+
+# slots()
+def slots_tally_and_payout(userID: int, reels: list) -> str:
+    count7 = reels.count("7️⃣")
+    unique = len(set(reels))
+    reels_display = f"{reels[0]} | {reels[1]} | {reels[2]}"
+
+    if count7 == 3:
+        add_coins(userID, 500)
+        return f"{reels_display}\n**Jackpot**! 500 {zenny}!"
+
+    if unique == 1 and reels[0] != "7️⃣":
+        add_coins(userID, 100)
+        return f"{reels_display}\nSmall prize! 100 {zenny}!"
+
+    if unique == 2:
+        prize = 50 if count7 == 2 else 25
+        add_coins(userID, prize)
+        prize_msg = f"Two lucky 7's! 50 {zenny}!" if prize == 50 else f"Nice! 25 {zenny}!"
+        return f"{reels_display}\n{prize_msg}"
+
+    return f"{reels_display}\nBetter luck next time..."
+
+# fun.py
+# emulation()
+def load_emulation():
+    file_path = os.path.join(os.path.dirname(__file__), "docs", "consoles.txt")
+    with open(file_path, "r", encoding="utf-8") as file:
+        emuDict = {
+            line.strip(): {
+                "links": [],
+                "instructions": ""
+            }
+            for line in file if line.strip()
+        }
+    file_path = os.path.join(os.path.dirname(__file__), "docs", "links.txt")
+    with open(file_path, "r", encoding="utf-8") as file:
+        for key in emuDict.keys():
+            line = file.readline().strip()
+            emuDict[key]["links"] = [part.strip() for part in line.split(",")]
+    file_path = os.path.join(os.path.dirname(__file__), "docs", "instructions.txt")
+    with open(file_path, "r", encoding="utf-8") as file:
+        for key in emuDict.keys():
+            emuDict[key]["instructions"] = file.readline().strip().replace("\\n", "\n")
+
+    return emuDict
+
+# pokedex()
+def build_pokedex_embed(pokemon, data: dict, enc_data: dict, pok_data: dict, index: int, shiny_int: int):
+    name = [entry for entry in data["names"] if entry["language"]["name"] == "en"][0]["name"]
+
+    if data["gender_rate"] == -1:
+        gender_ratio = "Genderless"
+    elif data["gender_rate"] == 8:
+        gender_ratio = "100% Female"
+    else:
+        female_percentage = (data["gender_rate"] / 8) * 100
+        male_percentage = 100 - female_percentage
+        gender_ratio = f"{male_percentage}% Male / {female_percentage}% Female"
+
+    locations = []
+    for entry in enc_data:
+        loc = capitalize_string(entry["location_area"]["name"])
+        if loc.endswith(" Area"):
+            loc = loc[: -len(" Area")]
+        locations.append(loc)
+
+    moves = [capitalize_string(entry["move"]["name"]) for entry in pok_data["moves"]]
+
+    embed = discord.Embed(title=f"{name}, #{index}", color=discord.Color.red())
+    embed.description = ""
+
+    for i, type_ in enumerate(pokemon.types, 1):
+        embed.description += f"**Type {i}**: {capitalize_string(type_)}\n"
+    embed.description += "\n"
+
+    for i, ability in enumerate(pokemon.abilities, 1):
+        embed.description += (
+            f"**Ability {i}**: {capitalize_string(ability.name)}"
+            f'{" *(Hidden)*" if ability.is_hidden else ""}\n'
+        )
+    embed.description += "\n"
+
+    embed.description += f"**Base HP**: {pokemon.base_stats.hp}\n"
+    embed.description += f"**Base Attack**: {pokemon.base_stats.attack}\n"
+    embed.description += f"**Base Defense**: {pokemon.base_stats.defense}\n"
+    embed.description += f"**Base Special Attack**: {pokemon.base_stats.sp_atk}\n"
+    embed.description += f"**Base Special Defense**: {pokemon.base_stats.sp_def}\n"
+    embed.description += f"**Base Speed**: {pokemon.base_stats.speed}\n"
+    embed.description += (
+        f"**Base Stat Total**: {pokemon.base_stats.hp + pokemon.base_stats.attack + pokemon.base_stats.defense + pokemon.base_stats.sp_atk + pokemon.base_stats.sp_def + pokemon.base_stats.speed}\n\n"
+    )
+    embed.description += f"**Base Experience**: {pokemon.base_experience if pokemon.base_experience is not None else 0}\n"
+    embed.description += f"**Base Happiness**: {data['base_happiness']}\n"
+    embed.description += f"**Capture Rate**: {data['capture_rate']}\n\n"
+    embed.description += (
+        f"**Egg Groups**: {', '.join(capitalize_string(g['name']) for g in [e for e in data['egg_groups']])}\n"
+    )
+    embed.description += f"**Gender Ratio**: {gender_ratio}\n\n"
+
+    embed.description += (
+        f"**Found At**: {', '.join(str(location) for location in locations) if len(locations) != 0 else 'No Location Data'}\n"
+    )
+    embed.description += (
+        f"**Moves Learned**: {', '.join(str(move) for move in moves) if index != 151 else 'Every Move'}"
+    )
+
+    try:
+        embed.set_thumbnail(url=pokemon.sprites.front.get("shiny")) if shiny_int == 1 else embed.set_thumbnail(url=pokemon.sprites.front.get("default"))
+        footer_text = [entry for entry in data["flavor_text_entries"] if entry["language"]["name"] == "en"][0]["flavor_text"]
+        footer_text = " ".join(str(footer_text).split())
+        embed.set_footer(text=footer_text)
+    except Exception:
+        pass
+
+    if shiny_int != 1:
+        return embed, None
+    return embed, f"Woah! A Shiny {name}! ✨"
+
+# roulette()
+async def roulette_spin(ctx: commands.Context, target: discord.Member, self_fired: bool, chance: int):
+    if random.randint(1, chance) == 1:
+        await target.edit(timed_out_until=discord.utils.utcnow() + timedelta(hours=1), reason="roulette")
+        return await reply(ctx, f"🔥🔫 {'You' if self_fired else 'This user'} died! (muted for 1 hour)")
+
+    add_coins(target.id, 1)
+    who = "you" if self_fired else "they"
+    give = "Here's" if self_fired else "I gave them"
+    return await reply(ctx, f"🚬🔫 Looks like {who}'re safe, for now... {give} 1 {zenny} as a pity prize...")
+
+
+# all sorts of classes for specific functions
+# on_message() handler class
 class MessageHandlers:
     @staticmethod
     async def custom_commands(message, lists):
@@ -214,7 +609,7 @@ class MessageHandlers:
             else:
                 await shark_react(message)
 
-# use command handlers
+# use() handler class
 class EconomyUseHandlers:
     @staticmethod
     async def handle(bot: commands.Bot, ctx: commands.Context, item: str):
@@ -329,7 +724,7 @@ class EconomyUseHandlers:
             return await msg.edit(content="Turns out that was just your stomach growling. The banana you just ate was a regular old banana...", allowed_mentions=discord.AllowedMentions.none())
         return await wups(ctx, f"You don't have a {item}")
 
-# grabber handler class
+# grabber() handler class
 class MusicDownloadHandlers:
     @staticmethod
     def spotify(query: str) -> dict:
@@ -434,11 +829,10 @@ class MusicDownloadHandlers:
 
         return query, None
 
-# mix handler class
+# mix() handler class
 class MusicMixHandlers:
     @staticmethod
     def load_current_mix_levels() -> tuple[float, float]:
-        """Load mix levels from disk or fall back to current in-memory values."""
         global volume_adjustment, tts_volume_adjustment
         current_music = volume_adjustment
         current_tts = tts_volume_adjustment
@@ -457,16 +851,7 @@ class MusicMixHandlers:
         return current_music, current_tts
 
     @staticmethod
-    def resolve_mix_inputs(
-        music_volume: Optional[int],
-        tts_volume: Optional[int],
-        current_music: float,
-        current_tts: float,
-    ) -> tuple[str, Optional[float], Optional[float], Optional[str]]:
-        """
-        Returns: (mode, music_scalar, tts_scalar, error_text)
-        mode in {"current", "apply", "error"}.
-        """
+    def resolve_mix_inputs(music_volume: Optional[int], tts_volume: Optional[int], current_music: float, current_tts: float) -> tuple[str, Optional[float], Optional[float], Optional[str]]:
         if music_volume is None and tts_volume is None:
             return "current", None, None, None
 
@@ -507,7 +892,6 @@ class MusicMixHandlers:
 
     @staticmethod
     def persist_mix_levels(music_scalar: float, tts_scalar: float) -> None:
-        """Persist mix levels to disk and update in-memory globals."""
         global volume_adjustment, tts_volume_adjustment
 
         mix_path = os.path.join(os.path.dirname(__file__), "csv", "mix.csv")
@@ -523,7 +907,6 @@ class MusicMixHandlers:
 
     @staticmethod
     def apply_mix_to_voice_state(voice_state, music_scalar: float, tts_scalar: float) -> None:
-        """Apply mix settings to the currently playing voice mixer (if present)."""
         if voice_state and getattr(voice_state, "mixer", None):
             voice_state.mixer.music_volume_when_tts = music_scalar
             voice_state.mixer.tts_volume_when_mixed = tts_scalar
@@ -535,7 +918,6 @@ class TriviaHandlers:
 
     @staticmethod
     def resolve_trivia_category(type: Optional[str]) -> tuple[Optional[int], Optional[str]]:
-        """Return (category_id, error_text)."""
         if type is None:
             return random.choice(TriviaHandlers.TRIVIA_CATEGORIES), None
 
@@ -548,7 +930,6 @@ class TriviaHandlers:
 
     @staticmethod
     def fetch_trivia(category_id: int) -> tuple[str, str, list[str]]:
-        """Return (question, correct_answer, shuffled_options)."""
         import requests
         import urllib.parse
 
@@ -587,8 +968,9 @@ class TriviaHandlers:
     def letter_to_index(letter: str) -> int:
         return {"a": 0, "b": 1, "c": 2, "d": 3}[letter.lower()]
 
-# music functionality
-# all sorts of classes for playing songs in vc. you may mostly ignore these since vc implementation is mostly complete.
+
+# all sorts of classes for playing songs in vc
+# you may mostly ignore these since vc implementation is mostly complete.
 class VoiceError(Exception):
     pass
 
@@ -871,7 +1253,7 @@ class VoiceState:
             self.voice = None
 
 
-# bot helper functions
+# reusable bot helper functions
 # check documentation rentry for more information
 def create_list(filename):
     file_checks[filename]=False
@@ -888,39 +1270,6 @@ def create_list(filename):
             for row in rows:
                 dict = list(row.values())
                 lists[filename][dict[0]]=dict[1]
-
-def update_birthday(user_id: int, birthdate: str, tz: str):
-    fieldnames = ['user_id', 'birthdate', 'timezone']
-    found = False
-    rows = []
-    with open('csv/birthdays.csv', 'r', newline='') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            if row['user_id'] == str(user_id):
-                row = {'user_id': row['user_id'], 'birthdate': birthdate, 'timezone': tz}
-                found = True
-            rows.append(row)
-    if not found:
-        rows.append({'user_id': str(user_id), 'birthdate': birthdate, 'timezone': tz})
-    with open('csv/birthdays.csv', 'w', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(row)
-    create_birthday_list()
-
-def create_birthday_list():
-    if not os.path.exists('csv/birthdays.csv'):
-        with open(f'csv/birthdays.csv', 'w'):
-            pass # creates csv file
-    with open(f'csv/birthdays.csv', mode='r') as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        rows = list(csv_reader)
-        for row in rows:
-            user_id = int(row['user_id'])
-            birthdate = row['birthdate']
-            timezone = row['timezone']
-            user_info[user_id] = {'birthdate': birthdate, 'timezone': timezone}
 
 async def check_reaction_board(message, reaction_type):
     emoji, count = None, None
@@ -987,31 +1336,6 @@ async def add_to_board(message, board_type):
 async def reply(ctx, content: str):
     return await ctx.reply(content, mention_author=False)
 
-def parse_mute_args(args: str) -> tuple[int, str, str]:
-    time_unit = 1
-    time_limit = "h"
-    reason = args.strip() or "No reason provided"
-
-    match = re.match(r"^\s*(\d+)\s*([smhdw])\s*(.*)$", args or "", re.IGNORECASE)
-    if match:
-        time_unit = int(match.group(1))
-        time_limit = match.group(2).lower()
-        reason = match.group(3).strip() or "No reason provided"
-
-    return time_unit, time_limit, reason
-
-async def build_mute_duration(ctx: commands.Context, time_unit: int, time_limit: str) -> Optional[timedelta]:
-    if time_unit <= 0:
-        return await wups(ctx, "Time duration has to be 1 or higher")
-    if time_limit not in MUTE_TIME_LIMITS:
-        return await wups(ctx, f"Invalid measure of time. Has to be one of the following: `{', '.join(MUTE_TIME_LIMITS.keys())}`")
-
-    attribute, limit = MUTE_TIME_LIMITS[time_limit]
-    if time_unit > limit:
-        return await wups(ctx, "Cannot mute member for more than 4 weeks")
-
-    return timedelta(**{attribute: time_unit})
-
 async def prompt_for_message(bot: commands.Bot, ctx: commands.Context, prompt_text: str, timeout: float, timeout_text: str, timeout_wups: bool = True) -> Optional[tuple[discord.Message, discord.Message]]:
     prompt = await reply(ctx, prompt_text)
     try:
@@ -1022,101 +1346,6 @@ async def prompt_for_message(bot: commands.Bot, ctx: commands.Context, prompt_te
             await wups(ctx, timeout_text)
         return None
     return prompt, message
-
-async def collect_birthday_and_timezone(bot: commands.Bot, ctx: commands.Context) -> tuple[Optional[str], Optional[object], Optional[str]]:
-    # birthday
-    bday_timeout_text = "Time's up! You didn't provide me with your birthday in time..."
-    prompt_data = await prompt_for_message(bot, ctx, 'In the next 30 seconds, give me your birthday in the format "MM-DD"!', 30, bday_timeout_text, timeout_wups=False)
-    if prompt_data is None:
-        return None, None, bday_timeout_text
-    prompt1, bday_message = prompt_data
-
-    try:
-        bday = datetime.strptime(bday_message.content, "%m-%d").date().strftime("%m-%d")
-    except Exception:
-        await bday_message.delete()
-        await prompt1.delete()
-        return None, None, "Invalid birthday input"
-    await bday_message.delete()
-    await prompt1.delete()
-
-    # timezone
-    tz_timeout_text = "Time's up! You didn't provide me with your timezone in time..."
-    prompt_data = await prompt_for_message(bot, ctx, "Now, you have 5 minutes to give me the timezone you are based in. Make sure it is one from [this list](<https://gist.githubusercontent.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568/raw/daacf0e4496ccc60a36e493f0252b7988bceb143/pytz-time-zones.py>)!", 300, tz_timeout_text, timeout_wups=False)
-    if prompt_data is None:
-        return None, None, tz_timeout_text
-    prompt2, tz_message = prompt_data
-
-    try:
-        tz_obj = timezone(tz_message.content)
-    except Exception:
-        await tz_message.delete()
-        await prompt2.delete()
-        return None, None, "Invalid timezone. Refer to [this list](<https://gist.githubusercontent.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568/raw/daacf0e4496ccc60a36e493f0252b7988bceb143/pytz-time-zones.py>)"
-
-    await tz_message.delete()
-    await prompt2.delete()
-
-    # update the birthday in the csv file
-    update_birthday(ctx.author.id, bday, tz_message.content)
-    return bday, tz_obj, None
-
-def set_voice(userID: int, voice_id: str):
-    fieldnames = ['user_id', 'voice']
-    found = False
-    rows = []
-    if os.path.exists('csv/voice.csv'):
-        with open('csv/voice.csv', 'r', newline='') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                if row.get('user_id') == str(userID):
-                    rows.append({'user_id': str(userID), 'voice': voice_id})
-                    found = True
-                else:
-                    rows.append(row)
-    if not found:
-        rows.append({'user_id': str(userID), 'voice': voice_id})
-    os.makedirs('csv', exist_ok=True)
-    with open('csv/voice.csv', 'w', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(row)
-    create_list("voice")
-
-async def enqueue_tts_message(ctx: commands.Context, raw_message: str, tts_queue, tts_processing: bool, start_processing_fn):
-    tts_text = f"{ctx.author.display_name or ctx.author.global_name} said {raw_message}"
-    if len(tts_text) > 200:
-        return False, 'Message is too long. Please keep it under 200 characters'
-
-    temp_path = None
-    try:
-        async with ctx.typing():
-            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
-            temp_path = temp_file.name
-            temp_file.close()
-
-            voice_id = lists["voice"].get(str(ctx.author.id)) or default_tts_voice
-            communicate = edge_tts.Communicate(tts_text, voice_id)
-            await communicate.save(temp_path)
-
-            was_playing = ctx.voice_state.is_playing and ctx.voice_state.voice.is_playing()
-            was_paused = ctx.voice_state.voice.is_paused() if ctx.voice_state.voice else False
-            current_song = ctx.voice_state.current if was_playing else None
-
-            await tts_queue.put((tts_text, temp_path, was_playing, was_paused, current_song))
-
-            if not tts_processing:
-                start_processing_fn()
-
-        return True, None
-    except Exception as e:
-        try:
-            if temp_path and os.path.exists(temp_path):
-                os.remove(temp_path)
-        except Exception:
-            pass
-        return False, f'An error occurred while generating TTS: `{str(e)}`'
 
 def add_coins(userID: int, coins: int):
     fieldnames = ['user_id', 'coins']
@@ -1321,46 +1550,6 @@ def stolen_funds(userID: int, coins: int) -> bool:
     create_list("bank")
     return True
 
-
-def steal_target_tracking(author_id: int, target, update_counts: bool = True) -> bool:
-    prev_target = prev_steal_targets.get(author_id)
-    prev_count = target_counts.get(author_id, 0)
-
-    if prev_target == target and prev_count <= 2:
-        return False
-
-    if not update_counts:
-        return True
-
-    if prev_target != target:
-        target_counts[author_id] = prev_count + 1
-        prev_steal_targets[author_id] = target
-
-    # clamp so it never sticks at 2+ across attempts
-    target_counts[author_id] = 0 if target_counts.get(author_id, 0) >= 2 else target_counts.get(author_id, 0)
-    return True
-
-def slots_tally_and_payout(userID: int, reels: list) -> str:
-    count7 = reels.count("7️⃣")
-    unique = len(set(reels))
-    reels_display = f"{reels[0]} | {reels[1]} | {reels[2]}"
-
-    if count7 == 3:
-        add_coins(userID, 500)
-        return f"{reels_display}\n**Jackpot**! 500 {zenny}!"
-
-    if unique == 1 and reels[0] != "7️⃣":
-        add_coins(userID, 100)
-        return f"{reels_display}\nSmall prize! 100 {zenny}!"
-
-    if unique == 2:
-        prize = 50 if count7 == 2 else 25
-        add_coins(userID, prize)
-        prize_msg = f"Two lucky 7's! 50 {zenny}!" if prize == 50 else f"Nice! 25 {zenny}!"
-        return f"{reels_display}\n{prize_msg}"
-
-    return f"{reels_display}\nBetter luck next time..."
-
 async def in_wom_shenanigans(ctx):
     wom_shenanigans = discord.utils.get(ctx.guild.channels, name='wom-shenanigans')
     if wom_shenanigans is None:
@@ -1434,117 +1623,6 @@ def cooldown_remaining(command, user_id) -> int:
 def capitalize_string(string: str) -> str:
     return ' '.join(word.capitalize() for word in string.split('-'))
 
-def build_pokedex_embed(pokemon, data: dict, enc_data: dict, pok_data: dict, index: int, shiny_int: int):
-    name = [entry for entry in data["names"] if entry["language"]["name"] == "en"][0]["name"]
-
-    if data["gender_rate"] == -1:
-        gender_ratio = "Genderless"
-    elif data["gender_rate"] == 8:
-        gender_ratio = "100% Female"
-    else:
-        female_percentage = (data["gender_rate"] / 8) * 100
-        male_percentage = 100 - female_percentage
-        gender_ratio = f"{male_percentage}% Male / {female_percentage}% Female"
-
-    locations = []
-    for entry in enc_data:
-        loc = capitalize_string(entry["location_area"]["name"])
-        if loc.endswith(" Area"):
-            loc = loc[: -len(" Area")]
-        locations.append(loc)
-
-    moves = [capitalize_string(entry["move"]["name"]) for entry in pok_data["moves"]]
-
-    embed = discord.Embed(title=f"{name}, #{index}", color=discord.Color.red())
-    embed.description = ""
-
-    for i, type_ in enumerate(pokemon.types, 1):
-        embed.description += f"**Type {i}**: {capitalize_string(type_)}\n"
-    embed.description += "\n"
-
-    for i, ability in enumerate(pokemon.abilities, 1):
-        embed.description += (
-            f"**Ability {i}**: {capitalize_string(ability.name)}"
-            f'{" *(Hidden)*" if ability.is_hidden else ""}\n'
-        )
-    embed.description += "\n"
-
-    embed.description += f"**Base HP**: {pokemon.base_stats.hp}\n"
-    embed.description += f"**Base Attack**: {pokemon.base_stats.attack}\n"
-    embed.description += f"**Base Defense**: {pokemon.base_stats.defense}\n"
-    embed.description += f"**Base Special Attack**: {pokemon.base_stats.sp_atk}\n"
-    embed.description += f"**Base Special Defense**: {pokemon.base_stats.sp_def}\n"
-    embed.description += f"**Base Speed**: {pokemon.base_stats.speed}\n"
-    embed.description += (f"**Base Stat Total**: {pokemon.base_stats.hp + pokemon.base_stats.attack + pokemon.base_stats.defense + pokemon.base_stats.sp_atk + pokemon.base_stats.sp_def + pokemon.base_stats.speed}\n\n")
-    embed.description += (f"**Base Experience**: {pokemon.base_experience if pokemon.base_experience is not None else 0}\n")
-    embed.description += f"**Base Happiness**: {data['base_happiness']}\n"
-    embed.description += f"**Capture Rate**: {data['capture_rate']}\n\n"
-    embed.description += (f"**Egg Groups**: {', '.join(capitalize_string(g['name']) for g in [e for e in data['egg_groups']])}\n")
-    embed.description += f"**Gender Ratio**: {gender_ratio}\n\n"
-
-    embed.description += (f"**Found At**: {', '.join(str(location) for location in locations) if len(locations) != 0 else 'No Location Data'}\n")
-    embed.description += (f"**Moves Learned**: {', '.join(str(move) for move in moves) if index != 151 else 'Every Move'}")
-
-    try:
-        embed.set_thumbnail(url=pokemon.sprites.front.get("shiny")) if shiny_int == 1 else embed.set_thumbnail(url=pokemon.sprites.front.get("default"))
-        footer_text = [entry for entry in data["flavor_text_entries"] if entry["language"]["name"] == "en"][0]["flavor_text"]
-        footer_text = " ".join(str(footer_text).split())
-        embed.set_footer(text=footer_text)
-    except Exception:
-        pass
-
-    if shiny_int != 1:
-        return embed, None
-    return embed, f"Woah! A Shiny {name}! ✨"
-
-def parse_total_duration(total_duration: list) -> str:
-    all_seconds = 0
-    conversion_factors = {
-        'second': 1,
-        'minute': 60,
-        'hour': 3600,
-        'day': 86400
-    }
-
-    for duration in total_duration:
-        if ':' in duration:
-            parts = duration.split(':')
-            if len(parts) == 4:
-                days, hours, minutes, seconds = map(int, parts)
-                all_seconds += days * 86400 + hours * 3600 + minutes * 60 + seconds
-            elif len(parts) == 3:
-                hours, minutes, seconds = map(int, parts)
-                all_seconds += hours * 3600 + minutes * 60 + seconds
-            elif len(parts) == 2:
-                minutes, seconds = map(int, parts)
-                all_seconds += minutes * 60 + seconds
-        else:
-            parts = duration.split(', ')
-            seconds = 0
-            for part in parts:
-                value, unit = part.split(' ')
-                value = int(value)
-                if unit.endswith('s'):
-                    unit = unit[:-1]
-                seconds += value * conversion_factors[unit]
-            all_seconds += seconds
-
-    days, remainder = divmod(all_seconds, 86400)
-    hours, remainder = divmod(remainder, 3600)
-    minutes, seconds = divmod(remainder, 60)
-
-    parts = [days, hours, minutes, seconds]
-    start_idx = None
-    for i, part in enumerate(parts):
-        if part != 0:
-            start_idx = i
-            break
-    if start_idx is None or start_idx > 2:
-        start_idx = 2
-    
-    formatted_parts = [f"{part:02d}" for part in parts[start_idx:]]
-    return ':'.join(formatted_parts)
-
 async def shark_react(message: discord.Message):
     return await message.add_reaction('🦈')
 
@@ -1552,76 +1630,7 @@ async def wups(ctx, content: str):
     await shark_react(ctx.message)
     return await reply(ctx, content=f"Wups! {content}...")
 
-
-async def roulette_spin(ctx: commands.Context, target: discord.Member, self_fired: bool, chance: int):
-    if random.randint(1, chance) == 1:
-        await target.edit(
-            timed_out_until=discord.utils.utcnow() + timedelta(hours=1),
-            reason="roulette",
-        )
-        return await reply(ctx, f"🔥🔫 {'You' if self_fired else 'This user'} died! (muted for 1 hour)")
-
-    add_coins(target.id, 1)
-    who = "you" if self_fired else "they"
-    give = "Here's" if self_fired else "I gave them"
-    return await reply(ctx, f"🚬🔫 Looks like {who}'re safe, for now... {give} 1 {zenny} as a pity prize...")
-
-def get_login_time(tz: str) -> str:
-    return f"Time: {datetime.now(timezone(tz)).strftime('%m/%d/%Y, %I:%M:%S %p')}\nTimezone: {tz}\n"
-
 def load_info(info: str):
     file_path = os.path.join(os.path.dirname(__file__), "docs", f"{info}.txt")
     with open(file_path, "r", encoding="utf-8") as file:
         return [line.strip() for line in file if line.strip()]
-
-def load_emulation():
-    file_path = os.path.join(os.path.dirname(__file__), "docs", "consoles.txt")
-    with open(file_path, "r", encoding="utf-8") as file:
-        emuDict = {
-            line.strip(): {
-                "links": [],
-                "instructions": ""
-            }
-            for line in file if line.strip()
-        }
-    file_path = os.path.join(os.path.dirname(__file__), "docs", "links.txt")
-    with open(file_path, "r", encoding="utf-8") as file:
-        for key in emuDict.keys():
-            line = file.readline().strip()
-            emuDict[key]["links"] = [part.strip() for part in line.split(",")]
-    file_path = os.path.join(os.path.dirname(__file__), "docs", "instructions.txt")
-    with open(file_path, "r", encoding="utf-8") as file:
-        for key in emuDict.keys():
-            emuDict[key]["instructions"] = file.readline().strip().replace("\\n", "\n")
-
-    return emuDict
-
-def load_help():
-    base_dir = os.path.join(os.path.dirname(__file__), "docs")
-
-    pages_path = os.path.join(base_dir, "help_pages.txt")
-    with open(pages_path, "r", encoding="utf-8") as file:
-        pages = [line.strip() for line in file if line.strip()]
-
-    helpDict = {}
-    for page in pages:
-        commands_path = os.path.join(base_dir, f"{page}_commands.txt")
-        descriptions_path = os.path.join(base_dir, f"{page}_descriptions.txt")
-
-        commands = []
-        descriptions = []
-
-        if os.path.exists(commands_path):
-            with open(commands_path, "r", encoding="utf-8") as cfile:
-                commands = [line.strip() for line in cfile if line.strip()]
-
-        if os.path.exists(descriptions_path):
-            with open(descriptions_path, "r", encoding="utf-8") as dfile:
-                descriptions = [line.strip() for line in dfile if line.strip()]
-
-        helpDict[page] = {
-            "commands": commands,
-            "descriptions": descriptions,
-        }
-
-    return helpDict
