@@ -14,7 +14,7 @@ from discord.ext import commands
 from datetime import datetime, timedelta
 from pytz import timezone
 from typing import Optional
-from colorama import Fore, Style
+from colorama import Fore, Style, Back
 
 
 # global variable declarations, with 1 exception that mix_settings is a function that defines the default global mix settings
@@ -328,6 +328,112 @@ class EconomyUseHandlers:
             await asyncio.sleep(3)
             return await msg.edit(content="Turns out that was just your stomach growling. The banana you just ate was a regular old banana...", allowed_mentions=discord.AllowedMentions.none())
         return await wups(ctx, f"You don't have a {item}")
+
+# music download handler class
+# for use with grabber command
+class MusicDownloadHandlers:
+    @staticmethod
+    def spotify(query: str) -> dict:
+        return {
+            "cmd": f'spotdl download "{query}" --format mp3 --output "{{artist}} - {{title}}.{{output-ext}}" --lyrics synced',
+            "name": "Spotify",
+            "colors": (Fore.BLACK, Back.GREEN),
+            "error_checks": {"LookupError": "I couldn't find a song on Spotify with that query. Try again"},
+        }
+
+    @staticmethod
+    def youtube(query: str) -> dict:
+        return {
+            # feel free to change the browser if you want to test, but then change back to firefox once finished testing as that is the browser neel's server relies on. MAKE SURE YOU ARE SIGNED INTO YOUTUBE ON YOUR BROWSER WITH THE ASSOCIATED COOKIES!
+            "cmd": f'yt-dlp {query} -x --audio-format mp3 -o "%(title)s.%(ext)s" --no-playlist --embed-metadata --embed-thumbnail --remote-components ejs:github --cookies-from-browser firefox', 
+            "name": "YouTube",
+            "colors": (Fore.WHITE, Back.RED),
+            "error_checks": {"Downloading 0 items": "I couldn't download anything. Try again (Most likely, your search query was invalid.)"},
+        }
+
+    @staticmethod
+    def soundcloud(query: str) -> dict:
+        return {
+            "cmd": f"scdl -l {query} --onlymp3 --force-metadata --no-playlist",
+            "name": "SoundCloud",
+            "colors": (Fore.WHITE, Back.LIGHTRED_EX),
+            "error_checks": {
+                "Found a playlist": "I don't want to bombard you with pings! Try downloading songs individually",
+                "URL is not valid": "Invalid URL! Try again",
+            },
+        }
+
+    @staticmethod
+    async def run_download(download_spec: dict):
+        cmd = download_spec["cmd"]
+        name = download_spec["name"]
+        colors = download_spec["colors"]
+        error_checks = download_spec.get("error_checks")
+
+        print(f"{Style.BRIGHT}Downloading from {colors[0]}{colors[1]}{name}{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
+        proc = await asyncio.create_subprocess_shell(
+            cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await proc.communicate()
+        stdout_str, stderr_str = stdout.decode(), stderr.decode()
+        print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout_str}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr_str}\n")
+
+        if error_checks:
+            for check, error_msg in error_checks.items():
+                if check in stdout_str or check in stderr_str:
+                    return False, error_msg
+
+        if proc.returncode != 0:
+            return False, "I couldn't download anything. Try again"
+        return True, None
+
+    @staticmethod
+    async def send_downloaded_files(ctx, msg):
+        """Send downloaded MP3 files and clean up."""
+        new_files = [f for f in os.listdir(".") if f.endswith(".mp3")]
+        for file in new_files:
+            file_path = os.path.join(".", file)
+            try:
+                await ctx.reply(content="Here is your song!", file=discord.File(file_path))
+            except Exception:
+                os.remove(file_path)
+                await msg.delete()
+                return await wups(ctx, "The file was too big for me to send")
+            os.remove(file_path)
+        return await msg.delete()
+
+
+    @staticmethod
+    def normalize_grabber_query(query_parts, platform_lower: str) -> tuple[Optional[str], Optional[str]]:
+        query = " ".join(query_parts)
+        if not query:
+            return None, "I need a search query"
+
+        # remove wrappers for embedded links
+        if query[0] == "<" and query[-1] == ">":
+            query = query[1:-1]
+        elif query[0] == "[" and query[-1] == ")":
+            return None, "I couldn't download anything in an embedded link. Try again"
+
+        # remove spotify-ish tracking param
+        query = re.sub(r"[?&]si=[a-zA-Z0-9_-]+", "", query)
+
+        # extra normalization for each supported platform
+        if platform_lower == "youtube":
+            youtube_url_pattern = r"(?:https?://)?(?:www\.)?(?:youtube\.com/(?:watch\?v=|embed/)|youtu\.be/|m\.youtube\.com/watch\?v=)"
+            if not re.search(youtube_url_pattern, query):
+                return f'ytsearch:"{query}"', None
+            return query, None
+
+        if platform_lower == "soundcloud":
+            if not query.startswith("https://soundcloud.com/"):
+                return None, "I couldn't download anything. Try again (Due to API requirements, you must make sure that you are providing a `https://soundcloud.com/` link as your query.)"
+            query = query[:query.find("?in=")] if "?in=" in query else query
+            return query.rstrip("/"), None
+
+        return query, None
 
 
 # music functionality
@@ -755,16 +861,10 @@ async def build_mute_duration(ctx: commands.Context, time_unit: int, time_limit:
 
     return timedelta(**{attribute: time_unit})
 
-def make_author_channel_check(ctx):
-    def check(message: discord.Message):
-        return message.author == ctx.author and message.channel == ctx.channel
-
-    return check
-
 async def prompt_for_message(bot: commands.Bot, ctx: commands.Context, prompt_text: str, timeout: float, timeout_text: str):
     prompt = await reply(ctx, prompt_text)
     try:
-        message = await bot.wait_for("message", check=make_author_channel_check(ctx), timeout=timeout)
+        message = await bot.wait_for("message", check=lambda m: m.author == ctx.author and m.channel == ctx.channel, timeout=timeout)
     except asyncio.TimeoutError:
         await prompt.delete()
         return await wups(ctx, timeout_text)

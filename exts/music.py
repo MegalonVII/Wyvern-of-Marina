@@ -12,7 +12,7 @@ from discord.ext import commands
 from colorama import Fore, Back, Style
 from typing import Optional
 
-from utils import VoiceState, YTDLSource, YTDLError, Song # utils classes 
+from utils import VoiceState, YTDLSource, YTDLError, Song, MusicDownloadHandlers # utils classes 
 from utils import reply, set_voice, wups, parse_total_duration, in_channels # utils functions
 from utils import lists, tts_voice_aliases, voice_id_to_alias, default_tts_voice, volume_adjustment, tts_volume_adjustment # utils variables
 
@@ -97,35 +97,6 @@ class Music(commands.Cog):
                 
         finally:
             self.tts_processing = False
-
-    async def _run_download(self, cmd: str, name: str, colors: tuple, error_checks: dict = None):
-        print(f"{Style.BRIGHT}Downloading from {colors[0]}{colors[1]}{name}{Fore.RESET}{Back.RESET}{Style.RESET_ALL}...")
-        proc = await asyncio.create_subprocess_shell(cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-        stdout, stderr = await proc.communicate()
-        stdout_str, stderr_str = stdout.decode(), stderr.decode()
-        print(f"{Style.BRIGHT}Out{Style.RESET_ALL}:\n{stdout_str}{Style.BRIGHT}Err{Style.RESET_ALL}:\n{stderr_str}\n")
-        
-        if error_checks:
-            for check, error_msg in error_checks.items():
-                if check in stdout_str or check in stderr_str:
-                    return False, error_msg
-        if proc.returncode != 0:
-            return False, "I couldn't download anything. Try again"
-        return True, None
-
-    async def _send_downloaded_files(self, ctx, msg):
-        """Helper to send downloaded MP3 files and clean up."""
-        new_files = [f for f in os.listdir('.') if f.endswith(".mp3")]
-        for file in new_files:
-            file_path = os.path.join('.', file)
-            try:
-                await ctx.reply(content='Here is your song!', file=discord.File(file_path))
-            except:
-                os.remove(file_path)
-                await msg.delete()
-                return await wups(ctx, 'The file was too big for me to send')
-            os.remove(file_path)
-        return await msg.delete()
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
@@ -328,57 +299,28 @@ class Music(commands.Cog):
             
     @commands.command(name='grabber')
     async def grabber(self, ctx, platform: str, *query):
-        query = " ".join(query)
-        try:
-            if query[0] == '<' and query[-1] == '>':
-                query = query[1:-1]
-            elif query[0] == '[' and query[-1] == ')':
-                return await wups(ctx, "I couldn't download anything in an embedded link. Try again")
-            query = re.sub(r'[?&]si=[a-zA-Z0-9_-]+', '', query)
-        except IndexError:
-            return await wups(ctx, "I need a search query")
+        platform_lower = platform.lower()platform_lower = platform.lower()platform_lower = platform.lower()
+        return await wups(ctx, "Invalid platform choice! Must be either `Spotify`, `YouTube`, or `SoundCloud`") if platform_lower not in self.platforms else None
         
+        query, err = MusicDownloadHandlers.normalize_grabber_query(query)
+        return await wups(ctx, err) if err else None
+
         if await in_channels(ctx, ["wom-shenanigans", "good-tunes"], True):
-            if platform.lower() not in self.platforms:
-                return await wups(ctx, 'Invalid platform choice! Must be either `Spotify`, `YouTube`, or `SoundCloud`')
-            
             async with ctx.typing():
-                msg = await ctx.reply('Hang tight! I\'ll try downloading your song. You\'ll be pinged with your song once I finish.', mention_author=False)
-                platform_lower = platform.lower()
-                
-                if platform_lower == 'spotify':
-                    success, error = await self._run_download(
-                        f'spotdl download "{query}" --format mp3 --output "{{artist}} - {{title}}.{{output-ext}}" --lyrics synced',
-                        'Spotify', (Fore.BLACK, Back.GREEN),
-                        {"LookupError": "I couldn't find a song on Spotify with that query. Try again"}
-                    )
-                elif platform_lower == 'youtube':
-                    youtube_url_pattern = r'(?:https?://)?(?:www\.)?(?:youtube\.com/(?:watch\?v=|embed/)|youtu\.be/|m\.youtube\.com/watch\?v=)'
-                    download_query = query if re.search(youtube_url_pattern, query) else f'ytsearch:"{query}"'
-                    success, error = await self._run_download(
-                        # change the browser if you want to change, but then change back to firefox once finished testing as that is the browser neel's server relies on
-                        f'yt-dlp {download_query} -x --audio-format mp3 -o "%(title)s.%(ext)s" --no-playlist --embed-metadata --embed-thumbnail --remote-components ejs:github --cookies-from-browser firefox', 
-                        'YouTube', (Fore.WHITE, Back.RED),
-                        {'Downloading 0 items': "I couldn't download anything. Try again (Most likely, your search query was invalid.)"}
-                    )
-                elif platform_lower == 'soundcloud':
-                    if not query.startswith('https://soundcloud.com/'):
-                        await msg.delete()
-                        return await wups(ctx, "I couldn't download anything. Try again (Due to API requirements, you must make sure that you are providing a `https://soundcloud.com/` link as your query.)")
-                    query = query[:query.find("?in=")] if "?in=" in query else query
-                    query = query.rstrip('/')
-                    success, error = await self._run_download(
-                        f'scdl -l {query} --onlymp3 --force-metadata --no-playlist',
-                        'SoundCloud', (Fore.WHITE, Back.LIGHTRED_EX),
-                        {'Found a playlist': "I don't want to bombard you with pings! Try downloading songs individually",
-                        'URL is not valid': "Invalid URL! Try again"}
-                    )
-                
-                if not success:
-                    await msg.delete()
-                    return await wups(ctx, error)
-                
-                return await self._send_downloaded_files(ctx, msg)
+                msg = await ctx.reply("Hang tight! I'll try downloading your song. You'll be pinged with your song once I finish.", mention_author=False)
+
+            if platform_lower == "spotify":
+                success, error = await MusicDownloadHandlers.run_download(MusicDownloadHandlers.spotify(query))
+            elif platform_lower == "youtube":
+                success, error = await MusicDownloadHandlers.run_download(MusicDownloadHandlers.youtube(query))
+            elif platform_lower == "soundcloud":
+                success, error = await MusicDownloadHandlers.run_download(MusicDownloadHandlers.soundcloud(query))
+
+            if not success:
+                await msg.delete()
+                return await wups(ctx, error)
+
+            return await MusicDownloadHandlers.send_downloaded_files(ctx, msg)
 
     @commands.command(name='mix')
     async def _mix(self, ctx: commands.Context, music_volume: Optional[int] = None, tts_volume: Optional[int] = None):
