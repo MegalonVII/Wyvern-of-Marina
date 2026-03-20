@@ -300,22 +300,26 @@ class Music(commands.Cog):
     @commands.command(name='grabber')
     async def grabber(self, ctx, platform: str, *query):
         platform_lower = platform.lower()
-        return await wups(ctx, "Invalid platform choice! Must be either `Spotify`, `YouTube`, or `SoundCloud`") if platform_lower not in self.platforms else None
-        
-        query, err = MusicDownloadHandlers.normalize_grabber_query(query)
-        return await wups(ctx, err) if err else None
+        if platform_lower not in self.platforms:
+            return await wups(ctx, "Invalid platform choice! Must be either `Spotify`, `YouTube`, or `SoundCloud`")
+        if not await in_channels(ctx, ["wom-shenanigans", "good-tunes"], True):
+            return
 
-        if await in_channels(ctx, ["wom-shenanigans", "good-tunes"], True):
-            async with ctx.typing():
-                msg = await ctx.reply("Hang tight! I'll try downloading your song. You'll be pinged with your song once I finish.", mention_author=False)
+        query, err = MusicDownloadHandlers.normalize_grabber_query(query, platform_lower)
+        if err:
+            return await wups(ctx, err)
+
+        async with ctx.typing():
+            msg = await ctx.reply("Hang tight! I'll try downloading your song. You'll be pinged with your song once I finish.", mention_author=False)
 
             if platform_lower == "spotify":
-                success, error = await MusicDownloadHandlers.run_download(MusicDownloadHandlers.spotify(query))
+                spec = MusicDownloadHandlers.spotify(query)
             elif platform_lower == "youtube":
-                success, error = await MusicDownloadHandlers.run_download(MusicDownloadHandlers.youtube(query))
-            elif platform_lower == "soundcloud":
-                success, error = await MusicDownloadHandlers.run_download(MusicDownloadHandlers.soundcloud(query))
+                spec = MusicDownloadHandlers.youtube(query)
+            else:
+                spec = MusicDownloadHandlers.soundcloud(query)
 
+            success, error = await MusicDownloadHandlers.run_download(spec)
             if not success:
                 await msg.delete()
                 return await wups(ctx, error)
