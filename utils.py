@@ -526,7 +526,65 @@ class MusicMixHandlers:
             voice_state.mixer.music_volume_when_tts = music_scalar
             voice_state.mixer.tts_volume_when_mixed = tts_scalar
 
+# trivia handler class
+class TriviaHandlers:
+    TRIVIA_TYPES = ["general", "film", "music", "tv", "games", "anime"]
+    TRIVIA_CATEGORIES = [9, 11, 12, 14, 15, 31]
 
+    @staticmethod
+    def resolve_trivia_category(type: Optional[str]) -> tuple[Optional[int], Optional[str]]:
+        """Return (category_id, error_text)."""
+        if type is None:
+            return random.choice(TriviaHandlers.TRIVIA_CATEGORIES), None
+
+        t = type.lower()
+        if t not in TriviaHandlers.TRIVIA_TYPES:
+            return None, "Invalid trivia type"
+
+        idx = TriviaHandlers.TRIVIA_TYPES.index(t)
+        return TriviaHandlers.TRIVIA_CATEGORIES[idx], None
+
+    @staticmethod
+    def fetch_trivia(category_id: int) -> tuple[str, str, list[str]]:
+        """Return (question, correct_answer, shuffled_options)."""
+        import requests
+        import urllib.parse
+
+        response = requests.get(
+            f"https://opentdb.com/api.php?amount=1&category={category_id}&type=multiple&encode=url3986"
+        )
+        data = json.loads(response.text)
+        question = urllib.parse.unquote(data["results"][0]["question"])
+
+        correct_answer = urllib.parse.unquote(data["results"][0]["correct_answer"])
+        incorrect_answers = data["results"][0]["incorrect_answers"]
+        options = [urllib.parse.unquote(answer) for answer in incorrect_answers] + [correct_answer]
+        random.shuffle(options)
+
+        return question, correct_answer, options
+
+    @staticmethod
+    def build_trivia_embed(question: str, options: list[str]) -> discord.Embed:
+        quiz_embed = discord.Embed(title="❓ Trivia ❓", description=question, color=discord.Color.purple())
+        quiz_embed.add_field(name="Options", value="\n".join(options), inline=False)
+        quiz_embed.set_footer(text="You have 15 seconds to answer. Type the letter of your answer (A, B, C, D).")
+        return quiz_embed
+
+    @staticmethod
+    def make_answer_check(ctx: commands.Context):
+        def check_answer(message: discord.Message):
+            return (
+                message.author == ctx.author
+                and message.content.lower() in ["a", "b", "c", "d"]
+                and message.channel == ctx.message.channel
+            )
+
+        return check_answer
+
+    @staticmethod
+    def letter_to_index(letter: str) -> int:
+        return {"a": 0, "b": 1, "c": 2, "d": 3}[letter.lower()]
+        
 # music functionality
 # all sorts of classes for playing songs in vc. you may mostly ignore these since vc implementation is mostly complete.
 class VoiceError(Exception):

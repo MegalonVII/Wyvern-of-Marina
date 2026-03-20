@@ -9,6 +9,7 @@ import pypokedex as dex
 from discord.ext import commands
 from datetime import timedelta
 
+from utils import TriviaHandlers # utils classes
 from utils import lists, snipe_data, editsnipe_data, zenny # utils direct values
 from utils import shark_react, reply, wups, assert_cooldown, cooldown_remaining, in_wom_shenanigans, add_coins, in_channels, in_threads, load_info, load_emulation, build_pokedex_embed # utils functions
 
@@ -192,52 +193,32 @@ class Fun(commands.Cog):
     @commands.command(name='trivia')
     async def trivia(self, ctx, type:str = None):
         if await in_wom_shenanigans(ctx):
-            types = ['general', 'film', 'music', 'tv', 'games', 'anime']
-            categories = [9, 11, 12, 14, 15, 31]
-            if assert_cooldown('trivia', ctx.author.id) != 0:
+            if assert_cooldown("trivia", ctx.author.id) != 0:
                 return await wups(ctx, f"Slow down there, bub! Command on cooldown for another {cooldown_remaining('trivia', ctx.author.id)} seconds")
-            if not type is None and type.lower() not in types:
+
+            category_id, err = TriviaHandlers.resolve_trivia_category(type)
+            if err:
+                return await wups(ctx, err)
+            if category_id is None:
                 return await wups(ctx, "Invalid trivia type")
-            
+
             async with ctx.typing():
-                if type is None:
-                    response = requests.get(f"https://opentdb.com/api.php?amount=1&category={random.choice(categories)}&type=multiple&encode=url3986")
-                else:
-                    for typing, category in zip(types, categories):
-                        if type.lower() == typing:
-                            response = requests.get(f"https://opentdb.com/api.php?amount=1&category={category}&type=multiple&encode=url3986")
-                            break
-                data = json.loads(response.text)
-                correct_answer = urllib.parse.unquote(data['results'][0]['correct_answer'])
-                incorrect_answers = data['results'][0]['incorrect_answers']
-                options = [urllib.parse.unquote(answer) for answer in incorrect_answers] + [correct_answer]
-            random.shuffle(options)
-            quiz_embed = discord.Embed(title="❓ Trivia ❓", description=urllib.parse.unquote(data['results'][0]['question']), color=discord.Color.purple())
-            quiz_embed.add_field(name="Options", value="\n".join(options), inline=False)
-            quiz_embed.set_footer(text="You have 15 seconds to answer. Type the letter of your answer (A, B, C, D).")
-            await ctx.reply(embed=quiz_embed, mention_author=False)
-        
-            def check_answer(message):
-                return message.author == ctx.author and message.content.lower() in ['a', 'b', 'c', 'd'] and message.channel == ctx.message.channel
-        
+                question, correct_answer, options = TriviaHandlers.fetch_trivia(category_id)
+
+            await ctx.reply(embed=TriviaHandlers.build_trivia_embed(question, options), mention_author=False)
+
             try:
-                answer_message = await self.bot.wait_for('message', timeout=15.0, check=check_answer)
+                answer_message = await ctx.bot.wait_for("message", timeout=15.0, check=TriviaHandlers.make_answer_check(ctx))
             except asyncio.TimeoutError:
                 return await reply(ctx, f"Time's up! The correct answer was **{correct_answer}**.")
-            else:
-                if answer_message.content.lower() == 'a':
-                    selected_answer = options[0]
-                elif answer_message.content.lower() == 'b':
-                    selected_answer = options[1]
-                elif answer_message.content.lower() == 'c':
-                    selected_answer = options[2]
-                elif answer_message.content.lower() == 'd':
-                    selected_answer = options[3]
-        
-                if selected_answer == correct_answer:
-                    add_coins(ctx.author.id, 10)
-                    return await answer_message.reply(f"Correct! The answer is **{correct_answer}**. 10 {zenny}!", mention_author=False)
-                return await answer_message.reply(f"Sorry, that's incorrect. The correct answer is **{correct_answer}**.", mention_author=False)
+
+            selected_answer = options[TriviaHandlers.letter_to_index(answer_message.content)]
+
+            if selected_answer == correct_answer:
+                add_coins(ctx.author.id, 10)
+                return await answer_message.reply(f"Correct! The answer is **{correct_answer}**. 10 {zenny}!", mention_author=False)
+
+            return await answer_message.reply(f"Sorry, that's incorrect. The correct answer is **{correct_answer}**.", mention_author=False)
             
     @commands.command(name='emulation')
     async def emulation(self, ctx, console: str = "guide"):
