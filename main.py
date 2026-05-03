@@ -1,10 +1,8 @@
 import discord
 import logging
-import asyncio
 
 from discord.ext import commands
 from os import getenv
-from aiohttp import web
 from dotenv import load_dotenv
 from sys import exit
 
@@ -13,8 +11,6 @@ from utils import *
 # token instantiation
 load_dotenv()
 TOKEN=getenv('DISCORD_TOKEN')
-HEALTH_PORT = int(getenv('HEALTH_PORT', 8080))
-ENABLE_HEALTH_CHECK = getenv('ENABLE_HEALTH_SERVER', 'false').lower() == 'true'
 
 # bot initialization
 bot=commands.Bot(command_prefix = '!w ', intents=discord.Intents.all())
@@ -33,31 +29,6 @@ HELP_TITLES = {
 }
 
 HELP_DATA = load_help()
-
-# uptime monitoring
-async def start_health_server():
-    if not logging.getLogger().handlers:
-        logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(name)s: %(message)s\n')
-
-    for name in ('aiohttp.server', 'aiohttp.access', 'aiohttp.client'):
-        logging.getLogger(name).setLevel(logging.CRITICAL)
-
-    logging.getLogger('discord.gateway').setLevel(logging.WARNING)
-    logging.getLogger('discord.http').setLevel(logging.WARNING)
-
-    async def health_handler(request):
-        if bot.is_ready() and not bot.is_closed():
-            return web.Response(text='OK', status=200)
-        return web.Response(text='Bot down', status=503)
-
-    try:
-        app = web.Application()
-        app.router.add_route('*', '/health', health_handler)
-        runner = web.AppRunner(app)
-        await runner.setup()
-        await web.TCPSite(runner, '0.0.0.0', HEALTH_PORT).start()
-    except:
-        pass
 
 # bot forced to use in server
 @bot.check
@@ -118,8 +89,6 @@ async def on_ready():
 # everything has finally been set up
 # we can now run the bot
 async def main():
-    if ENABLE_HEALTH_CHECK:
-        asyncio.create_task(start_health_server())
     await bot.start(TOKEN)
 
 try:
