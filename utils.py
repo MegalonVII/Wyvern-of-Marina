@@ -34,6 +34,8 @@ starboard_emoji='<:spuperman:670852114070634527>'
 shame_emoji='🪳'
 starboard_count=4
 zenny='<:zenny:1104179194780450906>'
+starttime=None
+login_timezone='America/Los_Angeles' # chose timezone as pacific because that's where i am based in
 tts_voice_aliases = {
     "male1": "en-US-GuyNeural",
     "male2": "en-US-AndrewMultilingualNeural",
@@ -459,12 +461,27 @@ def build_pokedex_embed(pokemon, data: dict, enc_data: dict, pok_data: dict, ind
 async def roulette_spin(ctx: commands.Context, target: discord.Member, self_fired: bool, chance: int):
     if random.randint(1, chance) == 1:
         await target.edit(timed_out_until=discord.utils.utcnow() + timedelta(hours=1), reason="roulette")
-        return await reply(ctx, f"🔥🔫 {'You' if self_fired else 'This user'} died! (muted for 1 hour)")
+        return await reply(ctx, f"🔥🔫 {'You' if self_fired else target.name} died! (muted for 1 hour)")
 
     add_coins(target.id, 1)
     who = "you" if self_fired else "they"
     give = "Here's" if self_fired else "I gave them"
     return await reply(ctx, f"🚬🔫 Looks like {who}'re safe, for now... {give} 1 {zenny} as a pity prize...")
+
+# misc.py
+# uptime()
+def get_uptime_text():
+    start = starttime
+    delta = datetime.now(timezone(login_timezone)) - start
+    total_seconds = max(0, int(delta.total_seconds()))
+    days, rem = divmod(total_seconds, 86400)
+    hours, rem = divmod(rem, 3600)
+    minutes, seconds = divmod(rem, 60)
+    if days:
+        return f"{days:02}:{hours:02}:{minutes:02}:{seconds:02}"
+    if hours:
+        return f"{hours:02}:{minutes:02}:{seconds:02}"
+    return f"{minutes:02}:{seconds:02}"
 
 
 # all sorts of classes for specific functions

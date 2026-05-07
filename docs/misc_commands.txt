@@ -4,4 +4,4 @@
 !w emote (emote from this server)
 !w convert (number) (original unit) (new unit)
 !w translate (phrase)
-
+!w uptime

@@ -5,6 +5,7 @@ from discord.ext import commands
 from os import getenv
 from dotenv import load_dotenv
 from sys import exit
+from datetime import datetime
 
 from utils import *
 
@@ -84,7 +85,9 @@ async def on_ready():
             if not id_str in lists["bank"].keys():
                 direct_to_bank(id, 0)
 
-    return print(f"Logged in as: {bot.user.name}\nID: {bot.user.id}\n" + get_login_time('America/Los_Angeles')) # fully logged in with everything loaded in the backend. chose the timezone as pacific because that's where i am based in
+    __import__("utils").starttime = datetime.now(timezone(login_timezone))
+
+    return print(f"Logged in as: {bot.user.name}\nID: {bot.user.id}\n" + get_login_time(login_timezone)) # fully logged in with everything loaded in the backend
 
 # everything has finally been set up
 # we can now run the bot
