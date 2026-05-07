@@ -83,15 +83,16 @@ class Miscellaneous(commands.Cog):
     
     @commands.command(name='uptime')
     async def uptime(self, ctx):
-        try:
-            await ctx.message.delete()
-        except Exception:
-            pass
+        if await in_wom_shenanigans():
+            try:
+                await ctx.message.delete()
+            except Exception:
+                pass
 
-        if ctx.author.id == 347503746835546134 or "wom coder" in [role.name for role in ctx.author.roles] : # neel user id
-            return await ctx.send(f"Uptime: {get_uptime_text()}", delete_after=5)
-        else:
-            return await ctx.send("Wups! You are not authorized to use this command...", delete_after=5)
+            if ctx.author.id == 347503746835546134 or "wom coder" in [role.name for role in ctx.author.roles] : # neel user id
+                return await ctx.send(f"Uptime: {get_uptime_text()}", delete_after=5)
+            else:
+                return await ctx.send("Wups! You are not authorized to use this command...", delete_after=5)
 
 async def setup(bot):
     await bot.add_cog(Miscellaneous(bot))
