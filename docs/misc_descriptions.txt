@@ -5,3 +5,4 @@ Returns information of the given emote. It MUST be from this server!
 Convert a number of units to another unit! Supported units include F, C, m, ft, kg, lb, mi, km, in, and cm. Supported conversions include F <-> C, ft <-> m, lb <-> kg, mi <-> km, and in <-> cm.
 Translates any given phrase to English! Be weary that I might not be 100 percent accurate with my translations.
 Returns how long I've been up for in DD:HH:MM:SS format. *[Dev Only]*.
+Convert a number of currency to another currency! Supported currencies include USD, EUR, GBP, JPY, CAD, PHP, MXN

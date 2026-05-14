@@ -5,3 +5,4 @@
 !w convert (number) (original unit) (new unit)
 !w translate (phrase)
 !w uptime
+!w currency (number) (original currency) (new currency)

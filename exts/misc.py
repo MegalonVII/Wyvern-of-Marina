@@ -23,6 +23,15 @@ class Miscellaneous(commands.Cog):
             ("in", "cm"): lambda x: x * 2.54,
             ("cm", "in"): lambda x: x * 0.393701
         }
+        self.currencies = {
+            "USD": "$",
+            "EUR": "€",
+            "GBP": "£",
+            "JPY": "¥",
+            "CAD": "CA$",
+            "PHP": "₱",
+            "MXN": "MX$"
+        }
 
     @commands.command(name='ping')
     async def ping(self, ctx):
@@ -93,6 +102,29 @@ class Miscellaneous(commands.Cog):
                 return await ctx.send(f"Uptime: {get_uptime_text()}", delete_after=5)
             else:
                 return await ctx.send("Wups! You are not authorized to use this command...", delete_after=5)
+
+    @commands.command(name='currency')
+    async def currency(self, ctx, amount: float, from_curr: str, to_curr: str):
+        from_curr = from_curr.upper()
+        to_curr = to_curr.upper()
+
+        for code in (from_curr, to_curr):
+            if code not in self.currencies:
+                supported = ", ".join(self.currencies.keys())
+                return await wups(ctx, f"{code} isn't supported. Available: `{supported}`")
+
+        if from_curr == to_curr:
+            return await wups(ctx, "I cannot convert a currency to itself")
+
+        rate = await get_rate(ctx, from_curr, to_curr)
+        if rate is None:
+            return await wups(ctx, "Could not fetch exchange rates. Try again later")
+
+        converted = amount * rate
+        from_sym = self.currencies[from_curr]
+        to_sym = self.currencies[to_curr]
+
+        return await reply(ctx, f"{from_sym}{amount:,.2f} {from_curr} is equal to {to_sym}{converted:,.2f} {to_curr}\n-# Rate: 1 {from_curr} = {to_sym}{rate:,.4f} {to_curr}")
 
 async def setup(bot):
     await bot.add_cog(Miscellaneous(bot))

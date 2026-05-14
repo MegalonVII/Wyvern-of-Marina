@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 from pytz import timezone
 from typing import Optional
 from colorama import Fore, Style, Back
+from aiohttp import ClientSession
 
 
 # global variable declarations, with 1 exception that mix_settings is a function that defines the default global mix settings
@@ -482,6 +483,18 @@ def get_uptime_text():
     if hours:
         return f"{hours:02}:{minutes:02}:{seconds:02}"
     return f"{minutes:02}:{seconds:02}"
+
+# currency()
+async def get_rate(ctx: commands.Context, from_curr: str, to_curr: str) -> float | None:
+    session = ClientSession()
+    url = f"https://api.frankfurter.dev/v1/latest?base={from_curr}&symbols={to_curr}"
+    async with ctx.typing():
+        async with session.get(url) as resp:
+            if resp.status != 200:
+                return None
+            data = await resp.json()
+            await session.close()
+            return data["rates"].get(to_curr)
 
 
 # all sorts of classes for specific functions
