@@ -726,7 +726,7 @@ class MusicDownloadHandlers:
     @staticmethod
     def spotify(query: str) -> dict:
         return {
-            "cmd": f'spotdl download "{query}" --format mp3 --output "{{artist}} - {{title}}.{{output-ext}}" --lyrics synced',
+            "cmd": f'spotdl download "{query}" --format mp3 --output "{{artist}} - {{title}}.{{output-ext}}" --lyrics synced --use-official-api',
             "name": "Spotify",
             "colors": (Fore.BLACK, Back.GREEN),
             "error_checks": {"LookupError": "I couldn't find a song on Spotify with that query. Try again"},
