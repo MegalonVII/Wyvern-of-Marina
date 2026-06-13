@@ -39,7 +39,7 @@ While the implementation is public for learning and collaboration, the bot is pr
 
 ## Tech stack
 
-- **Language**: Python (3.8–3.13)  
+- **Language**: Python (3.8–3.14)  
 - **Discord**: `discord.py` (commands, cogs, intents)  
 - **Web**: `aiohttp` (simple health server)  
 - **Config**: `python-dotenv` for environment variable loading  
