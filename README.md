@@ -32,62 +32,14 @@ While the implementation is public for learning and collaboration, the bot is pr
   - Periodically rotates the bot’s game presence from a curated list.  
   - Custom join/leave flows and lightweight moderation feedback.
 
-- **Health check endpoint**  
-  - Optional HTTP `/health` route via `aiohttp` to integrate with uptime monitoring.
-
 ---
 
 ## Tech stack
 
 - **Language**: Python (3.8–3.14)  
 - **Discord**: `discord.py` (commands, cogs, intents)  
-- **Web**: `aiohttp` (simple health server)  
 - **Config**: `python-dotenv` for environment variable loading  
 - **Data**: CSV files via `pandas` for persistent per‑user data
-
----
-
-## Getting started
-
-1. **Ensure a supported Python version**
-
-   This project currently targets **Python ≤ 3.13** (for example, 3.10–3.13).  
-   Some dependencies (such as `spotdl`) do **not yet support Python 3.14+**.
-
-2. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/MegalonVII/Wyvern-of-Marina.git
-   cd Wyvern-of-Marina
-   ```
-
-3. **Create and configure your environment file**
-
-   Use the provided example as a template:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   Then edit `.env`:
-
-   - `DISCORD_TOKEN` – your bot token from the Discord Developer Portal  
-   - `HEALTH_PORT` – port for the optional health server (e.g. `8080`)  
-   - `ENABLE_HEALTH_SERVER` – `true` to enable `/health`, `false` otherwise
-
-4. **Install dependencies**
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-5. **Run the bot**
-
-   ```bash
-   python main.py
-   ```
-
-   Make sure your bot is invited to a server and has the appropriate intents enabled in the Discord Developer Portal.
 
 ---
 
