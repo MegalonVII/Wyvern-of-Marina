@@ -576,7 +576,7 @@ class MessageHandlers:
         from random import choice
         import asyncio
         
-        wom = discord.utils.get(message.guild.members, bot=True, name="Wyvern of Marina")
+        wom = message.guild.me
         if not wom:
             return
         
