@@ -30,7 +30,8 @@ class Miscellaneous(commands.Cog):
             "JPY": "¥",
             "CAD": "CA$",
             "PHP": "₱",
-            "MXN": "MX$"
+            "MXN": "MX$",
+            "HKD": "HK$"
         }
 
     @commands.command(name='ping')
