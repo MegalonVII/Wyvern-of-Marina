@@ -19,6 +19,7 @@ from pytz import timezone
 from typing import Optional
 from colorama import Fore, Style, Back
 from aiohttp import ClientSession
+from urllib.parse import quote
 
 
 # global variable declarations, with 1 exception that mix_settings is a function that defines the default global mix settings
@@ -496,6 +497,56 @@ async def get_rate(ctx: commands.Context, from_curr: str, to_curr: str) -> float
             data = await resp.json()
             await session.close()
             return data["rates"].get(to_curr)
+
+# define()
+async def fetch_definition(word: str) -> tuple[dict | None, str | None]:
+    url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{quote(word)}"
+    try:
+        async with ClientSession() as session:
+            async with session.get(url) as resp:
+                if resp.status == 404:
+                    return None, f"I couldn't find a definition for `{word}`"
+                if resp.status != 200:
+                    return None, "Could not fetch a definition. Try again later"
+                data = await resp.json()
+    except Exception:
+        return None, "Could not fetch a definition. Try again later"
+
+    entry = data[0] if isinstance(data, list) and data else None
+    if not entry:
+        return None, f"I couldn't find a definition for `{word}`"
+    return entry, None
+
+
+def build_definition_embed(entry: dict) -> discord.Embed | None:
+    phonetic = entry.get("phonetic") or next((item.get("text") for item in entry.get("phonetics", []) if item.get("text")), None)
+    embed = discord.Embed(title=entry.get("word", ""), description=phonetic, color=discord.Color.purple())
+
+    for meaning in entry.get("meanings", [])[:3]:
+        lines = []
+        for index, definition in enumerate(meaning.get("definitions", [])[:2], start=1):
+            text = definition.get("definition")
+            if not text:
+                continue
+            line = f"**{index}.** {text}"
+            example = definition.get("example")
+            if example:
+                line += f'\n*"{example}"*'
+            lines.append(line)
+
+        if not lines:
+            continue
+
+        value = "\n".join(lines)
+        if len(value) > 1024:
+            value = value[:1021] + "..."
+
+        embed.add_field(name=meaning.get("partOfSpeech", "definition"), value=value, inline=False)
+
+    if not embed.fields:
+        return None
+
+    return embed
 
 
 # all sorts of classes for specific functions

@@ -6,3 +6,4 @@
 !w translate (phrase)
 !w uptime
 !w currency (number) (original currency) (new currency)
+!w define (word)

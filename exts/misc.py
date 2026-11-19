@@ -7,7 +7,7 @@ from datetime import datetime
 from utils import *
 
 # misc commands start here
-# ping, whomuted, avi, emote, convert, translate
+# ping, whomuted, avi, emote, convert, translate, define
 class Miscellaneous(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -126,6 +126,20 @@ class Miscellaneous(commands.Cog):
         to_sym = self.currencies[to_curr]
 
         return await reply(ctx, f"{from_sym}{amount:,.2f} {from_curr} is equal to {to_sym}{converted:,.2f} {to_curr}\n-# Rate: 1 {from_curr} = {to_sym}{rate:,.4f} {to_curr}")
+
+    @commands.command(name='define', aliases=['dict'])
+    async def define(self, ctx, *, word: str):
+        if len(word.split()) > 1:
+            return await wups(ctx, "I can only define one word at a time")
+        async with ctx.typing():
+            entry, error = await fetch_definition(word.strip())
+        if error:
+            return await wups(ctx, error)
+
+        embed = build_definition_embed(entry)
+        if embed is None:
+            return await wups(ctx, f"I couldn't find a definition for `{word}`")
+        return await ctx.reply(embed=embed, mention_author=False)
 
 async def setup(bot):
     await bot.add_cog(Miscellaneous(bot))
