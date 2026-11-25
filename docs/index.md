@@ -20,12 +20,12 @@ sudo apt install -y git ffmpeg libopus-dev translate-shell make build-essential 
 curl https://pyenv.run | bash
 echo -e '\nexport PATH="$HOME/.pyenv/bin:$PATH"\neval "$(pyenv init --path)"\neval "$(pyenv init -)"\neval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
 source ~/.bashrc
-pyenv install 3.14.4
-pyenv global 3.14.4
+pyenv install 3.14.7
+pyenv global 3.14.7
 ```
-	This will take a while and may require some user input from time to time for passwords and whatnot, but will install all necessary dependencies to your device. Grab a cup of coffee or something in the meantime.
+	This will take a while and may require some user input from time to time for passwords and whatnot, but will install all necessary dependencies to your device. Grab a snack in the meantime.
 
-2. Our executable relies on if you can use the `python3` command in your terminal. Try running `python3 --version`. and look for if it is running a version of Python that is in support but no later than 3.14. I have not tested support for Python 3.15 yet.
+2. Our executable relies on if you can use the `python3` command in your terminal. Try running `python3 --version`. and look for if it is running a version of Python that is in support but no later than 3.14. Support for Python 3.15 has not been tested yet.
 
 3. Check if `pip3 --version` works. If it does, great. No need for a specific version of `pip3` but if you'd like you may upgrade it.
 
@@ -67,7 +67,7 @@ sudo mv .env womconf.sh wom /usr/local/bin/
 
 12. Run `wom`. This should display descriptions of commands and ASCII art of WoM itself. Also, it will be proof that we have the tools ready for now. We're not done quite yet, however.
 
-13. Talk to the current host (at the time of writing, Neel). You will need WoM's token value from them. If you are just looking to develop, ignore the communication and get your own bot token from [here](https://discord.com/developers/applications).
+13. If you are looking to host WoM, talk to the current host (at the time of writing, Neel) for WoM's token value. If you are just looking to develop, ignore the communication and get your own bot token from [here](https://discord.com/developers/applications).
 
 14. `cd` into the directory where the repo cloned into earlier.
 
@@ -83,15 +83,13 @@ nano .env
 
 17. Run `cd csv` in the terminal. 
 
-18. Give Neel (yes, them in particular) your GitHub username. They will grant you access to a private GitHub repository containing a backup of WoM's CSV backend. This is so that there is a "cloud" based backup solution for these files, while also keeping them away from the public as they may contain sensitive personal information.
+18. If you are looking to host WoM, give Neel (yes, them in particular) your GitHub username. They will grant you access to a private GitHub repository containing a backup of WoM's CSV backend. This is so that there is a "cloud" based backup solution for these files, while also keeping them away from the public as they may contain sensitive personal information.
 
-19. Once you've gotten access to that repository, back in the terminal `git clone` the link to the repository you gained access to. If you are just looking to develop you may clear out these csv files as you wish for your own test environment.
+19. If you are looking to host WoM, once you've gotten access to that repository, back in the terminal `git clone` the link to the repository you gained access to.
 
 20. Sign into your YouTube account on Firefox. This sounds random and oddly specific, but this is so that WoM can read your browser cookies for access to age-restricted videos to play in voice channels, and so Google's authentication server thinks you are human.
 
-21. Ask the current host to stop running WoM.
-
-22. Once you've gotten confirmation that they've done that (WoM goes offline), you will run `cd` to go back to the $HOME folder and then `wom run`.
+21. If you are looking to host WoM, ask the current host to stop running WoM. Once you've gotten confirmation that they've done that (WoM goes offline), you will run `cd` to go back to the $HOME folder and then `wom run`.
 
 **WoM should now be online!**
 
@@ -126,7 +124,7 @@ Developers, make sure that when making a new command **the function you'll be de
 
 ## utils.py
 
-The `utils.py` file has a lot of helpful variables and functions that you most likely will use when developing functions for the bot. Think of this as if you could "`import wom"` to the top of the file you're working on, but instead you're doing `from utils import *`. Developers, if you make changes to this file **PLEASE LET ME KNOW IN DETAIL SO I CAN EDIT THIS DOCUMENTATION**! Speaking of, here's that documentation.
+The `utils.py` file has a lot of helpful variables and functions that you most likely will use when developing functions for the bot. Think of this as if you could "`import wom"` to the top of the file you're working on, but instead you're doing `from utils import *`. Developers, if you make changes to this file **YOU ARE EXPECTED TO EDIT THIS DOCUMENTATION AND LET NEEL KNOW OF IT**! Speaking of, here's that documentation.
 
 At the time of writing, the file is over 1600 lines of code long! it seems gargantuan, but the file is actually formatted very intentionally into separate categories.
 - Global variables that may be useful when developing. more information on them below.
