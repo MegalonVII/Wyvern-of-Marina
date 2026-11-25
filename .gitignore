@@ -137,3 +137,5 @@ csv/
 *.mp3
 .syncedlyrics/
 cookies.txt
+site/
+.cache/

@@ -1,0 +1,57 @@
+site_name: Wyvern of Marina
+site_description: Documentation for the Wyvern of Marina Discord bot
+site_url: https://megalonvii.github.io/Wyvern-of-Marina/
+
+nav:
+  - index.md
+
+theme:
+  name: material
+  variant: classic
+  language: en
+  logo: icons/wom.png
+  favicon: icons/wom.png
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - navigation.indexes
+    - toc.integrate
+    - search.highlight
+    - search.share
+    - content.code.copy
+  palette:
+    - scheme: slate
+      primary: deep purple
+      accent: cyan
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+    - scheme: default
+      primary: deep purple
+      accent: cyan
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+  font:
+    text: Inter
+    code: JetBrains Mono
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - sane_lists
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - toc:
+      permalink: true
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  generator: false
